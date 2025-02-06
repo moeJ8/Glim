@@ -17,7 +17,6 @@ mongoose
     console.error('Error connecting to MongoDB', error);
 });
 
-
 const app = express();
 app.use(express.json());
 const port = 3000;
