@@ -10,6 +10,9 @@ export default defineConfig({
         secure: false, // http
     },
   },
+  watch: {
+    usePolling: true, // Helps detect file changes on some systems
+  },
 },
   plugins: [react()],
 })
