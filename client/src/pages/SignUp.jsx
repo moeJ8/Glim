@@ -56,7 +56,7 @@ export default function SignUp() {
         Blog
         </Link>
         <p className="text-sm mt-5 font-semibold dark:text-white">
-           This is a demo project. You can sign up using any username and password or with your gmail account.
+          You can sign up using any username and password or with your gmail account.
         </p>
         </div>
 
