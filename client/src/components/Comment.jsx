@@ -5,8 +5,7 @@ import moment from 'moment';
 
 export default function Comment({comment}) {
     const [user, setUser] = useState({});
-    console.log(user);
-    
+
     useEffect(() => {
         const getUser = async () => {
             try{
@@ -39,5 +38,9 @@ export default function Comment({comment}) {
   )
 }
 Comment.propTypes = {
-    comment: PropTypes.string.isRequired,
-  };
+    comment: PropTypes.shape({
+        userId: PropTypes.string.isRequired,
+        content: PropTypes.string.isRequired,
+        createdAt: PropTypes.string.isRequired,
+    }).isRequired,
+};
