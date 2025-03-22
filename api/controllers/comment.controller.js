@@ -3,8 +3,27 @@ import Comment from "../models/comment.model.js";
 export const createComment = async (req, res, next) => {
     try {
         const {content, postId, userId} = req.body;
+
+        const now = new Date();
+        const startOfDay = new Date(now.setHours(0, 0, 0, 0)); 
+        const endOfDay = new Date(now.setHours(23, 59, 59, 999)); 
+        
+        
+        const commentsToday = await Comment.countDocuments({
+            userId,
+            postId, 
+            createdAt: { $gte: startOfDay, $lte: endOfDay } 
+        });
+
+        if (commentsToday >= 4) {
+            return next(errorHandler(403, "You can only comment 4 times per post per 24 hours"));
+        }
+
         if(userId !== req.user.id){
             return next(errorHandler(403, "You are not allowed to create a comment on this post"))
+        }
+        if (!content || content.trim() === "") {
+            return next(errorHandler(400, "Comment cannot be empty"));
         }
         const newComment = new Comment({
             content,

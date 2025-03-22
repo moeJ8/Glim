@@ -42,7 +42,7 @@ export default function CommentSection({postId}) {
         setComments([data, ...comments])
     }
     if(!res.ok){
-      console.log(data.message || "Failed to submit comment.");
+      setCommentError(data.message || "Failed to submit comment.");
       return;
     }
     
@@ -127,7 +127,7 @@ const handleDelete = async (commentId) => {
       ):
       (
         <div className="text-sm text-teal-500 my-5 flex gap-1">
-            You must be logged in to comment
+            You must be signed in to comment
             <Link to={'/sign-in'} className="text-blue-500 hover:underline">
                 Sign in
             </Link>
