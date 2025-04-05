@@ -4,7 +4,7 @@ import Home from './pages/Home'
 import About from './pages/About'
 import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp'
-import Projects from './pages/Projects'
+import Categories from './pages/Categories'
 import Dashboard from './pages/Dashboard'
 import Header from './components/Header'
 import Footer from './components/Footer'
@@ -36,7 +36,7 @@ export default function App() {
         <Route path="/create-post" element={<CreatePost/>}/>
         <Route path="/update-post/:postId" element={<UpdatePost/>}/>
       </Route>
-      <Route path="/projects" element={<Projects/>}/>
+      <Route path="/categories" element={<Categories/>}/>
       <Route path="/post/:postSlug" element={<PostPage/>}/>
   
       </Routes>

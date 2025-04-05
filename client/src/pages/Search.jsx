@@ -118,10 +118,14 @@ export default function Search() {
                 <Select onChange={handleChange} value={SidebarData.category} id="category">
                     <option value="uncategorized">Uncategorized</option>
                     <option value="art">Art</option>
+                    <option value="health">Health</option>
                     <option value="history">History</option>
+                    <option value="literature">Literature</option>
+                    <option value="music">Music</option>
+                    <option value="news">News</option>
                     <option value="politics">Politics</option>
-                    <option value="chicken">chicken</option>
-                    <option value="reactjs">reactjs</option>
+                    <option value="sport">Sport</option>
+                    <option value="tech">Tech</option>
                 </Select>
             </div>
             <Button type="submit" outline gradientDuoTone="purpleToPink">
