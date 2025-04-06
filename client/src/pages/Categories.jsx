@@ -73,7 +73,8 @@ export default function Categories() {
         urlParams.set("sort", SidebarData.sort);
         urlParams.set("category", SidebarData.category);
         const searchQuery = urlParams.toString();
-        navigate(`?${searchQuery}`, { replace: true });
+        navigate(`/categories?${searchQuery}`);
+
     };
 
     const handleShowMore = async () => {
@@ -97,7 +98,7 @@ export default function Categories() {
         <div className="min-h-screen max-w-6xl mx-auto px-3 py-8">
             <div className="flex flex-col gap-6 mb-8">
                 <h1 className="text-3xl font-semibold text-center">All Posts Categories</h1>
-                <p className="text-gray-500 text-center">Explore our posts</p>
+                <p className="text-gray-300 text-center">Explore our posts</p>
 
                 <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 items-center justify-center">
                     <div className="flex-1 w-full sm:max-w-[400px]">
@@ -106,7 +107,7 @@ export default function Categories() {
                             value={SidebarData.searchTerm}
                             onChange={handleChange}
                             id="searchTerm"
-                            className="w-full"
+                            className="w-full focus:border-blue-500 -ml-14"
                         />
                     </div>
                     <Select
@@ -115,7 +116,7 @@ export default function Categories() {
                         id="category"
                         className="w-full sm:w-[200px] px-4 py-2 focus:border-blue-500"
                     >
-                        <option value="uncategorized">Uncategorized</option>
+                        <option value="uncategorized">All</option>
                         <option value="art">Art</option>
                         <option value="health">Health</option>
                         <option value="history">History</option>
@@ -141,12 +142,23 @@ export default function Categories() {
                 </form>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className={`${
+                        posts.length === 1
+                        ? "flex justify-center"
+                        : posts.length === 2
+                        ? "flex justify-center gap-6 flex-wrap"
+                        : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    }`}
+                    >
                 {loading ? (
-                    <div className="col-span-3 text-center text-xl">Loading...</div>
+                    <div className="col-span-3 text-center text-xl text-gray-400">Loading...</div>
                 ) : (
                     posts.map((post) => <PostCard key={post._id} post={post} />)
                 )}
+                {
+                !loading && posts.length === 0 && (
+                    <div className="col-span-3 text-center text-xl text-gray-400">No Results Found.</div>
+                ) }
             </div>
 
             {showMore && !loading && (

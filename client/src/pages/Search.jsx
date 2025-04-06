@@ -116,7 +116,7 @@ export default function Search() {
             <div className="flex items-center gap-2">
                 <label className="whitespace-nowrap font-semibold">Category:</label>
                 <Select onChange={handleChange} value={SidebarData.category} id="category">
-                    <option value="uncategorized">Uncategorized</option>
+                    <option value="uncategorized">All</option>
                     <option value="art">Art</option>
                     <option value="health">Health</option>
                     <option value="history">History</option>
