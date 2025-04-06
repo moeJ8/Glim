@@ -11,6 +11,8 @@ export default function DashUsers() {
   const [showMore, setShowMore] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [userIdToDelete, setUserIdToDelete] = useState("");
+  const [successIcons, setSuccessIcons] = useState({});
+  const [failureIcons, setFailureIcons] = useState({});
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -65,9 +67,36 @@ export default function DashUsers() {
         console.log(err.message)
       }
   };
+
+  const handleTogglePublisher = async (userId, isPublisher) => {
+    try{
+        const res = await fetch(`/api/user/update-role`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId, isPublisher: !isPublisher }),
+        });
+        if (res.ok) {
+          setUsers((prev) =>
+            prev.map((user) =>
+              user._id === userId ? { ...user, isPublisher: !isPublisher } : user
+            )
+          );
+          setSuccessIcons((prev) => ({ ...prev, [userId]: true }));
+          setTimeout(() => setSuccessIcons((prev) => ({ ...prev, [userId]: false })), 3000);
+      } else {
+        setFailureIcons((prev) => ({ ...prev, [userId]: true }));
+        setTimeout(() => setFailureIcons((prev) => ({ ...prev, [userId]: false })), 3000);
+      }
+    } catch (err) {
+      console.log(err.message);
+    }
+  }
  
   return (
     <div className="table-auto overflow-x-scroll md:mx-auto p-3 scrollbar scrollbar-track-slate-100 scrollbar-thumb-slate-300 dark:scrollbar-track-slate-700 dark:scrollbar-thumb-slate-500">
+      
       {currentUser.isAdmin && users.length > 0 ? (
         <>
         <Table hoverable className="shadow-md">
@@ -76,6 +105,7 @@ export default function DashUsers() {
           <Table.HeadCell>User Image</Table.HeadCell>
           <Table.HeadCell>Username</Table.HeadCell>
           <Table.HeadCell>Email</Table.HeadCell>
+          <Table.HeadCell>Publisher</Table.HeadCell>
           <Table.HeadCell>Admin</Table.HeadCell>
           <Table.HeadCell>Delete</Table.HeadCell>
         </Table.Head>
@@ -98,6 +128,20 @@ export default function DashUsers() {
               <Table.Cell>
                 {user.email}
               </Table.Cell>
+              <Table.Cell>
+                    <Button gradientDuoTone="purpleToBlue" outline
+                      size="xs"
+                      onClick={() => handleTogglePublisher(user._id, user.isPublisher)}
+                    >
+                      {user.isPublisher ? "Revoke" : "Assign"}
+                    </Button>
+                    {successIcons[user._id] && (
+                    <FaCheck className="text-green-500 mt-3 mx-auto" />
+                    )}
+                    {failureIcons[user._id] &&(
+                     <FaTimes className="text-green-500 mt-3 mx-auto" />
+                     )}
+                  </Table.Cell>
               <Table.Cell>
                 {user.isAdmin ? (<FaCheck className = "text-green-500"/>) : (<FaTimes className = "text-red-500"/>)}
               </Table.Cell>

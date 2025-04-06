@@ -147,3 +147,22 @@ export const getUser = async (req, res, next) => {
     next(err);
   }
 }
+
+export const updateUserRole = async (req, res, next) => {
+  const { userId, isPublisher } = req.body;
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ message: "Access denied." });
+  }
+  try {
+    const user = await User.findById(userId)
+    if(!user) return next(errorHandler(404, "User not found"));
+
+    user.isPublisher = isPublisher;
+    await user.save();
+    res.status(200).json({ message: "User updated successfully." });
+  }catch(err) {
+    next(err);
+  }
+
+
+}

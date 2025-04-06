@@ -50,7 +50,9 @@ const handleSignOut = async () => {
                 </Link>
             )}
             <Link to={`/dashboard?tab=profile`}>
-              <Sidebar.Item active={tab === 'profile'} icon={HiUser} label={currentUser.isAdmin ? 'Admin' : 'User'} labelColor='dark' as='div'>
+              <Sidebar.Item active={tab === 'profile'} icon={HiUser}
+               label={currentUser.isAdmin ? 'Admin' : currentUser.isPublisher ? 'Publisher' : 'User'} 
+               labelColor='dark' as='div'>
                 Profile
               </Sidebar.Item>
           </Link>
