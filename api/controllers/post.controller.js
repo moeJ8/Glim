@@ -104,4 +104,30 @@ export const updatepost = async (req, res, next) => {
     } catch(err){
         next(err);
     }
-}
+};
+
+export const increaseView = async (req, res, next) => {
+    try {
+        await Post.findByIdAndUpdate(req.params.postId, {
+            $inc: { views: 1 }
+        });
+        res.status(200).json({ message: 'View count increased' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getMostReadPosts = async (req, res, next) => {
+    try {
+        const limit = parseInt(req.query.limit) || 5;
+        
+        const posts = await Post.find()
+            .sort({ views: -1 })
+            .limit(limit)
+            .populate('userId', 'username profilePicture');
+            
+        res.status(200).json({ posts });
+    } catch (err) {
+        next(err);
+    }
+};

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import CallToAction from "../components/CallToAction";
 import CommentSection from "../components/CommentSection";
-import PostCard from "../components/postCard";
+import PostCard from "../components/PostCard";
 
 
 export default function PostPage() {
@@ -29,6 +29,17 @@ export default function PostPage() {
                     setPost(data.posts[0]);
                     setLoading(false);
                     setError(false);
+                    
+                    // Increment view count
+                    if (data.posts[0]?._id) {
+                        try {
+                            await fetch(`/api/post/view/${data.posts[0]._id}`, {
+                                method: 'PUT',
+                            });
+                        } catch (error) {
+                            console.error('Error incrementing view count:', error);
+                        }
+                    }
                 }
             } catch (err) {
                 setError(true);
