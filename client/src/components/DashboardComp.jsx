@@ -1,6 +1,6 @@
 import { Button, Table } from "flowbite-react"
 import { useEffect, useState } from "react"
-import { HiAnnotation, HiArrowNarrowUp, HiDocumentText, HiOutlineUserGroup } from "react-icons/hi"
+import { HiAnnotation, HiArrowNarrowUp, HiDocumentText, HiOutlineUserGroup, HiInboxIn } from "react-icons/hi"
 import { useSelector } from "react-redux"
 import { Link } from "react-router-dom"
 export default function DashboardComp() {
@@ -10,10 +10,12 @@ export default function DashboardComp() {
   const [totalUsers, setTotalUsers] = useState(0)
   const [totalPosts, setTotalPosts] = useState(0)
   const [totalComments, setTotalComments] = useState(0)
+  const [totalRequests, setTotalRequests] = useState(0)
   const [lastMonthUsers, setLastMonthUsers] = useState(0)
   const [lastMonthPosts, setLastMonthPosts] = useState(0)
   const [lastMonthComments, setLastMonthComments] = useState(0)
   const {currentUser} = useSelector(state => state.user)
+
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -55,12 +57,31 @@ export default function DashboardComp() {
         console.log(err)
       }
     }
+    const fetchRequests = async () => {
+      try {
+        const res = await fetch('/api/user/publisher-requests/get?status=pending', {
+          headers: {
+            Authorization: `Bearer ${currentUser.token}`,
+          },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setTotalRequests(data.totalRequests);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    
     if (currentUser.isAdmin) {
-      fetchUsers()
-      fetchPosts()
-      fetchComments()
+      fetchUsers();
+      fetchPosts();
+      fetchComments();
+      fetchRequests();
     }
   },[currentUser])
+
+
 
   return (
     <div className="p-3 md:mx-auto">
@@ -117,6 +138,22 @@ export default function DashboardComp() {
               <div className="text-gray-500">
                 Last Month
               </div>
+          </div>
+        </div>
+        <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
+          <div className="flex justify-between">
+            <div>
+              <h3 className="text-gray-500 text-md uppercase">Pending Requests</h3>
+              <p className="text-2xl">{totalRequests}</p>
+            </div>
+              <HiInboxIn className="bg-purple-600 text-white rounded-full text-5xl p-3 shadow-lg"/>
+          </div>
+          <div className="flex justify-end">
+            <Link to="/dashboard?tab=requests">
+              <Button outline gradientDuoTone="purpleToPink" size="sm">
+                View All
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

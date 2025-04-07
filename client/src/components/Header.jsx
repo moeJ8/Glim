@@ -130,6 +130,14 @@ export default function Header() {
                         Categories
                     </Link>
                 </Navbar.Link>
+                <Navbar.Link active={path === "/donate"} as={'div'}>
+                    <Link to="/donate">
+                    <p className="text-teal-400">
+                        Donate Now
+                    </p>
+                        
+                    </Link>
+                </Navbar.Link>
             </Navbar.Collapse>
     </Navbar>
   )

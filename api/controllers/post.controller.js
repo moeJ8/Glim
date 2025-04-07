@@ -28,6 +28,7 @@ export const getposts = async (req, res, next) => {
         const limit = parseInt(req.query.limit) || 9;
         const sortDirection = req.query.sort === 'asc' ? 1 : -1;
         const categoryFilter = req.query.category && req.query.category !== 'uncategorized' ? { category: req.query.category } : {};
+        
         const posts = await Post.find({
             ...(req.query.userId && {userId: req.query.userId}),
             ...categoryFilter,
@@ -39,7 +40,11 @@ export const getposts = async (req, res, next) => {
                     {content: {$regex: req.query.searchTerm, $options: 'i'}},
                 ],
             }),
-        }).sort({updatedAt: sortDirection}).skip(startIndex).limit(limit);
+        })
+        .sort({updatedAt: sortDirection})
+        .skip(startIndex)
+        .limit(limit)
+        .populate('userId', 'username profilePicture');
         
         const totalPosts = await Post.countDocuments();
 
@@ -58,7 +63,7 @@ export const getposts = async (req, res, next) => {
             posts,
             totalPosts,
             lastMonthPosts,
-        })
+        });
 
     }catch(err){
         next(err);
@@ -66,7 +71,8 @@ export const getposts = async (req, res, next) => {
 };
 
 export const deletepost = async (req, res, next) => {
-    if(!req.user.isAdmin || req.user.id !== req.params.userId){
+    // Allow admins to delete any post, or the post author to delete their own post
+    if(!req.user.isAdmin && req.user.id !== req.params.userId){
         return next(errorHandler(403, 'You are not allowed to delete this post'))
     }
     try{
@@ -78,7 +84,8 @@ export const deletepost = async (req, res, next) => {
 };
 
 export const updatepost = async (req, res, next) => {
-    if(!req.user.isAdmin || req.user.id !== req.params.userId){
+    // Allow admins to update any post, or the post author to update their own post
+    if(!req.user.isAdmin && req.user.id !== req.params.userId){
         return next(errorHandler(403, 'You are not allowed to update this post'))
     }
     try{

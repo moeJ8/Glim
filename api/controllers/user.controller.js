@@ -1,6 +1,8 @@
 import { errorHandler } from "../utils/error.js";
 import bcryptjs from "bcryptjs";
 import User from "../models/user.model.js";
+import PublisherRequest from '../models/publisherRequest.model.js';
+import jwt from "jsonwebtoken";
 
 export const test = (req, res) => {
   res.json({ message: "API is working" });
@@ -154,15 +156,122 @@ export const updateUserRole = async (req, res, next) => {
     return res.status(403).json({ message: "Access denied." });
   }
   try {
-    const user = await User.findById(userId)
+    const user = await User.findById(userId);
     if(!user) return next(errorHandler(404, "User not found"));
 
     user.isPublisher = isPublisher;
     await user.save();
-    res.status(200).json({ message: "User updated successfully." });
+    
+    // Generate a new token with updated role
+    const token = jwt.sign(
+      {
+        id: user._id,
+        isAdmin: user.isAdmin,
+        isPublisher: user.isPublisher
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+    
+    // Set the new token in a cookie
+    res.cookie("access_token", token, { httpOnly: true });
+    
+    res.status(200).json({ 
+      message: "User updated successfully.",
+      user: {
+        _id: user._id,
+        username: user.username,
+        isAdmin: user.isAdmin,
+        isPublisher: user.isPublisher
+      }
+    });
   }catch(err) {
     next(err);
   }
+}
 
+export const requestPublisher = async (req, res, next) => {
+  const { userId } = req.body;
+  try {
+    const existingRequest = await PublisherRequest.findOne({ userId, status: "pending" });
+    if (existingRequest) {
+      return res.status(400).json({ message: "You already have a pending request." });
+    }
+    await PublisherRequest.create({ userId });
+    res.status(200).json({ message: "Request sent successfully." });
+  }catch(err) {
+    next(err);
+  }
+}
 
+export const getPublisherRequests = async (req, res, next) => {
+  if (!req.user.isAdmin) {
+    return next(errorHandler(403, "You are not authorized to view publisher requests"));
+  }
+  try {
+    const startIndex = parseInt(req.query.startIndex) || 0;
+    const limit = parseInt(req.query.limit) || 9;
+    const sortDirection = req.query.sort === "asc" ? 1 : -1;
+    const status = req.query.status || 'pending';
+
+    const requests = await PublisherRequest.find({ status })
+      .sort({ createdAt: sortDirection })
+      .skip(startIndex)
+      .limit(limit)
+      .populate('userId', 'username email profilePicture');
+
+    const totalRequests = await PublisherRequest.countDocuments({ status });
+
+    res.status(200).json({
+      requests,
+      totalRequests,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export const updatePublisherRequest = async (req, res, next) => {
+  if (!req.user.isAdmin) {
+    return next(errorHandler(403, "You are not authorized to update publisher requests"));
+  }
+  const { requestId, status } = req.body;
+  try {
+    const request = await PublisherRequest.findById(requestId);
+    if (!request) {
+      return next(errorHandler(404, "Request not found"));
+    }
+
+    request.status = status;
+    await request.save();
+
+    // If request is approved, update user to be a publisher
+    if (status === 'approved') {
+      const updatedUser = await User.findByIdAndUpdate(
+        request.userId, 
+        { isPublisher: true },
+        { new: true }
+      );
+      
+      // Generate a new token that includes the updated isPublisher status
+      if (updatedUser) {
+        const token = jwt.sign(
+          {
+            id: updatedUser._id,
+            isAdmin: updatedUser.isAdmin,
+            isPublisher: true  // explicitly set to true since we just approved
+          },
+          process.env.JWT_SECRET,
+          { expiresIn: "1d" }
+        );
+        
+        // Set the new token in a cookie
+        res.cookie("access_token", token, { httpOnly: true });
+      }
+    }
+
+    res.status(200).json({ message: "Request updated successfully" });
+  } catch (err) {
+    next(err);
+  }
 }

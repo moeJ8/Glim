@@ -7,6 +7,7 @@ import { app } from "../firebase";
 import { CircularProgressbar } from "react-circular-progressbar";
 import 'react-circular-progressbar/dist/styles.css';
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 
 export default function CreatePost() {
@@ -15,8 +16,8 @@ export default function CreatePost() {
   const [imageUploadError, setImageUploadError] = useState(null);
   const [formData, setFormData] = useState({});
   const [publishError, setPublishError] = useState(null);
-
- const navigate = useNavigate();
+  const { currentUser } = useSelector(state => state.user);
+  const navigate = useNavigate();
 
   const handleUploadImage = async () => {
     try{
@@ -59,10 +60,18 @@ export default function CreatePost() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try{
+      // Check if user is authenticated
+      if (!currentUser || !currentUser.token) {
+        setPublishError("You must be logged in to create a post");
+        return;
+      }
+
       const res = await fetch('/api/post/create', {
         method: 'POST',
+        credentials: 'include', // Include cookies
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentUser.token}`,
         },
         body: JSON.stringify(formData),
       });
@@ -74,7 +83,7 @@ export default function CreatePost() {
    
       if (res.ok) {
         setPublishError(null);
-        navigate(`/post/${data.slug}`)
+        navigate(`/post/${data.slug}`);
       }
     } catch (error) {
       console.error('Error:', error);

@@ -15,36 +15,48 @@ export default function DashPosts() {
   useEffect(() => {
     const fetchPosts = async () => {
       try{
-          const res = await fetch(`/api/post/getposts?userId=${currentUser._id}`)
-          const data = await res.json()
+          // If user is admin, fetch all posts, otherwise fetch only user's posts
+          const url = currentUser.isAdmin 
+            ? `/api/post/getposts` 
+            : `/api/post/getposts?userId=${currentUser._id}`;
+            
+          const res = await fetch(url);
+          const data = await res.json();
+          
           if(res.ok){
-            setUserPosts(data.posts)
+            setUserPosts(data.posts);
             if(data.posts.length < 9){
-              setShowMore(false)
+              setShowMore(false);
             }
           }
-
       }catch(err){
-        console.log(err)
+        console.log(err);
       }
     };
-    if (currentUser.isAdmin) {
+    if (currentUser.isAdmin || currentUser.isPublisher) {
       fetchPosts();
     }
-  }, [currentUser._id])
+  }, [currentUser._id, currentUser.isAdmin, currentUser.isPublisher]);
+  
   const handleShowMore = async () => {
     const startIndex = userPosts.length;
     try{
-      const res = await fetch(`/api/post/getposts?userId=${currentUser._id}&startIndex=${startIndex}`)
-      const data = await res.json()
+      // If user is admin, fetch all posts, otherwise fetch only user's posts
+      const url = currentUser.isAdmin 
+        ? `/api/post/getposts?startIndex=${startIndex}` 
+        : `/api/post/getposts?userId=${currentUser._id}&startIndex=${startIndex}`;
+        
+      const res = await fetch(url);
+      const data = await res.json();
+      
       if(res.ok){
         setUserPosts((prev) => [...prev, ...data.posts]);
         if(data.posts.length < 9){
-          setShowMore(false)
+          setShowMore(false);
         }
       }
     } catch(err){
-      console.log(err)
+      console.log(err);
     }
   }
 
@@ -69,7 +81,7 @@ export default function DashPosts() {
 
   return (
     <div className="table-auto overflow-x-scroll md:mx-auto p-3 scrollbar scrollbar-track-slate-100 scrollbar-thumb-slate-300 dark:scrollbar-track-slate-700 dark:scrollbar-thumb-slate-500">
-      {currentUser.isAdmin && userPosts.length > 0 ? (
+      {(currentUser.isAdmin || currentUser.isPublisher) && userPosts.length > 0 ? (
         <>
         <Table hoverable className="shadow-md">
         <Table.Head>
@@ -77,6 +89,7 @@ export default function DashPosts() {
           <Table.HeadCell>Post Image</Table.HeadCell>
           <Table.HeadCell>Post Title</Table.HeadCell>
           <Table.HeadCell>Post Category</Table.HeadCell>
+          {currentUser.isAdmin && <Table.HeadCell>Author</Table.HeadCell>}
           <Table.HeadCell>Delete</Table.HeadCell>
           <Table.HeadCell>
             <span>Edit</span>
@@ -101,6 +114,11 @@ export default function DashPosts() {
               <Table.Cell>
                 {post.category}
               </Table.Cell>
+              {currentUser.isAdmin && (
+                <Table.Cell>
+                  {post.userId && typeof post.userId === 'object' ? post.userId.username : 'Unknown'}
+                </Table.Cell>
+              )}
               <Table.Cell>
                 <span onClick={() => {
                   setShowModal(true)

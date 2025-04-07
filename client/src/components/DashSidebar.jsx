@@ -1,5 +1,5 @@
 import { Sidebar } from "flowbite-react";
-import { HiUser, HiArrowSmRight, HiDocumentText, HiOutlineUserGroup, HiAnnotation, HiChartPie } from "react-icons/hi";
+import { HiUser, HiArrowSmRight, HiDocumentText, HiOutlineUserGroup, HiAnnotation, HiChartPie, HiInboxIn, HiCash } from "react-icons/hi";
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { signoutSuccess } from "../redux/user/userSlice";
@@ -56,13 +56,15 @@ const handleSignOut = async () => {
                 Profile
               </Sidebar.Item>
           </Link>
-          {currentUser.isAdmin && (
+          {/* Posts tab for both admin and publisher */}
+          {(currentUser.isAdmin || currentUser.isPublisher) && (
             <Link to={`/dashboard?tab=posts`}>
               <Sidebar.Item active = {tab === 'posts'} icon={HiDocumentText} as='div'>
                 Posts
               </Sidebar.Item>
             </Link>
           )}
+          {/* Comments tab for admin */}
           {currentUser.isAdmin && (
             <>
               <Link to={`/dashboard?tab=users`}>
@@ -71,11 +73,37 @@ const handleSignOut = async () => {
                 </Sidebar.Item>
               </Link>
               <Link to={`/dashboard?tab=comments`}>
+                <Sidebar.Item active = {tab === 'comments'} icon={HiAnnotation} as='div'>
+                    Comments
+                </Sidebar.Item>
+              </Link>
+              {/* Donation management links for admin */}
+              <Link to="/donation-dashboard">
+                <Sidebar.Item icon={HiCash} as='div'>
+                  Donations
+                </Sidebar.Item>
+              </Link>
+              <Link to="/create-donation">
+                <Sidebar.Item icon={HiDocumentText} as='div'>
+                  Create Donation
+                </Sidebar.Item>
+              </Link>
+            </>
+          )}
+          {/* Comments tab for publisher */}
+          {currentUser.isPublisher && !currentUser.isAdmin && (
+            <Link to={`/dashboard?tab=comments`}>
               <Sidebar.Item active = {tab === 'comments'} icon={HiAnnotation} as='div'>
                   Comments
               </Sidebar.Item>
             </Link>
-            </>
+          )}
+          {currentUser.isAdmin && (
+            <Link to={`/dashboard?tab=requests`}>
+              <Sidebar.Item active={tab === 'requests'} icon={HiInboxIn} as='div'>
+                Requests
+              </Sidebar.Item>
+            </Link>
           )}
           
           <Sidebar.Item icon={HiArrowSmRight} className='cursor-pointer' onClick={handleSignOut}>
