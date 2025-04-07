@@ -142,7 +142,6 @@ export default function CreateDonation() {
       setPublishError('Something went wrong');
       setLoading(false);
       console.log(err);
-      
     }
   };
 
@@ -150,7 +149,7 @@ export default function CreateDonation() {
     <div className="min-h-screen max-w-3xl mx-auto px-3 py-8">
       <h1 className="text-3xl font-semibold text-center mb-6">Create Donation Case</h1>
       
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <div>
           <Label htmlFor="title" value="Title *" />
           <TextInput
@@ -264,19 +263,7 @@ export default function CreateDonation() {
             )}
           </label>
         </div>
-        
-        {imageUploadError && (
-          <Alert color="failure">
-            {imageUploadError}
-          </Alert>
-        )}
-        
-        {publishError && (
-          <Alert color="failure">
-            {publishError}
-          </Alert>
-        )}
-        
+
         <Button
           type="submit"
           gradientDuoTone="purpleToBlue"
@@ -291,6 +278,17 @@ export default function CreateDonation() {
             'Create Donation Case'
           )}
         </Button>
+
+        {publishError && (
+          <Alert color="failure" onDismiss={() => setPublishError(null)}>
+            {publishError}
+          </Alert>
+        )}
+        {imageUploadError && (
+          <Alert color="failure" onDismiss={() => setImageUploadError(null)}>
+            {imageUploadError}
+          </Alert>
+        )}
       </form>
     </div>
   );

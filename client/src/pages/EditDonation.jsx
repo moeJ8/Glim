@@ -196,7 +196,7 @@ export default function EditDonation() {
     <div className="min-h-screen max-w-3xl mx-auto px-3 py-8">
       <h1 className="text-3xl font-semibold text-center mb-6">Edit Donation Case</h1>
       
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <div>
           <Label htmlFor="title" value="Title *" />
           <TextInput
@@ -312,9 +312,6 @@ export default function EditDonation() {
               ></div>
             </div>
           )}
-          {imageUploadError && (
-            <Alert color="failure">{imageUploadError}</Alert>
-          )}
         </div>
 
         <div>
@@ -330,10 +327,6 @@ export default function EditDonation() {
           </select>
         </div>
         
-        {publishError && (
-          <Alert color="failure">{publishError}</Alert>
-        )}
-        
         <Button
           type="submit"
           gradientDuoTone="purpleToPink"
@@ -348,6 +341,22 @@ export default function EditDonation() {
             "Update Donation Case"
           )}
         </Button>
+
+        {publishError && (
+          <Alert color="failure" onDismiss={() => setPublishError(null)}>
+            {publishError}
+          </Alert>
+        )}
+        {imageUploadError && (
+          <Alert color="failure" onDismiss={() => setImageUploadError(null)}>
+            {imageUploadError}
+          </Alert>
+        )}
+        {fetchError && (
+          <Alert color="failure" onDismiss={() => setFetchError(null)}>
+            {fetchError}
+          </Alert>
+        )}
       </form>
     </div>
   );

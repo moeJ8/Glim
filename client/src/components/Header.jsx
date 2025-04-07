@@ -132,7 +132,7 @@ export default function Header() {
                 </Navbar.Link>
                 <Navbar.Link active={path === "/donate"} as={'div'}>
                     <Link to="/donate">
-                    <p className="text-teal-400">
+                    <p className="dark:text-teal-400 text-indigo-800">
                         Donate Now
                     </p>
                         

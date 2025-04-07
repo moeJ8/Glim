@@ -95,7 +95,7 @@ export default function Donate() {
             {donationCases.map((donationCase) => (
               <div
                 key={donationCase._id}
-                className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+                className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow flex flex-col h-full"
               >
                 {donationCase.image && (
                   <img
@@ -104,11 +104,11 @@ export default function Donate() {
                     className="w-full h-48 object-cover"
                   />
                 )}
-                <div className="p-4">
+                <div className="p-4 flex flex-col flex-grow">
                   <h2 className="text-xl font-semibold mb-2 line-clamp-1">
                     {donationCase.title}
                   </h2>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                  <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2 flex-grow">
                     {donationCase.description}
                   </p>
                   
@@ -134,7 +134,7 @@ export default function Donate() {
                     </div>
                   )}
                   
-                  <Link to={`/donate/${donationCase._id}`}>
+                  <Link to={`/donate/${donationCase._id}`} className="mt-auto">
                     <Button
                       gradientDuoTone="purpleToBlue"
                       outline

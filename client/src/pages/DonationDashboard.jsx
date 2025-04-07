@@ -24,7 +24,7 @@ export default function DonationDashboard() {
     const fetchDonationCases = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/donation/cases?limit=10`);
+        const res = await fetch(`/api/donation/cases?limit=10&active=all`);
         if (!res.ok) {
           throw new Error("Failed to fetch donation cases");
         }
@@ -50,7 +50,7 @@ export default function DonationDashboard() {
   const handleShowMore = async () => {
     const startIndex = donationCases.length;
     try {
-      const res = await fetch(`/api/donation/cases?startIndex=${startIndex}&limit=10`);
+      const res = await fetch(`/api/donation/cases?startIndex=${startIndex}&limit=10&active=all`);
       if (!res.ok) {
         throw new Error("Failed to load more cases");
       }
@@ -61,8 +61,6 @@ export default function DonationDashboard() {
       }
     } catch (error) {
       setError(error.message);
-      console.log(selectedCaseId);
-      
     }
   };
 
@@ -110,6 +108,8 @@ export default function DonationDashboard() {
     } catch (error) {
       setError(error.message);
       setDeleteLoading(false);
+      console.log(selectedCaseId);
+      
     }
   };
 

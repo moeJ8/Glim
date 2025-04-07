@@ -101,44 +101,46 @@ export default function Categories() {
                 <p className="text-gray-300 text-center">Explore our posts</p>
 
                 <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-                    <div className="flex-1 w-full sm:max-w-[400px]">
+                    <div className="w-full sm:w-[400px]">
                         <TextInput
                             placeholder="Search..."
                             value={SidebarData.searchTerm}
                             onChange={handleChange}
                             id="searchTerm"
-                            className="w-full focus:border-blue-500 -ml-14"
+                            className="w-full focus:border-blue-500"
                         />
                     </div>
-                    <Select
-                        onChange={handleChange}
-                        value={SidebarData.category}
-                        id="category"
-                        className="w-full sm:w-[200px] px-4 py-2 focus:border-blue-500"
-                    >
-                        <option value="uncategorized">All</option>
-                        <option value="art">Art</option>
-                        <option value="health">Health</option>
-                        <option value="history">History</option>
-                        <option value="literature">Literature</option>
-                        <option value="music">Music</option>
-                        <option value="news">News</option>
-                        <option value="politics">Politics</option>
-                        <option value="sport">Sport</option>
-                        <option value="tech">Tech</option>
-                    </Select>
-                    <Select
-                        onChange={handleChange}
-                        value={SidebarData.sort}
-                        id="sort"
-                        className="w-full sm:w-[200px] px-4 py-2 focus:border-blue-500"
-                    >
-                        <option value="desc">Latest</option>
-                        <option value="asc">Oldest</option>
-                    </Select>
-                    <Button type="submit" outline gradientDuoTone="purpleToPink">
-                        Search
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                        <Select
+                            onChange={handleChange}
+                            value={SidebarData.category}
+                            id="category"
+                            className="w-full sm:w-[200px] focus:border-blue-500"
+                        >
+                            <option value="uncategorized">All</option>
+                            <option value="art">Art</option>
+                            <option value="health">Health</option>
+                            <option value="history">History</option>
+                            <option value="literature">Literature</option>
+                            <option value="music">Music</option>
+                            <option value="news">News</option>
+                            <option value="politics">Politics</option>
+                            <option value="sport">Sport</option>
+                            <option value="tech">Tech</option>
+                        </Select>
+                        <Select
+                            onChange={handleChange}
+                            value={SidebarData.sort}
+                            id="sort"
+                            className="w-full sm:w-[200px] focus:border-blue-500"
+                        >
+                            <option value="desc">Latest</option>
+                            <option value="asc">Oldest</option>
+                        </Select>
+                        <Button type="submit" outline gradientDuoTone="purpleToPink" className="w-full sm:w-auto">
+                            Search
+                        </Button>
+                    </div>
                 </form>
             </div>
 

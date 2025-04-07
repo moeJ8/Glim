@@ -36,16 +36,21 @@ export const getDonationCases = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 10;
     const startIndex = parseInt(req.query.startIndex) || 0;
     
-    const donationCases = await DonationCase.find({ 
-      active: req.query.active === 'false' ? false : true
-    })
+    // Build query based on active parameter
+    const query = {};
+    if (req.query.active === 'false') {
+      query.active = false;
+    } else if (req.query.active === 'true') {
+      query.active = true;
+    }
+    // If active=all or not specified, don't filter by active status
+    
+    const donationCases = await DonationCase.find(query)
       .sort({ createdAt: -1 })
       .skip(startIndex)
       .limit(limit);
       
-    const totalDonationCases = await DonationCase.countDocuments({
-      active: req.query.active === 'false' ? false : true
-    });
+    const totalDonationCases = await DonationCase.countDocuments(query);
     
     res.status(200).json({ donationCases, totalDonationCases });
   } catch (error) {
