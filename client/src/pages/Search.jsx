@@ -54,10 +54,10 @@ export default function Search() {
         
         setSidebarData(newSidebarData);
         
-        if (searchTermFromUrl || sortFromUrl || categoryFromUrl) {
-            fetchPosts(urlParams);
-        }
+        // Always fetch posts, even on initial load
+        fetchPosts(urlParams);
     }, [location.search]);
+
     const handleChange = (e) => {
         const { id, value } = e.target;
         setSidebarData(prev => ({
@@ -73,7 +73,25 @@ export default function Search() {
         const startIndex = numberOfPosts;
         const urlParams = new URLSearchParams(location.search);
         urlParams.set("startIndex", startIndex);
-        fetchPosts(urlParams);
+        
+        try {
+            setLoading(true);
+            const searchQuery = urlParams.toString();
+            const res = await fetch(`/api/post/getposts?${searchQuery}`);
+            
+            if(!res.ok){
+                const errorData = await res.json();
+                throw new Error(errorData.message || 'Failed to fetch posts');
+            }
+            
+            const data = await res.json();
+            setPosts(prevPosts => [...prevPosts, ...data.posts]);
+            setShowMore(data.posts.length === 9);
+        } catch (error) {
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
     }
     return (
         <div className="flex flex-col md:flex-row">

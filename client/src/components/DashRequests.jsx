@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { Button, Table, Modal } from "flowbite-react";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
+import { decrementPendingRequests } from "../redux/request/requestSlice";
 
 export default function DashRequests() {
   const { currentUser } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
   const [requests, setRequests] = useState([]);
   const [showMore, setShowMore] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -85,6 +87,7 @@ export default function DashRequests() {
         setRequests((prev) => 
           prev.filter((request) => request._id !== requestToHandle._id)
         );
+        dispatch(decrementPendingRequests());
         setShowModal(false);
       } else {
         console.log(data.message);

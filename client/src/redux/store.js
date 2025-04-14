@@ -3,11 +3,13 @@ import userReducer from '../redux/user/userSlice'; // ✅ Correct import
 import themeReducer from '../redux/theme/themeSlice';
 import {persistReducer, persistStore} from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
+import requestReducer from './request/requestSlice';
 
 
 const rootReducer = combineReducers({
   user: userReducer, // ✅ Correct usage
   theme: themeReducer,
+  request: requestReducer,
 });
 
 const persistconfig = {

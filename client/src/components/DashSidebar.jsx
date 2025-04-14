@@ -3,41 +3,66 @@ import { HiUser, HiArrowSmRight, HiDocumentText, HiOutlineUserGroup, HiAnnotatio
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { signoutSuccess } from "../redux/user/userSlice";
-import { useDispatch } from "react-redux";
-import { useSelector } from "react-redux";
-
+import { useDispatch, useSelector } from "react-redux";
+import { setPendingRequests } from "../redux/request/requestSlice";
 
 export default function DashSidebar() {
   const location = useLocation();
   const dispatch = useDispatch();
-  const {currentUser} = useSelector((state) => state.user)
-  const [tab, setTab] = useState('')
+  const {currentUser} = useSelector((state) => state.user);
+  const {pendingRequests} = useSelector((state) => state.request);
+  const [tab, setTab] = useState('');
+
   useEffect(() => {
-  const urlParams = new URLSearchParams(location.search);
-  const tabFromUrl = urlParams.get('tab');
-  if(tabFromUrl) {
-    setTab(tabFromUrl)
-  }
-
-}, [location.search])
-
-const handleSignOut = async () => {
-  try{
-    const res = await fetch('api/user/signout',{
-      method: 'POST',
-    });
-    const data = await res.json();
-    if(!res.ok) {
-      console.log(data.message)
-    }else{
-      dispatch(signoutSuccess());
+    const urlParams = new URLSearchParams(location.search);
+    const tabFromUrl = urlParams.get('tab');
+    if(tabFromUrl) {
+      setTab(tabFromUrl)
     }
-  } catch(error) {
-    console.log(error.message)
-  }
-};
-  return (
+  }, [location.search])
 
+  useEffect(() => {
+    const fetchPendingRequests = async () => {
+      try {
+        const res = await fetch('/api/user/publisher-requests/get?status=pending', {
+          headers: {
+            Authorization: `Bearer ${currentUser.token}`,
+          },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          dispatch(setPendingRequests(data.totalRequests));
+        }
+      } catch (error) {
+        console.log(error.message);
+      }
+    };
+
+    if (currentUser && currentUser.isAdmin) {
+      fetchPendingRequests();
+      // Set up polling every 30 seconds
+      const interval = setInterval(fetchPendingRequests, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [currentUser, dispatch]);
+
+  const handleSignOut = async () => {
+    try{
+      const res = await fetch('api/user/signout',{
+        method: 'POST',
+      });
+      const data = await res.json();
+      if(!res.ok) {
+        console.log(data.message)
+      }else{
+        dispatch(signoutSuccess());
+      }
+    } catch(error) {
+      console.log(error.message)
+    }
+  };
+
+  return (
     <Sidebar className="w-full md:w-56">
       <Sidebar.Items>
         <Sidebar.ItemGroup className="flex flex-col gap-1">
@@ -102,6 +127,11 @@ const handleSignOut = async () => {
             <Link to={`/dashboard?tab=requests`}>
               <Sidebar.Item active={tab === 'requests'} icon={HiInboxIn} as='div'>
                 Requests
+                {pendingRequests > 0 && (
+                  <span className="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                    {pendingRequests}
+                  </span>
+                )}
               </Sidebar.Item>
             </Link>
           )}
@@ -112,6 +142,5 @@ const handleSignOut = async () => {
         </Sidebar.ItemGroup>
       </Sidebar.Items>
     </Sidebar>
-    
   )
 }

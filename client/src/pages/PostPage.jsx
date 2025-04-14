@@ -86,7 +86,18 @@ export default function PostPage() {
         {post && post.category}
     </Button>
   </Link>
-  <img src={post && post.image} alt={post && post.title} className="mt-10 p-3 max-h-[600px] w-full object-cover"/>
+  
+  {/* Author Info */}
+  <div className="flex items-center justify-center gap-2 mt-6 mb-2">
+    <img 
+      src={post && post.userId && post.userId.profilePicture} 
+      alt="Author" 
+      className="w-8 h-8 rounded-full object-cover"
+    />
+    <p className="text-sm font-medium">{post && post.userId && post.userId.username}</p>
+  </div>
+
+  <img src={post && post.image} alt={post && post.title} className="mt-2 p-3 max-h-[600px] w-full object-cover"/>
   <div className="flex justify-between p-3 border-b border-slate-500 mx-auto w-full max-w-2xl text-xs">
     <span>{post && new Date(post.createdAt).toLocaleDateString()}</span>
     <span className="italic">{post && (post.content.length /1000).toFixed(0)} mins read</span>
