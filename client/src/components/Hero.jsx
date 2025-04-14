@@ -30,9 +30,10 @@ export default function Hero() {
           </div>
           <div className="hidden lg:block flex-1 w-full max-w-lg">
             <img
-              src="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=500&auto=format&fit=crop&q=80"
-              alt="Creative Expression"
-              className="w-full h-[500px] object-cover rounded-lg shadow-lg grayscale mx-auto"
+            loading="eager"
+              src="https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?q=80&w=2080&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+              alt="Modern creative workspace"
+              className="w-full h-[500px] object-cover rounded-lg shadow-lg mx-auto transition-transform duration-300 brightness-[0.95] contrast-[1.05]"
             />
           </div>
         </div>

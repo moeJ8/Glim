@@ -14,17 +14,15 @@ export default function About() {
         <h1 className="text-3xl font-semibold text-center my-7">About Us</h1>
         <div className="text-md text-gray-600 flex flex-col gap-6 dark:text-gray-300">
           <p>
-            Welcome to our platform dedicated to advancing and protecting women&apos;s rights. Our mission is to create a space where voices for gender equality can be heard, stories can be shared, and meaningful discussions about women&apos;s rights can flourish. Through our blog posts and community engagement, we aim to raise awareness about critical issues affecting women globally, from workplace equality and reproductive rights to education access and fighting gender-based discrimination. We believe that by sharing knowledge, experiences, and resources, we can contribute to building a more equitable world where all women can thrive and exercise their fundamental human rights.
+            Join our diverse community where every voice matters. Whether you&apos;re passionate about art, supporting causes, sharing knowledge, or making a difference - this is your platform to connect, inspire, and create meaningful change.
           </p>
 
           <p>
-            WR is a movement fueled by the unwavering belief in equality, dignity, and opportunity for every woman. We exist to challenge outdated norms, break systemic barriers, and forge paths toward a world where women thrive on their terms.
-            At WR, action speaks louder than words. Through bold advocacy, transformative education, and community-driven solutions, we address the pressing issues facing women globally. Our work is rooted in amplifying voices, inspiring resilience, and building a future where justice and equity are not ideals but everyday realities.
-            This is more than a mission &ndash; it&apos;s a commitment. Together, we are rewriting the story, one powerful step at a time.
+            We believe in the power of collective action and the importance of diverse perspectives. Our platform serves as a space where individuals from all walks of life can come together to share their stories, ideas, and experiences. Through meaningful connections and collaborative efforts, we strive to make a positive impact in our communities and beyond.
           </p>
 
           <p>
-            We encourage you to leave comments on our posts, share your thoughts, and engage with our community. Your voice matters, and your participation is essential in driving our collective impact. Let&apos;s continue to create a world where women&apos;s rights are not just a promise but a reality.
+            Your participation is what makes this community thrive. We encourage you to engage with others, share your unique perspective, and be part of the change you want to see in the world. Together, we can create a more inclusive, inspiring, and impactful space for everyone.
           </p>
         </div>
         <div className="p-6">
