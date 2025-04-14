@@ -41,7 +41,6 @@ export default function DashPosts() {
   const handleShowMore = async () => {
     const startIndex = userPosts.length;
     try{
-      // If user is admin, fetch all posts, otherwise fetch only user's posts
       const url = currentUser.isAdmin 
         ? `/api/post/getposts?startIndex=${startIndex}` 
         : `/api/post/getposts?userId=${currentUser._id}&startIndex=${startIndex}`;

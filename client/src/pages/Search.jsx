@@ -168,30 +168,30 @@ export default function Search() {
             </div>
             <div className="w-full">
                 <h1 className="text-3xl font-semibold sm:border-b border-gray-500 p-3 mt-5">Results:</h1>
-                <div className="p-7 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="p-7 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     {error && (
-                        <p className="col-span-3 text-xl font-semibold text-center text-red-500">
+                        <p className="col-span-full text-xl font-semibold text-center text-red-500">
                             {error}
                         </p>
                     )}
                     {loading && (
-                        <p className="col-span-3 text-xl font-semibold text-center text-gray-500">
+                        <p className="col-span-full text-xl font-semibold text-center text-gray-500">
                             Loading...
                         </p>
                     )}
                     {!loading && !error && posts.length === 0 && (
-                        <p className="col-span-3 text-xl font-semibold text-center text-gray-500">
+                        <p className="col-span-full text-xl font-semibold text-center text-gray-500">
                             No results found.
                         </p>
                     )}
                     {!loading && !error && posts.map((post) => (
-                        <div key={post._id}>
+                        <div key={post._id} className="w-full">
                             <PostCard post={post} />
                         </div>
                     ))}
                     {showMore && !loading && !error && (
                         <button 
-                            className="col-span-3 text-teal-500 text-lg hover:underline p-7 w-full" 
+                            className="col-span-full text-teal-500 text-lg hover:underline p-7" 
                             onClick={handleShowMore}
                         >
                             Show More

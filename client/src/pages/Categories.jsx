@@ -175,23 +175,20 @@ export default function Categories() {
                 )}
             </div>
 
-            <div className={`${
-                        posts.length === 1
-                        ? "flex justify-center"
-                        : posts.length === 2
-                        ? "flex justify-center gap-6 flex-wrap"
-                        : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                    }`}
-                    >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {loading ? (
-                    <div className="col-span-3 text-center text-xl text-gray-400">Loading...</div>
+                    <div className="col-span-full text-center text-xl text-gray-400">Loading...</div>
                 ) : (
-                    posts.map((post) => <PostCard key={post._id} post={post} />)
+                    posts.map((post) => (
+                        <div key={post._id} className="w-full max-w-[600px] mx-auto">
+                            <PostCard post={post} />
+                        </div>
+                    ))
                 )}
                 {
                 !loading && posts.length === 0 && (
-                    <div className="col-span-3 text-center text-xl text-gray-400">No Results Found.</div>
-                ) }
+                    <div className="col-span-full text-center text-xl text-gray-400">No Results Found.</div>
+                )}
             </div>
 
             {showMore && !loading && (

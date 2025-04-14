@@ -113,12 +113,14 @@ export default function PostPage() {
     <CommentSection postId={post._id}/>
   </div>
   <div className="flex flex-col justify-center items-center mb-5">
-    <h1 className="text-xl mt-5 mb-2">Recent Articles</h1>
-    <div className="flex flex-wrap gap-5 justify-center mb-5">
+    <h1 className="text-xl mt-5 mb-5">Recent Articles</h1>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl px-3">
         {
             recentPosts &&
              recentPosts.map((post) => (
-                <PostCard key = {post._id} post={post}/>
+                <div key={post._id} className="w-full">
+                    <PostCard post={post}/>
+                </div>
              ))
         }
     </div>
