@@ -3,6 +3,7 @@ import {Link, useNavigate} from "react-router-dom";
 import { useState } from 'react';
 import OAuth from "../components/OAuth";
 import FOAuth from "../components/FOAuth";
+import GlimSignInImage from "../assets/GlimSignIn.jpg";
 
 export default function SignUp() {
   const [formData, setFormData] = useState({});
@@ -49,37 +50,28 @@ export default function SignUp() {
   }
   
   return (
-    <div className="min-h-screen mt-20">
-      <div className="flex p-3 max-w-3xl mx-auto flex-col md:flex-row md:items-center gap-5">
-        {/* Left */}
-        <div className="flex-1">
-        <Link to ="/" className=" font-bold dark:text-white text-4xl">
-        <span className="px-2 py-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg text-white">Moe&apos;s</span>
-        Blog
-        </Link>
-        <p className="text-sm mt-5 font-semibold dark:text-white">
-          You can sign up using any username and password or with your gmail account.
-        </p>
-        </div>
-
-
-        {/* Right */}
-        <div className="flex-1">
-
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+    <div className="min-h-screen flex flex-col md:flex-row">
+      {/* Form Section */}
+      <div className="flex-[1.3] flex items-center justify-center p-4 sm:p-6 md:p-8">
+        <div className="w-full max-w-[450px] sm:w-[450px] p-3 flex flex-col gap-5">
+          
+          <p className="text-xl p-3 font-semibold dark:text-white mx-auto">
+              Become a Member
+          </p>
+          <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
             <div>
-              <Label value="Your Username" />
+              <Label value="Your Username" className=" block" />
               <TextInput type="text" placeholder="Username" id="username" onChange={handleChange}/>
             </div>
             <div>
-              <Label value="Your Email" />
+              <Label value="Your Email" className=" block" />
               <TextInput type="email" placeholder="name@mail.com" id="email" onChange={handleChange}/>
             </div>
             <div>
-              <Label value="Your Password" />
+              <Label value="Your Password" className="block" />
               <TextInput type="password" placeholder="Password" id="password" onChange={handleChange}/>
             </div>
-            <Button gradientDuoTone="purpleToPink" type="submit" disabled={loading}>
+            <Button gradientDuoTone="purpleToPink" type="submit" disabled={loading} >
               {
                 loading ? <> <Spinner size="sm"/> <span className="pl-3">Loading...</span></> : 'Sign Up'
               }
@@ -88,7 +80,7 @@ export default function SignUp() {
             <FOAuth/>
           </form>
 
-          <div className="flex gap-2 text-sm mt-5">
+          <div className="flex gap-2 text-sm mt-3 justify-center">
             <span>Have an account?</span>
             <Link to='/sign-in' className="text-blue-500">
               Sign In
@@ -100,6 +92,15 @@ export default function SignUp() {
             {errorMessage}
           </Alert>)}
         </div>
+      </div>
+
+      {/* Image Section */}
+      <div className="flex-[1.1] relative hidden md:block">
+        <img 
+          src={GlimSignInImage} 
+          alt="Artist painting" 
+          className="absolute inset-0 w-full h-full object-cover"
+        />
       </div>
     </div>
   )
