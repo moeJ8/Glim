@@ -11,7 +11,7 @@ export default function Home() {
   useEffect(() => {
     try{
         const fetchPosts = async () => {
-        const response = await fetch("/api/post/getposts");
+        const response = await fetch("/api/post/getposts?sort=desc");
         const data = await response.json();
         setPosts(data.posts);
       }

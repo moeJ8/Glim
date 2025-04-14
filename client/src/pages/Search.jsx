@@ -6,7 +6,7 @@ import PostCard from "../components/PostCard";
 export default function Search() {
     const [SidebarData, setSidebarData] = useState({
         searchTerm: "",
-        sort: "desc",
+        sort: "views",
         category: "uncategorized",
     });
     
@@ -46,9 +46,16 @@ export default function Search() {
         const sortFromUrl = urlParams.get("sort");
         const categoryFromUrl = urlParams.get("category");
 
+        // If no sort parameter in URL, set it to views
+        if (!sortFromUrl) {
+            urlParams.set("sort", "views");
+            navigate(`/search?${urlParams.toString()}`);
+            return;
+        }
+
         const newSidebarData = {
             searchTerm: searchTermFromUrl || "",
-            sort: sortFromUrl || "desc",
+            sort: sortFromUrl || "views",
             category: categoryFromUrl || "uncategorized",
         };
         
@@ -116,6 +123,7 @@ export default function Search() {
                             id="sort"
                             className="flex-1"
                         >
+                            <option value="views">Most Views</option>
                             <option value="desc">Latest</option>
                             <option value="asc">Oldest</option>
                         </Select>
@@ -147,7 +155,7 @@ export default function Search() {
                         onClick={() => {
                             setSidebarData({
                                 searchTerm: "",
-                                sort: "desc",
+                                sort: "views",
                                 category: "uncategorized",
                             });
                             navigate("/search");

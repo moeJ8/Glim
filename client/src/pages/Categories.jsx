@@ -7,7 +7,7 @@ import { FaSearch } from "react-icons/fa";
 export default function Categories() {
     const [SidebarData, setSidebarData] = useState({
         searchTerm: "",
-        sort: "desc",
+        sort: "views",
         category: "uncategorized",
     });
 
@@ -23,11 +23,18 @@ export default function Categories() {
         const sortFromUrl = urlParams.get("sort");
         const categoryFromUrl = urlParams.get("category");
 
+        // If no sort parameter in URL, set it to views
+        if (!sortFromUrl) {
+            urlParams.set("sort", "views");
+            navigate(`/categories?${urlParams.toString()}`);
+            return;
+        }
+
         if (searchTermFromUrl || sortFromUrl || categoryFromUrl) {
             setSidebarData({
                 ...SidebarData,
                 searchTerm: searchTermFromUrl || "",
-                sort: sortFromUrl || "desc",
+                sort: sortFromUrl || "views",
                 category: categoryFromUrl || "uncategorized",
             });
         }
@@ -62,7 +69,7 @@ export default function Categories() {
             navigate(`/categories?${urlParams.toString()}`);
         }
         if (e.target.id === "sort") {
-            const order = e.target.value || "desc";
+            const order = e.target.value || "views";
             setSidebarData({ ...SidebarData, sort: order });
             const urlParams = new URLSearchParams(location.search);
             urlParams.set("sort", order);
@@ -97,7 +104,7 @@ export default function Categories() {
     const handleRemoveFilters = () => {
         setSidebarData({
             searchTerm: "",
-            sort: "desc",
+            sort: "views",
             category: "uncategorized",
         });
         navigate("/categories");
@@ -144,6 +151,7 @@ export default function Categories() {
                             id="sort"
                             className="w-full sm:w-[200px] focus:border-blue-500"
                         >
+                            <option value="views">Most Views</option>
                             <option value="desc">Latest</option>
                             <option value="asc">Oldest</option>
                         </Select>

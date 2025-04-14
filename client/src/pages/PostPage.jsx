@@ -93,6 +93,7 @@ export default function PostPage() {
       src={post && post.userId && post.userId.profilePicture} 
       alt="Author" 
       className="w-8 h-8 rounded-full object-cover"
+      loading="lazy"
     />
     <p className="text-sm font-medium">{post && post.userId && post.userId.username}</p>
   </div>

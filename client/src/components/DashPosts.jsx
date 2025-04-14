@@ -89,6 +89,7 @@ export default function DashPosts() {
           <Table.HeadCell>Post Image</Table.HeadCell>
           <Table.HeadCell>Post Title</Table.HeadCell>
           <Table.HeadCell>Post Category</Table.HeadCell>
+          <Table.HeadCell>Views</Table.HeadCell>
           {currentUser.isAdmin && <Table.HeadCell>Author</Table.HeadCell>}
           <Table.HeadCell>Delete</Table.HeadCell>
           <Table.HeadCell>
@@ -113,6 +114,9 @@ export default function DashPosts() {
               </Table.Cell>
               <Table.Cell>
                 {post.category}
+              </Table.Cell>
+              <Table.Cell>
+                {post.views || 0}
               </Table.Cell>
               {currentUser.isAdmin && (
                 <Table.Cell>

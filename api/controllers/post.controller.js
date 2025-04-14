@@ -29,6 +29,16 @@ export const getposts = async (req, res, next) => {
         const sortDirection = req.query.sort === 'asc' ? 1 : -1;
         const categoryFilter = req.query.category && req.query.category !== 'uncategorized' ? { category: req.query.category } : {};
         
+        // Determine sort criteria based on sort parameter
+        let sortCriteria = {};
+        if (req.query.sort === 'views') {
+            sortCriteria = { views: -1, updatedAt: -1 };
+        } else if (req.query.sort === 'asc') {
+            sortCriteria = { updatedAt: 1 };
+        } else {
+            sortCriteria = { updatedAt: -1 };
+        }
+        
         const posts = await Post.find({
             ...(req.query.userId && {userId: req.query.userId}),
             ...categoryFilter,
@@ -41,7 +51,7 @@ export const getposts = async (req, res, next) => {
                 ],
             }),
         })
-        .sort({updatedAt: sortDirection})
+        .sort(sortCriteria)
         .skip(startIndex)
         .limit(limit)
         .populate('userId', 'username profilePicture');
@@ -108,9 +118,13 @@ export const updatepost = async (req, res, next) => {
 
 export const increaseView = async (req, res, next) => {
     try {
-        await Post.findByIdAndUpdate(req.params.postId, {
-            $inc: { views: 1 }
-        });
+        await Post.findByIdAndUpdate(
+            req.params.postId,
+            {
+                $inc: { views: 1 }
+            },
+            { timestamps: false }
+        );
         res.status(200).json({ message: 'View count increased' });
     } catch (err) {
         next(err);
@@ -122,7 +136,7 @@ export const getMostReadPosts = async (req, res, next) => {
         const limit = parseInt(req.query.limit) || 5;
         
         const posts = await Post.find()
-            .sort({ views: -1 })
+            .sort({ views: -1, updatedAt: -1 })
             .limit(limit)
             .populate('userId', 'username profilePicture');
             
