@@ -23,7 +23,7 @@ export default function Hero() {
                     to="/donate"
                     className="w-full"
                 >
-                    Support Causes
+                    Donate Now
                 </Link>
               </Button>
             </div>

@@ -1,7 +1,8 @@
-import { Button, Select, TextInput } from "flowbite-react";
+import { Select, TextInput, Button } from "flowbite-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import PostCard from "../components/PostCard";
+import { FaSearch } from "react-icons/fa";
 
 export default function Categories() {
     const [SidebarData, setSidebarData] = useState({
@@ -25,9 +26,9 @@ export default function Categories() {
         if (searchTermFromUrl || sortFromUrl || categoryFromUrl) {
             setSidebarData({
                 ...SidebarData,
-                searchTerm: searchTermFromUrl,
-                sort: sortFromUrl,
-                category: categoryFromUrl,
+                searchTerm: searchTermFromUrl || "",
+                sort: sortFromUrl || "desc",
+                category: categoryFromUrl || "uncategorized",
             });
         }
 
@@ -55,26 +56,25 @@ export default function Categories() {
     const handleChange = (e) => {
         if (e.target.id === "searchTerm") {
             setSidebarData({ ...SidebarData, searchTerm: e.target.value });
+            // Update URL immediately for search term
+            const urlParams = new URLSearchParams(location.search);
+            urlParams.set("searchTerm", e.target.value);
+            navigate(`/categories?${urlParams.toString()}`);
         }
         if (e.target.id === "sort") {
             const order = e.target.value || "desc";
             setSidebarData({ ...SidebarData, sort: order });
+            const urlParams = new URLSearchParams(location.search);
+            urlParams.set("sort", order);
+            navigate(`/categories?${urlParams.toString()}`);
         }
         if (e.target.id === "category") {
             const category = e.target.value || "uncategorized";
             setSidebarData({ ...SidebarData, category: category });
+            const urlParams = new URLSearchParams(location.search);
+            urlParams.set("category", category);
+            navigate(`/categories?${urlParams.toString()}`);
         }
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        const urlParams = new URLSearchParams(location.search);
-        urlParams.set("searchTerm", SidebarData.searchTerm);
-        urlParams.set("sort", SidebarData.sort);
-        urlParams.set("category", SidebarData.category);
-        const searchQuery = urlParams.toString();
-        navigate(`/categories?${searchQuery}`);
-
     };
 
     const handleShowMore = async () => {
@@ -94,20 +94,30 @@ export default function Categories() {
         }
     };
 
+    const handleRemoveFilters = () => {
+        setSidebarData({
+            searchTerm: "",
+            sort: "desc",
+            category: "uncategorized",
+        });
+        navigate("/categories");
+    };
+
     return (
         <div className="min-h-screen max-w-6xl mx-auto px-3 py-8">
             <div className="flex flex-col gap-6 mb-8">
                 <h1 className="text-3xl font-semibold text-center">All Posts Categories</h1>
                 <p className="text-gray-300 text-center">Explore our posts</p>
 
-                <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-                    <div className="w-full sm:w-[400px]">
+                <div className="flex flex-col gap-4 items-center justify-center">
+                    <div className="w-full sm:w-[600px]">
                         <TextInput
                             placeholder="Search..."
                             value={SidebarData.searchTerm}
                             onChange={handleChange}
                             id="searchTerm"
                             className="w-full focus:border-blue-500"
+                            rightIcon={FaSearch}
                         />
                     </div>
                     <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
@@ -137,11 +147,24 @@ export default function Categories() {
                             <option value="desc">Latest</option>
                             <option value="asc">Oldest</option>
                         </Select>
-                        <Button type="submit" outline gradientDuoTone="purpleToPink" className="w-full sm:w-auto">
-                            Search
+                        <Button 
+                            onClick={handleRemoveFilters}
+                            outline 
+                            gradientDuoTone="purpleToPink" 
+                            className="w-full sm:w-auto"
+                        >
+                            Remove Filters
                         </Button>
                     </div>
-                </form>
+                </div>
+                {!loading && (
+                    <p className="text-gray-500 dark:text-gray-400 text-sm text-center">
+                        {posts.length === 0 
+                            ? "No results found" 
+                            : `Showing ${posts.length} ${posts.length === 1 ? 'result' : 'results'}`
+                        }
+                    </p>
+                )}
             </div>
 
             <div className={`${
