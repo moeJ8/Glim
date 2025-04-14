@@ -52,9 +52,7 @@ export default function MostReadPosts() {
   if (posts.length === 0) return null;
 
   return (
-    <div className="my-8">
-      <h2 className="text-2xl font-semibold text-center mb-6">Most Read Posts</h2>
-      
+    <div className="w-full">
       <div className="h-[400px] md:h-[450px] xl:h-[500px] rounded-lg overflow-hidden">
         <Carousel
           leftControl={

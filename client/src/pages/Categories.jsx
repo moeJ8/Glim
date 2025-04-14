@@ -1,8 +1,9 @@
 import { Select, TextInput, Button } from "flowbite-react";
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import PostCard from "../components/PostCard";
 import { FaSearch } from "react-icons/fa";
+import { useSelector } from "react-redux";
 
 export default function Categories() {
     const [SidebarData, setSidebarData] = useState({
@@ -16,6 +17,7 @@ export default function Categories() {
     const [showMore, setShowMore] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
+    const { currentUser } = useSelector(state => state.user);
 
     useEffect(() => {
         const urlParams = new URLSearchParams(location.search);
@@ -113,8 +115,10 @@ export default function Categories() {
     return (
         <div className="min-h-screen max-w-6xl mx-auto px-3 py-8">
             <div className="flex flex-col gap-6 mb-8">
-                <h1 className="text-3xl font-semibold text-center">All Posts Categories</h1>
-                <p className="text-gray-300 text-center">Explore our posts</p>
+                <div className="text-center">
+                    <h1 className="text-3xl font-semibold">All Posts Categories</h1>
+                    <p className="text-gray-300">Explore our posts</p>
+                </div>
 
                 <div className="flex flex-col gap-4 items-center justify-center">
                     <div className="w-full sm:w-[600px]">
@@ -155,14 +159,23 @@ export default function Categories() {
                             <option value="desc">Latest</option>
                             <option value="asc">Oldest</option>
                         </Select>
-                        <Button 
-                            onClick={handleRemoveFilters}
-                            outline 
-                            gradientDuoTone="purpleToPink" 
-                            className="w-full sm:w-auto"
-                        >
-                            Remove Filters
-                        </Button>
+                        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                            <Button 
+                                onClick={handleRemoveFilters}
+                                outline 
+                                gradientDuoTone="purpleToPink" 
+                                className="w-full sm:w-auto"
+                            >
+                                Remove Filters
+                            </Button>
+                            {currentUser && (currentUser.isAdmin || currentUser.isPublisher) && (
+                                <Link to="/create-post" className="w-full sm:w-auto">
+                                    <Button gradientDuoTone="purpleToPink" className="w-full font-semibold">
+                                        Create Post
+                                    </Button>
+                                </Link>
+                            )}
+                        </div>
                     </div>
                 </div>
                 {!loading && (

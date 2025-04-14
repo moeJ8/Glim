@@ -28,18 +28,25 @@ export const signup = async (req, res, next) => {
 }
 
 export const signin = async (req, res, next) => {
-    const {email, password } = req.body;
+    const { email, password } = req.body;
     if (!email || !password || email === "" || password === "") {
         next(errorHandler(400, "All fields are required"))
     }
     try {
-        const validUser = await User.findOne({email});
+        // Try to find user by email or username
+        const validUser = await User.findOne({
+            $or: [
+                { email: email },
+                { username: email }
+            ]
+        });
+        
         if (!validUser) {
-            return next(errorHandler(404, "User not found"))
+            return next(errorHandler(404, "Invalid credentials"))
         }
         const validPassword = bcryptjs.compareSync(password, validUser.password);
         if (!validPassword) {
-           return next(errorHandler(400, "User not found"))
+           return next(errorHandler(400, "Invalid credentials"))
         }
         const token = jwt.sign(
             {

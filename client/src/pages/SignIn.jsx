@@ -70,16 +70,16 @@ export default function SignIn() {
           </div>
           <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
             <div>
-              <Label value="Your Email" className="block" />
+              <Label value="Email or Username" className="block" />
               <TextInput 
-                type="email" 
-                placeholder="name@mail.com" 
-                id="email" 
+                type="text"
+                placeholder="user@mail.com" 
+                id="email"
                 onChange={handleChange}
               />
             </div>
             <div>
-              <Label value="Your Password" className="block" />
+              <Label value="Password" className="block" />
               <TextInput 
                 type="password" 
                 placeholder="**********" 
