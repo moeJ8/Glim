@@ -8,7 +8,9 @@ import 'react-circular-progressbar/dist/styles.css';
 import {updateStart, updateSuccess, updateFailure, deleteUserStart, deleteUserSuccess, deleteUserFailure, signoutSuccess} from "../redux/user/userSlice"
 import { useDispatch } from "react-redux"
 import {HiOutlineExclamationCircle} from "react-icons/hi"
+import {FaEye} from "react-icons/fa"
 import { Link } from "react-router-dom"
+import UserPosts from "./UserPosts"
 
 export default function DashProfile() {
     const {currentUser, errormodal, loading} = useSelector(state => state.user)
@@ -186,22 +188,30 @@ export default function DashProfile() {
         <Button type="submit" gradientDuoTone="purpleToBlue" outline disabled={loading || imageFileUploading}>
             {loading ? 'Updating...' : 'Update'}
         </Button>
-          {
-            (currentUser.isAdmin || currentUser.isPublisher) && (
-              <Link to={'/create-post'}>
-                <Button type="button" gradientDuoTone="purpleToPink" className="w-full">
-                  Create a Post
-                </Button>
-              </Link>
-              
-            )
-          }
+
+        {/* Create Post button (only for admin/publisher) */}
+        {(currentUser.isAdmin || currentUser.isPublisher) && (
+          <Link to={'/create-post'}>
+            <Button type="button" gradientDuoTone="purpleToPink" className="w-full">
+              Create a Post
+            </Button>
+          </Link>
+        )}
+        
+        {/* View Public Profile link - available to all users */}
+        <Link to={`/profile/${currentUser.username}`} className="w-full block text-center">
+          <p className="flex items-center justify-center gap-2 text-teal-600 dark:text-teal-400 font-medium hover:text-teal-800 dark:hover:text-teal-300 transition-colors">
+            <FaEye className="h-4 w-4" />
+            Show Your Profile as Anonymous
+          </p>
+        </Link>
 
       </form>
       <div className="text-red-500 mt-5 flex justify-between">
         <span onClick={()=> setShowModal(true)} className="cursor-pointer hover:underline">Delete Account</span>
         <span onClick={handleSignOut} className="cursor-pointer hover:underline">Sign Out</span>
       </div>
+
       {updateUserSuccess && 
       (
         <Alert color="success" className="mt-5">
@@ -234,6 +244,10 @@ export default function DashProfile() {
         </Modal.Body>
       </Modal>
      
+      {/* Display user's posts */}
+      <div className="mt-10">
+        {currentUser && <UserPosts userId={currentUser._id} username={currentUser.username} />}
+      </div>
     </div>
   )
 }
