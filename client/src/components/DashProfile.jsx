@@ -198,7 +198,6 @@ export default function DashProfile() {
           </Link>
         )}
         
-        {/* View Public Profile link - available to all users */}
         <Link to={`/profile/${currentUser.username}`} className="w-full block text-center">
           <p className="flex items-center justify-center gap-2 text-teal-600 dark:text-teal-400 font-medium hover:text-teal-800 dark:hover:text-teal-300 transition-colors">
             <FaEye className="h-4 w-4" />
@@ -244,7 +243,6 @@ export default function DashProfile() {
         </Modal.Body>
       </Modal>
      
-      {/* Display user's posts */}
       <div className="mt-10">
         {currentUser && <UserPosts userId={currentUser._id} username={currentUser.username} />}
       </div>

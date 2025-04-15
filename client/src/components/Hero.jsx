@@ -8,9 +8,9 @@ export default function Hero() {
         <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
           <div className="flex-1 text-center lg:text-left">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
-              Share Your Story
+              Share Your Story, Make an Impact.
               <br className="hidden sm:block" />
-              Make an Impact
+              
             </h1>
             <p className="text-base sm:text-lg mb-6 sm:mb-8 text-gray-600 dark:text-gray-300 max-w-2xl mx-auto lg:mx-0">
               Join our diverse community where every voice matters. Whether you&apos;re passionate about art,

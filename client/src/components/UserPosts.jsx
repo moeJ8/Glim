@@ -11,19 +11,16 @@ export default function UserPosts({ userId, username }) {
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [cachedPosts, setCachedPosts] = useState({});
   
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPosts, setTotalPosts] = useState(0);
   const postsPerPage = 6;
 
-  // Paginate posts on client side after fetching all
   const paginatePosts = useCallback((allPosts, page) => {
     const startIndex = (page - 1) * postsPerPage;
     const endIndex = startIndex + postsPerPage;
     return allPosts.slice(startIndex, endIndex);
   }, [postsPerPage]);
 
-  // Memoized fetch implementation
   const fetchUserPosts = useCallback(async () => {
     if (!userId) return;
     

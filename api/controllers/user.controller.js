@@ -245,21 +245,19 @@ export const updatePublisherRequest = async (req, res, next) => {
     request.status = status;
     await request.save();
 
-    // If request is approved, update user to be a publisher
+  
     if (status === 'approved') {
       const updatedUser = await User.findByIdAndUpdate(
         request.userId, 
         { isPublisher: true },
         { new: true }
       );
-      
-      // Generate a new token that includes the updated isPublisher status
       if (updatedUser) {
         const token = jwt.sign(
           {
             id: updatedUser._id,
             isAdmin: updatedUser.isAdmin,
-            isPublisher: true  // explicitly set to true since we just approved
+            isPublisher: true
           },
           process.env.JWT_SECRET,
           { expiresIn: "1d" }
@@ -283,6 +281,31 @@ export const getUserByUsername = async (req, res, next) => {
 
     const { password, ...rest } = user._doc;
     res.status(200).json(rest);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const searchUsers = async (req, res, next) => {
+  try {
+    const username = req.query.username;
+    const limit = parseInt(req.query.limit) || 6;
+    
+    if (!username) {
+      return res.status(200).json({ users: [] });
+    }
+    
+    // case-insensitive regex pattern for the username
+    const usernameRegex = new RegExp(username, 'i');
+    
+    // Find users that match the search term
+    const users = await User.find({ 
+      username: usernameRegex 
+    })
+    .limit(limit)
+    .select('-password -email'); // Exclude sensitive data
+    
+    res.status(200).json({ users });
   } catch (err) {
     next(err);
   }
