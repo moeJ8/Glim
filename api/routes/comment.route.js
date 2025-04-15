@@ -1,11 +1,13 @@
 import express from 'express';
-import { createComment, getPostComments, likeComment, editComment, deleteComment, getComments, getPublisherComments } from '../controllers/comment.controller.js';
+import { createComment, getPostComments, likeComment, editComment, deleteComment, getComments, getPublisherComments, createReply, getReplies } from '../controllers/comment.controller.js';
 import { verifyToken } from '../utils/verifyUser.js';
 
 const router = express.Router();
 
 router.post('/create',verifyToken, createComment);
+router.post('/reply',verifyToken, createReply);
 router.get('/getPostComments/:postId', getPostComments);
+router.get('/getReplies/:commentId', getReplies);
 router.put('/likeComment/:commentId', verifyToken, likeComment);
 router.put('/editComment/:commentId', verifyToken, editComment);
 router.delete('/deleteComment/:commentId', verifyToken, deleteComment);

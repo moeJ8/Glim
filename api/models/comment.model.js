@@ -23,6 +23,19 @@ const CommentSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    parentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Comment',
+        default: null
+    },
+    isReply: {
+        type: Boolean,
+        default: false
+    },
+    replies: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Comment'
+    }]
     
 },{timestamps: true})
 

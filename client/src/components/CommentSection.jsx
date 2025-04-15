@@ -66,6 +66,7 @@ useEffect(() => {
   }
   getComments();
 },[postId])
+
 const handleLike = async (commentId) => {
     try{
       if(!currentUser){
@@ -77,24 +78,47 @@ const handleLike = async (commentId) => {
       });
       if(res.ok){
         const data = await res.json();
-        setComments(comments.map(comment => 
-          comment._id === commentId ? {
-            ...comment,
-            likes: data.likes,
-            numberOfLikes: data.likes.length,
-          } : comment
-        )
-        );
+        // Check if this is a main comment or a reply
+        const isMainComment = comments.some(c => c._id === commentId);
+        
+        if (isMainComment) {
+          setComments(comments.map(comment => 
+            comment._id === commentId ? {
+              ...comment,
+              likes: data.likes,
+              numberOfLikes: data.likes.length,
+            } : comment
+          ));
+        } else {
+          // It's a reply, so we need to find the parent comment
+          setComments(comments.map(comment => {
+            if (comment.replies && comment.replies.some(reply => reply._id === commentId)) {
+              return {
+                ...comment,
+                replies: comment.replies.map(reply => 
+                  reply._id === commentId ? {
+                    ...reply,
+                    likes: data.likes,
+                    numberOfLikes: data.likes.length,
+                  } : reply
+                )
+              };
+            }
+            return comment;
+          }));
+        }
       }
       
     } catch (err){
       console.log(err);
     }
 };
+
 const handleEdit = async (comment, editedContent) => {
   setComments(comments.map((c)=>
     c._id === comment._id ? {...c, content: editedContent} : c));
 };
+
 const handleDelete = async (commentId) => {
   setShowModal(false);
   try{
@@ -107,13 +131,40 @@ const handleDelete = async (commentId) => {
     })
     if(res.ok){
       await res.json();
-      setComments(comments.filter((comment) => comment._id !== commentId));
+      
+      // Check if this is a main comment
+      const isMainComment = comments.some(c => c._id === commentId);
+      
+      if (isMainComment) {
+        setComments(comments.filter((comment) => comment._id !== commentId));
+      } else {
+        // It's a reply, find the parent and remove the reply
+        setComments(comments.map(comment => {
+          if (comment.replies && comment.replies.some(reply => reply._id === commentId)) {
+            return {
+              ...comment,
+              replies: comment.replies.filter(reply => reply._id !== commentId)
+            };
+          }
+          return comment;
+        }));
+      }
     }
   } catch(err){
     console.log(err.message);
   }
 }
-  return (
+
+const handleReply = (parentId, newReply) => {
+  setComments(comments.map(comment => 
+    comment._id === parentId ? {
+      ...comment,
+      replies: [...(comment.replies || []), newReply]
+    } : comment
+  ));
+}
+
+return (
     <div className="max-w-2xl mx-auto w-full p-3">
       {currentUser ? 
       (
@@ -175,7 +226,8 @@ const handleDelete = async (commentId) => {
                  onDelete={(commentId)=>{
                   setShowModal(true)
                   setCommentToDelete(commentId)
-                 }}/>
+                 }}
+                 onReply={handleReply}/>
               ))
             }
           </>
@@ -199,5 +251,5 @@ const handleDelete = async (commentId) => {
 }
 
 CommentSection.propTypes = {
-  postId: PropTypes.string.isRequired, // Ensures postId is required and should be a string
+  postId: PropTypes.string.isRequired,
 };

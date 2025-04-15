@@ -18,7 +18,8 @@ export const createComment = async (req, res, next) => {
         const commentsToday = await Comment.countDocuments({
             userId: userObjectId,
             postId: postObjectId, 
-            createdAt: { $gte: startOfDay, $lte: endOfDay } 
+            createdAt: { $gte: startOfDay, $lte: endOfDay },
+            isReply: false
         });
 
         if (commentsToday >= 4) {
@@ -36,7 +37,8 @@ export const createComment = async (req, res, next) => {
         const newComment = new Comment({
             content,
             postId: postObjectId,
-            userId: userObjectId
+            userId: userObjectId,
+            isReply: false
         });
         
         await newComment.save();
@@ -52,14 +54,111 @@ export const createComment = async (req, res, next) => {
     }
 }
 
-export const getPostComments = async (req, res, next) => {
+export const createReply = async (req, res, next) => {
     try {
-        const comments = await Comment.find({postId: req.params.postId})
-            .sort({createdAt: -1})
+        const {content, postId, userId, parentId} = req.body;
+
+        const now = new Date();
+        const startOfDay = new Date(now.setHours(0, 0, 0, 0)); 
+        const endOfDay = new Date(now.setHours(23, 59, 59, 999)); 
+        
+        // Convert string IDs to ObjectIDs for the query
+        const postObjectId = new mongoose.Types.ObjectId(postId);
+        const userObjectId = new mongoose.Types.ObjectId(userId);
+        const parentObjectId = new mongoose.Types.ObjectId(parentId);
+        
+        // Check if parent comment exists
+        const parentComment = await Comment.findById(parentId);
+        if (!parentComment) {
+            return next(errorHandler(404, "Parent comment not found"));
+        }
+        
+        // Check replies count for today
+        const repliesToday = await Comment.countDocuments({
+            userId: userObjectId,
+            postId: postObjectId,
+            isReply: true,
+            createdAt: { $gte: startOfDay, $lte: endOfDay }
+        });
+
+        if (repliesToday >= 4) {
+            return next(errorHandler(403, "You can only reply 4 times per post per 24 hours"));
+        }
+
+        if(userId !== req.user.id){
+            return next(errorHandler(403, "You are not allowed to reply to this comment"));
+        }
+        
+        if (!content || content.trim() === "") {
+            return next(errorHandler(400, "Reply cannot be empty"));
+        }
+        
+        const newReply = new Comment({
+            content,
+            postId: postObjectId,
+            userId: userObjectId,
+            parentId: parentObjectId,
+            isReply: true
+        });
+        
+        await newReply.save();
+        
+        // Add reply to parent comment's replies array
+        parentComment.replies.push(newReply._id);
+        await parentComment.save();
+        
+        // Populate the reply with user and post info before returning
+        const populatedReply = await Comment.findById(newReply._id)
             .populate('userId', 'username profilePicture')
             .populate('postId', 'title slug');
+
+        res.status(200).json(populatedReply);
+    } catch(err){
+        next(err);
+    }
+}
+
+export const getPostComments = async (req, res, next) => {
+    try {
+        const comments = await Comment.find({
+            postId: req.params.postId,
+            isReply: false
+        })
+            .sort({createdAt: -1})
+            .populate('userId', 'username profilePicture')
+            .populate('postId', 'title slug')
+            .populate({
+                path: 'replies',
+                populate: {
+                    path: 'userId',
+                    select: 'username profilePicture'
+                },
+                options: { sort: { createdAt: 1 } }
+            });
             
         res.status(200).json(comments);
+    } catch(err) {
+        next(err);
+    }
+}
+
+export const getReplies = async (req, res, next) => {
+    try {
+        const comment = await Comment.findById(req.params.commentId)
+            .populate({
+                path: 'replies',
+                populate: {
+                    path: 'userId',
+                    select: 'username profilePicture'
+                },
+                options: { sort: { createdAt: 1 } }
+            });
+            
+        if (!comment) {
+            return next(errorHandler(404, "Comment not found"));
+        }
+        
+        res.status(200).json(comment.replies);
     } catch(err) {
         next(err);
     }
@@ -129,6 +228,18 @@ export const deleteComment = async (req, res, next) => {
         // Compare userId as strings
         if (comment.userId.toString() !== req.user.id && !req.user.isAdmin) {
             return next(errorHandler(403, "You are not allowed to delete this comment"));
+        }
+        
+        // If this is a reply, remove it from parent's replies array
+        if (comment.isReply && comment.parentId) {
+            await Comment.findByIdAndUpdate(comment.parentId, {
+                $pull: { replies: comment._id }
+            });
+        }
+        
+        // If this is a parent comment, delete all its replies
+        if (!comment.isReply && comment.replies.length > 0) {
+            await Comment.deleteMany({ _id: { $in: comment.replies } });
         }
         
         await Comment.findByIdAndDelete(req.params.commentId);
