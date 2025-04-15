@@ -120,7 +120,7 @@ const handleDelete = async (commentId) => {
         <div className="flex items-center gap-1 my-5 text-gray-500 text-sm">
             <p>Signed in as:</p>
             <img className="h-5 w-5 object-cover rounded-full" src={currentUser.profilePicture} alt="" />
-            <Link to={'/dashboard?tab=profile'} className="text-xs text-cyan-600 hover:underline">
+            <Link to={'/dashboard?tab=profile'} className="text-xs text-cyan-700 dark:text-cyan-400 hover:underline">
                 @{currentUser.username}
             </Link>
         </div>
@@ -136,7 +136,7 @@ const handleDelete = async (commentId) => {
       )
     }
     {currentUser && (
-            <form onSubmit={handleSubmit} className="border border-teal-500 rounded-md p-3">
+            <form onSubmit={handleSubmit} className="border border-purple-700 dark:border-purple-500 rounded-md p-3">
                 <Textarea
                     placeholder="Add a comment..."
                     rows='3'

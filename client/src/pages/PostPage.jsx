@@ -89,13 +89,17 @@ export default function PostPage() {
   
   {/* Author Info */}
   <div className="flex items-center justify-center gap-2 mt-6 mb-2">
-    <img 
-      src={post && post.userId && post.userId.profilePicture} 
-      alt="Author" 
-      className="w-8 h-8 rounded-full object-cover"
-      loading="lazy"
-    />
-    <p className="text-sm font-medium">{post && post.userId && post.userId.username}</p>
+    {post && post.userId && (
+      <Link to={`/profile/${post.userId.username}`} className="flex items-center gap-2 hover:text-purple-700 dark:hover:text-purple-500 ">
+        <img 
+          src={post.userId.profilePicture} 
+          alt={post.userId.username} 
+          className="w-8 h-8 rounded-full object-cover border border-purple-800 dark:border-purple-500"
+          loading="lazy"
+        />
+        <p className="text-sm font-medium bo">{post.userId.username}</p>
+      </Link>
+    )}
   </div>
 
   <img src={post && post.image} alt={post && post.title} className="mt-2 p-3 max-h-[600px] w-full object-cover"/>

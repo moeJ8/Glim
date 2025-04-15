@@ -61,7 +61,7 @@ export default function Search() {
         
         setSidebarData(newSidebarData);
         
-        // Always fetch posts, even on initial load
+        // Always fetch posts
         fetchPosts(urlParams);
     }, [location.search]);
 

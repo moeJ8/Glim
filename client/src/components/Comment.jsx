@@ -4,6 +4,7 @@ import moment from 'moment';
 import {FaThumbsUp} from 'react-icons/fa';
 import { useSelector } from "react-redux";
 import { Button, Textarea } from "flowbite-react";
+import { Link } from "react-router-dom";
 
 export default function Comment({comment, onLike, onEdit, onDelete}) {
     const [isEditing, setIsEditing] = useState(false);
@@ -38,17 +39,21 @@ export default function Comment({comment, onLike, onEdit, onDelete}) {
     return (
         <div className="flex p-4 border-b dark:border-gray-600 text-sm">
             <div className="flex-shrink-0 mr-3">
-                <img 
-                    src={comment.userId.profilePicture} 
-                    alt={comment.userId.username} 
-                    className="w-10 h-10 rounded-full bg-gray-200" 
-                />
+                <Link to={`/profile/${comment.userId.username}`}>
+                    <img 
+                        src={comment.userId.profilePicture} 
+                        alt={comment.userId.username} 
+                        className="w-10 h-10 rounded-full bg-gray-200 hover:ring-2 hover:ring-blue-500" 
+                    />
+                </Link>
             </div>
             <div className="flex-1">
                 <div className="flex items-center mb-1">
-                    <span className="font-bold mr-1 text-xs truncate">
-                        @{comment.userId.username}
-                    </span>
+                    <Link to={`/profile/${comment.userId.username}`} className="hover:text-blue-500">
+                        <span className="font-bold mr-1 text-xs truncate">
+                            @{comment.userId.username}
+                        </span>
+                    </Link>
                     <span className="text-gray-500 text-xs">
                         {moment(comment.createdAt).fromNow()}
                     </span>

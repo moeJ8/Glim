@@ -21,6 +21,7 @@ import DonateSuccess from './pages/DonateSuccess'
 import CreateDonation from './pages/CreateDonation'
 import DonationDashboard from './pages/DonationDashboard'
 import EditDonation from './pages/EditDonation.jsx'
+import UserProfile from './pages/UserProfile'
 
 
 export default function App() {
@@ -38,6 +39,7 @@ export default function App() {
       <Route path="/donate" element={<Donate/>}/>
       <Route path="/donate/:id" element={<DonateCase/>}/>
       <Route path="/donate/success" element={<DonateSuccess/>}/>
+      <Route path="/profile/:username" element={<UserProfile/>}/>
       <Route element ={<PrivateRoute/>} >
         <Route path="/dashboard" element={<Dashboard/>}/>
       </Route>
