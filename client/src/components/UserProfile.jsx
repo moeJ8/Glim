@@ -30,12 +30,11 @@ export default function UserProfile() {
     }
   }, [cacheKey]);
 
-  // Fetch user data
   useEffect(() => {
     const fetchUser = async () => {
       if (!username) return;
       
-      if (!loading) return; // Skip if already loaded from cache
+      if (!loading) return; 
       
       try {
         setError(null);
@@ -106,7 +105,7 @@ export default function UserProfile() {
             <img 
               src={user.profilePicture} 
               alt={user.username} 
-              className="rounded-full w-full h-full object-cover border-8 border-[lightgray]" 
+              className="rounded-full w-full h-full object-cover border-2 border-purple-700" 
               loading="lazy"
             />
           </div>

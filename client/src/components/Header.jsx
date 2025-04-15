@@ -143,7 +143,19 @@ export default function Header() {
     return (
         <>
             <Navbar className="border-b-2 sticky top-0 z-50 shadow-md">
-                <Logo />
+                <div className="flex items-center gap-2">
+                    <Logo />
+                    {/* Mobile dark mode toggle beside logo */}
+                    <Button 
+                        className="w-10 h-10 md:hidden flex items-center justify-center" 
+                        color="gray" 
+                        pill 
+                        onClick={() => dispatch(toggleTheme())}
+                    >
+                        {theme === "light" ? <FaMoon className="text-lg"/> : <FaSun className="text-lg"/>}
+                    </Button>
+                </div>
+                
                 <div className="relative hidden md:block" ref={dropdownRef}>
                     <form onSubmit={handleSubmit}>
                         <TextInput
@@ -169,17 +181,23 @@ export default function Header() {
                         />
                     )}
                 </div>
-                <Button 
-                    id="mobileSearchToggle"
-                    className="w-12 h-10 md:hidden" 
-                    color='gray' 
-                    pill
-                    onClick={() => setShowMobileSearch(!showMobileSearch)}
-                >
-                    <AiOutlineSearch/>
-                </Button>
+                
+                {/* Centered search button on mobile */}
+                <div className="flex-1 flex justify-center md:hidden">
+                    <Button 
+                        id="mobileSearchToggle"
+                        className="w-18 h-10" 
+                        color='gray' 
+                        pill
+                        onClick={() => setShowMobileSearch(!showMobileSearch)}
+                    >
+                        <AiOutlineSearch className="text-lg"/>
+                    </Button>
+                </div>
+                
                 <div className="flex gap-2 md:order-2">
-                    <Button className="w-12 h-10 sm:inline" color="gray" pill onClick={() => dispatch(toggleTheme())}>
+                    {/* Desktop theme toggle */}
+                    <Button className="w-12 h-10 hidden md:inline-flex" color="gray" pill onClick={() => dispatch(toggleTheme())}>
                         {theme === "light" ? <FaMoon className="text-md"/> : <FaSun/>}
                     </Button>
 
