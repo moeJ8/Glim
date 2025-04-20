@@ -27,6 +27,7 @@ export const createDonationCase = async (req, res, next) => {
     const savedDonationCase = await newDonationCase.save();
     // Create notifications for all non-admin users
     await createNewDonationNotifications(
+      req,
       savedDonationCase._id,
       savedDonationCase.title,
       req.user.id
@@ -151,6 +152,7 @@ export const createDonationTransaction = async (req, res, next) => {
     
     // Create notifications for admins
     await createDonationTransactionNotifications(
+      req,
       donationCaseId,
       donationCase.title,
       amount,
@@ -223,6 +225,7 @@ export const updateDonationTransactionStatus = async (req, res, next) => {
       if (donationCase) {
         // Create notifications for admins about the completed donation
         await createDonationTransactionNotifications(
+          req,
           donationTransaction.donationCase,
           donationCase.title,
           donationTransaction.amount,

@@ -4,6 +4,7 @@ import { createNotification } from '../controllers/notification.controller.js';
 
 /**
  * Create a comment notification
+ * @param {Object} req - Express request object
  * @param {String} postId - Post ID
  * @param {String} postSlug - Post slug
  * @param {String} postTitle - Post title
@@ -13,6 +14,7 @@ import { createNotification } from '../controllers/notification.controller.js';
  * @returns {Promise} Created notification
  */
 export const createCommentNotification = async (
+  req,
   postId,
   postSlug,
   postTitle,
@@ -34,7 +36,7 @@ export const createCommentNotification = async (
     const title = 'New Comment';
     const message = `${commenter.username} commented on your post "${postTitle.substring(0, 30)}${postTitle.length > 30 ? '...' : ''}"`;
 
-    return await createNotification({
+    return await createNotification(req, {
       recipient: recipientId,
       title,
       message,
@@ -52,6 +54,7 @@ export const createCommentNotification = async (
 
 /**
  * Create a reply notification
+ * @param {Object} req - Express request object
  * @param {String} postId - Post ID
  * @param {String} postSlug - Post slug
  * @param {String} postTitle - Post title
@@ -61,6 +64,7 @@ export const createCommentNotification = async (
  * @returns {Promise} Created notification
  */
 export const createReplyNotification = async (
+  req,
   postId,
   postSlug,
   postTitle,
@@ -80,7 +84,7 @@ export const createReplyNotification = async (
     const title = 'New Reply';
     const message = `${replier.username} replied to your comment on "${postTitle.substring(0, 30)}${postTitle.length > 30 ? '...' : ''}"`;
 
-    return await createNotification({
+    return await createNotification(req, {
       recipient: recipientId,
       title,
       message,
@@ -98,6 +102,7 @@ export const createReplyNotification = async (
 
 /**
  * Create a like comment notification
+ * @param {Object} req - Express request object
  * @param {String} postId - Post ID
  * @param {String} postSlug - Post slug
  * @param {String} commentId - Comment ID
@@ -107,6 +112,7 @@ export const createReplyNotification = async (
  * @returns {Promise} Created notification
  */
 export const createLikeCommentNotification = async (
+  req,
   postId,
   postSlug,
   commentId,
@@ -131,7 +137,7 @@ export const createLikeCommentNotification = async (
     const title = 'Comment Liked';
     const message = `${liker.username} liked your comment: "${truncatedContent}"`;
 
-    return await createNotification({
+    return await createNotification(req, {
       recipient: recipientId,
       title,
       message,
@@ -149,6 +155,7 @@ export const createLikeCommentNotification = async (
 
 /**
  * Create notifications for all admins when a new post is created
+ * @param {Object} req - Express request object
  * @param {String} postId - Post ID
  * @param {String} postSlug - Post slug
  * @param {String} postTitle - Post title
@@ -156,6 +163,7 @@ export const createLikeCommentNotification = async (
  * @returns {Promise<Array>} - Array of created notifications
  */
 export const createNewPostNotifications = async (
+  req,
   postId,
   postSlug,
   postTitle,
@@ -181,7 +189,7 @@ export const createNewPostNotifications = async (
 
     const notifications = [];
     for (const admin of admins) {
-      const notification = await createNotification({
+      const notification = await createNotification(req, {
         recipient: admin._id,
         title,
         message,
@@ -202,13 +210,15 @@ export const createNewPostNotifications = async (
 };
 
 /**
- * Create notifications for all non-admin users (normal users and publishers) when a new donation case is created
+ * Create notifications for all admins when a new donation case is created
+ * @param {Object} req - Express request object
  * @param {String} donationId - Donation case ID
  * @param {String} donationTitle - Donation case title
- * @param {String} creatorId - User ID of the admin who created the donation case
+ * @param {String} creatorId - User ID of the donation case creator
  * @returns {Promise<Array>} - Array of created notifications
  */
 export const createNewDonationNotifications = async (
+  req,
   donationId,
   donationTitle,
   creatorId
@@ -216,54 +226,57 @@ export const createNewDonationNotifications = async (
   try {
     const creator = await User.findById(creatorId);
     if (!creator) {
-      console.error('Admin creator not found');
+      console.error('Creator not found');
       return null;
     }
-    // Find all non-admin users
-    const users = await User.find({ 
-      isAdmin: false,
+
+    // Find all admins except the creator
+    const admins = await User.find({ 
+      isAdmin: true,
+      _id: { $ne: creatorId } // Exclude the creator
     }).select('_id');
 
-    if (!users || users.length === 0) {
+    if (!admins || admins.length === 0) {
       return null;
     }
 
     const title = 'New Donation Case';
-    const message = `New donation case available: "${donationTitle.substring(0, 30)}${donationTitle.length > 30 ? '...' : ''}" - Donate now!`;
+    const message = `${creator.username} created a new donation case: "${donationTitle.substring(0, 30)}${donationTitle.length > 30 ? '...' : ''}"`;
 
     const notifications = [];
-    for (const user of users) {
-      const notification = await createNotification({
-        recipient: user._id,
+    for (const admin of admins) {
+      const notification = await createNotification(req, {
+        recipient: admin._id,
         title,
         message,
         type: 'new_donation',
         donationId,
         triggeredBy: creatorId
       });
-
+      
       if (notification) {
         notifications.push(notification);
       }
     }
-
     return notifications;
-  } catch (error) {
-    console.error('Error creating new donation notifications:', error);
+  } catch (err) {
+    console.error('Error creating new donation notifications:', err);
     return null;
   }
 };
 
 /**
- * Create notifications for all admin users when someone donates to a case
+ * Create notification for donation transaction
+ * @param {Object} req - Express request object
  * @param {String} donationId - Donation case ID
  * @param {String} donationCaseTitle - Donation case title
  * @param {Number} amount - Donation amount
  * @param {String} donorName - Name of the donor
- * @param {String} donorId - User ID of the donor (can be null for anonymous donations)
- * @returns {Promise<Array>} - Array of created notifications
+ * @param {String} donorId - User ID of the donor
+ * @returns {Promise<Array>} - Notification for admins
  */
 export const createDonationTransactionNotifications = async (
+  req,
   donationId,
   donationCaseTitle,
   amount,
@@ -271,47 +284,46 @@ export const createDonationTransactionNotifications = async (
   donorId
 ) => {
   try {
-    // Find all admin users
-    const admins = await User.find({ 
-      isAdmin: true
-    }).select('_id');
-
+    // Find all admins
+    const admins = await User.find({ isAdmin: true }).select('_id');
+    
     if (!admins || admins.length === 0) {
       return null;
     }
-
-    // If we have a donor user, get their details
-    let donorDetails = donorName;
-    if (donorId) {
-      const donorUser = await User.findById(donorId);
-      if (donorUser) {
-        donorDetails = donorUser.username || donorName;
-      }
-    }
+    
+    const truncatedTitle = donationCaseTitle.length > 30 
+      ? `${donationCaseTitle.substring(0, 30)}...` 
+      : donationCaseTitle;
+    
+    const formatAmount = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount / 100);
 
     const title = 'New Donation Received';
-    const message = `${donorDetails} donated $${amount} to "${donationCaseTitle.substring(0, 30)}${donationCaseTitle.length > 30 ? '...' : ''}"`;
+    const message = `${donorName} donated ${formatAmount} to "${truncatedTitle}"`;
 
     const notifications = [];
     for (const admin of admins) {
-      const notification = await createNotification({
+      // Skip if the admin is the donor (although this case is unlikely)
+      if (admin._id.toString() === donorId) continue;
+      
+      const notification = await createNotification(req, {
         recipient: admin._id,
         title,
         message,
         type: 'donation_received',
         donationId,
-        donationAmount: amount,
-        triggeredBy: donorId || null
+        triggeredBy: donorId || null // might be null for anonymous donations
       });
       
       if (notification) {
         notifications.push(notification);
       }
     }
-
     return notifications;
-  } catch (error) {
-    console.error('Error creating donation transaction notifications:', error);
+  } catch (err) {
+    console.error('Error creating donation transaction notifications:', err);
     return null;
   }
 }; 

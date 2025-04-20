@@ -55,6 +55,7 @@ export const createComment = async (req, res, next) => {
         if (post) {
             // Create notification for post owner
             await createCommentNotification(
+                req,
                 postId,
                 post.slug,
                 post.title,
@@ -133,6 +134,7 @@ export const createReply = async (req, res, next) => {
         if (post) {
             // Create notification for comment owner (if different from replier)
             await createReplyNotification(
+                req,
                 postId,
                 post.slug,
                 post.title,
@@ -216,6 +218,7 @@ export const likeComment = async (req, res, next) => {
             if (post && comment.userId.toString() !== userIdStr) {
                 // Create notification for comment owner
                 await createLikeCommentNotification(
+                    req,
                     comment.postId.toString(),
                     post.slug,
                     comment._id.toString(),

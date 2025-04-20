@@ -8,10 +8,11 @@ import commentRoutes from './routes/comment.route.js';
 import donationRoutes from './routes/donation.route.js';
 import notificationRoutes from './routes/notification.route.js';
 import cookieParser from 'cookie-parser';
-
+import http from 'http';
+import { Server } from 'socket.io';
+import jwt from 'jsonwebtoken';
 
 dotenv.config();
-
 
 mongoose
 .connect(process.env.MONGO)
@@ -26,7 +27,66 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 const port = 3000;
-app.listen(port, () => {
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize Socket.io
+const io = new Server(server, {
+    cors: {
+        origin: process.env.CLIENT_URL || "http://localhost:5173",
+        credentials: true
+    }
+});
+
+// Socket.io middleware for authentication
+io.use((socket, next) => {
+    try {
+        console.log('Socket attempting to connect:', socket.id);
+        const token = socket.handshake.auth.token;
+        if (!token) {
+            console.log('Socket connection rejected: No token provided');
+            return next(new Error('Authentication error: Token not provided'));
+        }
+        
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
+        if (!verified) {
+            console.log('Socket connection rejected: Invalid token');
+            return next(new Error('Authentication error: Invalid token'));
+        }
+        
+        console.log('Socket authenticated for user:', verified.id);
+        socket.userId = verified.id;
+        next();
+    } catch (error) {
+        console.log('Socket authentication error:', error.message);
+        next(new Error('Authentication error: ' + error.message));
+    }
+});
+
+// Store online users
+const onlineUsers = new Map();
+
+io.on('connection', (socket) => {
+    console.log('User connected to socket:', socket.userId);
+    
+    // Add user to online users
+    onlineUsers.set(socket.userId, socket.id);
+    console.log('Current online users:', onlineUsers.size);
+    
+    // Handle disconnect
+    socket.on('disconnect', (reason) => {
+        console.log('User disconnected from socket:', socket.userId, 'Reason:', reason);
+        onlineUsers.delete(socket.userId);
+        console.log('Current online users after disconnect:', onlineUsers.size);
+    });
+});
+
+// Make io accessible to other modules
+app.set('io', io);
+app.set('onlineUsers', onlineUsers);
+
+server.listen(port, () => {
     console.log(`Server is listening on port ${port}`);
 });
 

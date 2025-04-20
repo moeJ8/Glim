@@ -1,16 +1,36 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Badge, Button, Spinner } from 'flowbite-react';
 import { Link } from 'react-router-dom';
 import { IoMdNotificationsOutline } from 'react-icons/io';
 import { BsArrowRightCircle } from 'react-icons/bs';
+import { useSelector } from 'react-redux';
+import { getSocket, authenticateSocket } from '../services/socketService';
 
 export default function NotificationIcon() {
+  const { currentUser } = useSelector(state => state.user);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
   const [recentNotifications, setRecentNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
+  const socketRef = useRef(null);
   
+  // Fetch unread count from API
+  const fetchUnreadCount = useCallback(async () => {
+    if (!currentUser) return;
+    
+    try {
+      const res = await fetch('/api/notification/unread-count');
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadCount(data.count);
+      }
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    }
+  }, [currentUser]);
+  
+  // Handle clicks outside dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -23,33 +43,169 @@ export default function NotificationIcon() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-  
+
+  // Initial setup and fetch
   useEffect(() => {
-    const fetchUnreadCount = async () => {
-      try {
-        const res = await fetch('/api/notification/unread-count');
-        if (res.ok) {
-          const data = await res.json();
-          setUnreadCount(data.count);
-        }
-      } catch (error) {
-        console.error('Error fetching unread count:', error);
+    if (!currentUser) return;
+    
+    // Fetch initial count
+    fetchUnreadCount();
+    
+    // Setup socket connection
+    if (currentUser?.token) {
+      authenticateSocket(currentUser.token);
+      const socket = getSocket();
+      socketRef.current = socket;
+    }
+  }, [currentUser, fetchUnreadCount]);
+  
+  // Socket event listeners
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    // Get active socket connection
+    const socket = getSocket();
+    socketRef.current = socket;
+    
+    const handleNewNotification = (data) => {
+      if (typeof data.unreadCount === 'number') {
+        setUnreadCount(data.unreadCount);
+      }
+      
+      if (data.notification) {
+        // Always update the notification list when a new one comes in,
+        // regardless of dropdown state
+        setRecentNotifications(prev => {
+          // Check if notification already exists
+          if (prev.some(n => n._id === data.notification._id)) {
+            return prev;
+          }
+          // Add the new notification and limit to 5
+          return [data.notification, ...prev.slice(0, 4)];
+        });
       }
     };
     
-    // Fetch initially
-    fetchUnreadCount();
+    const handleNotificationRead = (data) => {
+      if (typeof data.unreadCount === 'number') {
+        setUnreadCount(data.unreadCount);
+      }
+      
+      setRecentNotifications(prev => 
+        prev.map(notification => 
+          notification._id === data.notificationId 
+            ? { ...notification, read: true } 
+            : notification
+        )
+      );
+    };
     
-    // Set up interval to fetch unread count
-    const interval = setInterval(fetchUnreadCount, 30000); // every 30 seconds
+    const handleAllNotificationsRead = (data) => {
+      if (typeof data.unreadCount === 'number') {
+        setUnreadCount(data.unreadCount);
+      } else {
+        setUnreadCount(0);
+      }
+      
+      setRecentNotifications(prev => 
+        prev.map(notification => ({ ...notification, read: true }))
+      );
+    };
     
-    return () => clearInterval(interval);
-  }, []);
+    const handleNotificationDeleted = (data) => {
+      if (typeof data.unreadCount === 'number') {
+        setUnreadCount(data.unreadCount);
+      }
+      
+      // Always remove the deleted notification from the list if it exists
+      setRecentNotifications(prev => 
+        prev.filter(notification => notification._id !== data.notificationId)
+      );
+    };
+    
+    const handleUnreadCountUpdate = (data) => {
+      if (typeof data.unreadCount === 'number') {
+        // Use immediate state update for faster UI response
+        setUnreadCount(data.unreadCount);
+      }
+    };
+    
+    // Add socket event listeners
+    socket.on('new-notification', handleNewNotification);
+    socket.on('notification-read', handleNotificationRead);
+    socket.on('all-notifications-read', handleAllNotificationsRead);
+    socket.on('notification-deleted', handleNotificationDeleted);
+    socket.on('unread-count-update', handleUnreadCountUpdate);
+    
+    // Verify socket connection
+    if (!socket.connected) {
+      socket.connect();
+    }
+    
+    return () => {
+      // Remove socket event listeners
+      socket.off('new-notification', handleNewNotification);
+      socket.off('notification-read', handleNotificationRead);
+      socket.off('all-notifications-read', handleAllNotificationsRead);
+      socket.off('notification-deleted', handleNotificationDeleted);
+      socket.off('unread-count-update', handleUnreadCountUpdate);
+    };
+  }, [currentUser]);
+  
+  // Check socket connection status periodically
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const checkSocketStatus = () => {
+      if (socketRef.current) {
+        if (!socketRef.current.connected) {
+          socketRef.current.connect();
+        }
+      } else {
+        if (currentUser?.token) {
+          authenticateSocket(currentUser.token);
+          socketRef.current = getSocket();
+        }
+      }
+    };
+
+    // Check immediately
+    checkSocketStatus();
+    
+    // And then periodically
+    const intervalId = setInterval(checkSocketStatus, 30000); // Every 30 seconds
+    
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [currentUser]);
+  
+  // Poll for unread count as a backup (every 10 seconds)
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    // Set up a polling interval as a backup for socket events
+    const pollInterval = setInterval(() => {
+      fetchUnreadCount();
+    }, 10000); // Poll every 10 seconds
+    
+    // Clear the interval when the component unmounts
+    return () => {
+      clearInterval(pollInterval);
+    };
+  }, [currentUser, fetchUnreadCount]);
   
   const handleBellClick = async () => {
-    setShowDropdown(!showDropdown);
+    // Toggle dropdown
+    const newDropdownState = !showDropdown;
+    setShowDropdown(newDropdownState);
     
-    if (!showDropdown && recentNotifications.length === 0) {
+    // If opening dropdown, fetch the latest unread count and notifications
+    if (newDropdownState) {
+      // Refresh unread count
+      await fetchUnreadCount();
+      
+      // Always fetch the most recent notifications when opening the dropdown
       setLoading(true);
       try {
         const res = await fetch('/api/notification?limit=5');
@@ -91,14 +247,7 @@ export default function NotificationIcon() {
   
   const markAsRead = async (notificationId) => {
     try {
-      await fetch(`/api/notification/${notificationId}/read`, {
-        method: 'PUT',
-      });
-      
-      // Update the unread count
-      setUnreadCount(prev => Math.max(0, prev - 1));
-      
-      // Update the notification in the list
+      // Optimistic UI update - update the notification state immediately
       setRecentNotifications(prev => 
         prev.map(notification => 
           notification._id === notificationId 
@@ -106,10 +255,24 @@ export default function NotificationIcon() {
             : notification
         )
       );
+      
+      // Also optimistically decrease the unread count
+      setUnreadCount(prevCount => Math.max(0, prevCount - 1));
+      
+      // Then send the API request
+      await fetch(`/api/notification/${notificationId}/read`, {
+        method: 'PUT',
+      });
+      
+      // The socket update will eventually confirm the change
     } catch (error) {
       console.error('Error marking notification as read:', error);
+      // If there's an error, revert the optimistic UI updates
+      fetchUnreadCount();
     }
   };
+  
+  if (!currentUser) return null;
   
   return (
     <div className="relative" ref={dropdownRef}>
@@ -156,8 +319,12 @@ export default function NotificationIcon() {
                     key={notification._id} 
                     to={getNotificationLink(notification)}
                     onClick={() => {
-                      !notification.read && markAsRead(notification._id);
-                      setShowDropdown(false);
+                      // Mark as read before navigation if not already read
+                      if (!notification.read) {
+                        markAsRead(notification._id);
+                      }
+                      // Close dropdown after a short delay to ensure state updates
+                      setTimeout(() => setShowDropdown(false), 50);
                     }}
                     className={`block p-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
                       !notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''

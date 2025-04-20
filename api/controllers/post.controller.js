@@ -19,6 +19,7 @@ export const create = async (req, res, next) => {
         const savedPost = await newPost.save();  
         // Create notifications for admins about the new post
         await createNewPostNotifications(
+            req,
             savedPost._id,
             savedPost.slug,
             savedPost.title,

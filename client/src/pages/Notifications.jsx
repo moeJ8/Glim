@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Button, Spinner } from 'flowbite-react';
 import { Link } from 'react-router-dom';
+import { getSocket, authenticateSocket } from '../services/socketService';
 
 export default function Notifications() {
   const { currentUser } = useSelector((state) => state.user);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const socketRef = useRef(null);
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -30,59 +32,134 @@ export default function Notifications() {
     };
 
     if (currentUser) {
+      // Setup socket connection with authentication
+      if (currentUser?.token) {
+        authenticateSocket(currentUser.token);
+        const socket = getSocket();
+        socketRef.current = socket;
+      }
+      
       fetchNotifications();
+      
+      // Set up socket listeners for real-time updates
+      const socket = getSocket();
+      
+      // Handle new notifications
+      const handleNewNotification = (data) => {
+        // If not already in our list, add it
+        if (data.notification) {
+          setNotifications(prev => {
+            // Check if notification already exists
+            if (prev.some(n => n._id === data.notification._id)) return prev;
+            return [data.notification, ...prev];
+          });
+        }
+      };
+      
+      // Handle notification read status updates
+      const handleNotificationRead = (data) => {
+        setNotifications(prev => 
+          prev.map(n => n._id === data.notificationId ? { ...n, read: true } : n)
+        );
+      };
+      
+      // Handle all notifications read
+      const handleAllNotificationsRead = () => {
+        setNotifications(prev => 
+          prev.map(notification => ({ ...notification, read: true }))
+        );
+      };
+      
+      // Handle notification deletion
+      const handleNotificationDeleted = (data) => {
+        setNotifications(prev => prev.filter(n => n._id !== data.notificationId));
+      };
+      
+      socket.on('new-notification', handleNewNotification);
+      socket.on('notification-read', handleNotificationRead);
+      socket.on('all-notifications-read', handleAllNotificationsRead);
+      socket.on('notification-deleted', handleNotificationDeleted);
+      
+      return () => {
+        // Clean up socket listeners when component unmounts
+        if (socket) {
+          socket.off('new-notification', handleNewNotification);
+          socket.off('notification-read', handleNotificationRead);
+          socket.off('all-notifications-read', handleAllNotificationsRead);
+          socket.off('notification-deleted', handleNotificationDeleted);
+        }
+      };
     }
   }, [currentUser]);
 
   const markAsRead = async (notificationId) => {
     try {
-      const res = await fetch(`/api/notification/${notificationId}/read`, {
+      // Optimistically update UI first
+      setNotifications(prev => 
+        prev.map(n => n._id === notificationId ? { ...n, read: true } : n)
+      );
+      
+      // Then make API request
+      await fetch(`/api/notification/${notificationId}/read`, {
         method: 'PUT',
       });
-      
-      if (res.ok) {
-        setNotifications((prev) =>
-          prev.map((notification) =>
-            notification._id === notificationId
-              ? { ...notification, read: true }
-              : notification
-          )
-        );
-      }
+      // Server update will come through socket as a backup
     } catch (error) {
       console.error('Error marking notification as read:', error);
+      // Revert optimistic update on error
+      setNotifications(prev => 
+        prev.map(n => n._id === notificationId ? { ...n, read: false } : n)
+      );
     }
   };
 
   const markAllAsRead = async () => {
     try {
-      const res = await fetch('/api/notification/read-all', {
+      // Optimistic UI update - mark all as read immediately
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      
+      // Then make API request
+      await fetch('/api/notification/read-all', {
         method: 'PUT',
       });
-      
-      if (res.ok) {
-        setNotifications((prev) =>
-          prev.map((notification) => ({ ...notification, read: true }))
-        );
-      }
+      // Socket update will eventually confirm this change
     } catch (error) {
       console.error('Error marking all as read:', error);
+      // If there's an error, fetch the actual state
+      try {
+        const res = await fetch('/api/notification');
+        if (res.ok) {
+          const data = await res.json();
+          setNotifications(data.notifications);
+        }
+      } catch (fetchError) {
+        console.error('Error fetching notifications after error:', fetchError);
+      }
     }
   };
 
   const deleteNotification = async (notificationId) => {
     try {
-      const res = await fetch(`/api/notification/${notificationId}`, {
+      const existingNotification = notifications.find(n => n._id === notificationId);
+      if (!existingNotification) return;
+      
+      // Optimistically remove from UI first for better UX
+      setNotifications(prev => prev.filter(n => n._id !== notificationId));
+      
+      const response = await fetch(`/api/notification/${notificationId}`, {
         method: 'DELETE',
       });
       
-      if (res.ok) {
-        setNotifications((prev) =>
-          prev.filter((notification) => notification._id !== notificationId)
-        );
+      if (!response.ok) {
+        throw new Error('Server responded with an error');
       }
     } catch (error) {
       console.error('Error deleting notification:', error);
+      // Revert optimistic update
+      const existingNotification = notifications.find(n => n._id === notificationId);
+      if (existingNotification) {
+        setNotifications(prev => [...prev, existingNotification]);
+      }
     }
   };
 
@@ -129,6 +206,8 @@ export default function Notifications() {
 
   const handleNotificationClick = (notification) => {
     if (!notification.read) {
+      // Call markAsRead to update the UI immediately 
+      // and send the API request
       markAsRead(notification._id);
     }
   };
