@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.route.js';
 import postRoutes from './routes/post.route.js';
 import commentRoutes from './routes/comment.route.js';
 import donationRoutes from './routes/donation.route.js';
+import notificationRoutes from './routes/notification.route.js';
 import cookieParser from 'cookie-parser';
 
 
@@ -34,6 +35,7 @@ app.use('/api/auth' , authRoutes);
 app.use('/api/post', postRoutes);
 app.use('/api/comment', commentRoutes);
 app.use('/api/donation', donationRoutes);
+app.use('/api/notification', notificationRoutes);
 
 app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;

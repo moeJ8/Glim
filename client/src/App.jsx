@@ -22,6 +22,7 @@ import CreateDonation from './pages/CreateDonation'
 import DonationDashboard from './pages/DonationDashboard'
 import EditDonation from './pages/EditDonation.jsx'
 import UserProfile from './pages/UserProfile'
+import Notifications from './pages/Notifications'
 
 
 export default function App() {
@@ -42,6 +43,7 @@ export default function App() {
       <Route path="/profile/:username" element={<UserProfile/>}/>
       <Route element ={<PrivateRoute/>} >
         <Route path="/dashboard" element={<Dashboard/>}/>
+        <Route path="/notifications" element={<Notifications/>}/>
       </Route>
       <Route element ={<OnlyAdminPrivateRoute/>} >
         <Route path="/create-post" element={<CreatePost/>}/>

@@ -9,6 +9,7 @@ import { useEffect, useState, useRef } from "react";
 import Logo from "./Logo";
 import MobileSearch from "./MobileSearch";
 import SearchDropdown from "./SearchDropdown";
+import NotificationIcon from "./NotificationIcon";
 
 export default function Header() {
     const path = useLocation().pathname;
@@ -152,7 +153,9 @@ export default function Header() {
                         pill 
                         onClick={() => dispatch(toggleTheme())}
                     >
-                        {theme === "light" ? <FaMoon className="text-lg"/> : <FaSun className="text-lg"/>}
+                        <div className="flex items-center justify-center w-full h-full">
+                            {theme === "light" ? <FaMoon className="text-lg"/> : <FaSun className="text-lg"/>}
+                        </div>
                     </Button>
                 </div>
                 
@@ -186,20 +189,27 @@ export default function Header() {
                 <div className="flex-1 flex justify-center md:hidden">
                     <Button 
                         id="mobileSearchToggle"
-                        className="w-18 h-10" 
+                        className="w-18 h-10 flex items-center justify-center" 
                         color='gray' 
                         pill
                         onClick={() => setShowMobileSearch(!showMobileSearch)}
                     >
-                        <AiOutlineSearch className="text-lg"/>
+                        <div className="flex items-center justify-center w-full h-full">
+                            <AiOutlineSearch className="text-lg"/>
+                        </div>
                     </Button>
                 </div>
                 
                 <div className="flex gap-2 md:order-2">
                     {/* Desktop theme toggle */}
-                    <Button className="w-12 h-10 hidden md:inline-flex" color="gray" pill onClick={() => dispatch(toggleTheme())}>
-                        {theme === "light" ? <FaMoon className="text-md"/> : <FaSun/>}
+                    <Button className="w-12 h-10 hidden md:inline-flex items-center justify-center" color="gray" pill onClick={() => dispatch(toggleTheme())}>
+                        <div className="flex items-center justify-center w-full h-full">
+                            {theme === "light" ? <FaMoon className="text-md"/> : <FaSun className="text-md"/>}
+                        </div>
                     </Button>
+
+                    {/* Notification icon - only show for logged in users */}
+                    {currentUser && <NotificationIcon />}
 
                     {currentUser ? (
                         <Dropdown 
@@ -219,6 +229,9 @@ export default function Header() {
                             </Dropdown.Header>
                             <Link to={'/dashboard?tab=profile'}>
                                 <Dropdown.Item>Profile</Dropdown.Item>
+                            </Link>
+                            <Link to='/notifications'>
+                                <Dropdown.Item>Notifications</Dropdown.Item>
                             </Link>
                             <Dropdown.Divider />
                             <Dropdown.Item onClick={handleSignOut}>Sign out</Dropdown.Item>

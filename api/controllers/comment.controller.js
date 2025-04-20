@@ -2,6 +2,7 @@ import { errorHandler } from "../utils/error.js";
 import Comment from "../models/comment.model.js";
 import Post from "../models/post.model.js";
 import mongoose from "mongoose";
+import { createCommentNotification, createReplyNotification, createLikeCommentNotification } from "../utils/createNotification.js";
 
 export const createComment = async (req, res, next) => {
     try {
@@ -47,6 +48,21 @@ export const createComment = async (req, res, next) => {
         const populatedComment = await Comment.findById(newComment._id)
             .populate('userId', 'username profilePicture')
             .populate('postId', 'title slug');
+            
+        // Get post details to create notification
+        const post = await Post.findById(postId);
+        
+        if (post) {
+            // Create notification for post owner
+            await createCommentNotification(
+                postId,
+                post.slug,
+                post.title,
+                newComment._id.toString(),
+                post.userId,
+                userId
+            );
+        }
 
         res.status(200).json(populatedComment);
     } catch(err){
@@ -103,7 +119,6 @@ export const createReply = async (req, res, next) => {
         
         await newReply.save();
         
-        // Add reply to parent comment's replies array
         parentComment.replies.push(newReply._id);
         await parentComment.save();
         
@@ -111,6 +126,21 @@ export const createReply = async (req, res, next) => {
         const populatedReply = await Comment.findById(newReply._id)
             .populate('userId', 'username profilePicture')
             .populate('postId', 'title slug');
+            
+        // Get post details for notification
+        const post = await Post.findById(postId);
+        
+        if (post) {
+            // Create notification for comment owner (if different from replier)
+            await createReplyNotification(
+                postId,
+                post.slug,
+                post.title,
+                newReply._id.toString(),
+                parentComment.userId.toString(),
+                userId
+            );
+        }
 
         res.status(200).json(populatedReply);
     } catch(err){
@@ -176,9 +206,26 @@ export const likeComment = async (req, res, next) => {
         const userIndex = comment.likes.indexOf(userIdStr);
         
         if (userIndex === -1) {
+            // User hasn't liked the comment yet, add the like
             comment.numberOfLikes += 1;
             comment.likes.push(userIdStr);
+            
+            // Get post details for notification
+            const post = await Post.findById(comment.postId);
+            
+            if (post && comment.userId.toString() !== userIdStr) {
+                // Create notification for comment owner
+                await createLikeCommentNotification(
+                    comment.postId.toString(),
+                    post.slug,
+                    comment._id.toString(),
+                    comment.content,
+                    comment.userId.toString(),
+                    userIdStr
+                );
+            }
         } else {
+            // User already liked the comment, remove the like
             comment.numberOfLikes -= 1;
             comment.likes.splice(userIndex, 1);
         }

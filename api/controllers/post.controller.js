@@ -1,5 +1,6 @@
 import Post from "../models/post.model.js";
 import { errorHandler } from "../utils/error.js"
+import { createNewPostNotifications } from "../utils/createNotification.js";
 
 export const create = async (req, res, next) => {
     if (!req.user.isAdmin && !req.user.isPublisher) {
@@ -15,7 +16,14 @@ export const create = async (req, res, next) => {
         userId: req.user.id,
     });
     try {
-        const savedPost = await newPost.save();
+        const savedPost = await newPost.save();  
+        // Create notifications for admins about the new post
+        await createNewPostNotifications(
+            savedPost._id,
+            savedPost.slug,
+            savedPost.title,
+            req.user.id
+        );
         res.status(201).json(savedPost);
     } catch (err) {
         next(err);

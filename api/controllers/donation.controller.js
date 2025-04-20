@@ -1,5 +1,6 @@
 import { DonationCase, DonationTransaction } from '../models/donation.model.js';
 import { errorHandler } from '../utils/error.js';
+import { createNewDonationNotifications, createDonationTransactionNotifications } from '../utils/createNotification.js';
 
 // Create a new donation case (admin only)
 export const createDonationCase = async (req, res, next) => {
@@ -24,26 +25,29 @@ export const createDonationCase = async (req, res, next) => {
     });
 
     const savedDonationCase = await newDonationCase.save();
+    // Create notifications for all non-admin users
+    await createNewDonationNotifications(
+      savedDonationCase._id,
+      savedDonationCase.title,
+      req.user.id
+    );
     res.status(201).json(savedDonationCase);
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
-// Get all donation cases
 export const getDonationCases = async (req, res, next) => {
   try {
     const limit = parseInt(req.query.limit) || 10;
     const startIndex = parseInt(req.query.startIndex) || 0;
     
-    // Build query based on active parameter
     const query = {};
     if (req.query.active === 'false') {
       query.active = false;
     } else if (req.query.active === 'true') {
       query.active = true;
     }
-    // If active=all or not specified, don't filter by active status
     
     const donationCases = await DonationCase.find(query)
       .sort({ createdAt: -1 })
@@ -53,12 +57,11 @@ export const getDonationCases = async (req, res, next) => {
     const totalDonationCases = await DonationCase.countDocuments(query);
     
     res.status(200).json({ donationCases, totalDonationCases });
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
-// Get a donation case by ID
 export const getDonationCaseById = async (req, res, next) => {
   try {
     const donationCase = await DonationCase.findById(req.params.id);
@@ -68,8 +71,8 @@ export const getDonationCaseById = async (req, res, next) => {
     }
     
     res.status(200).json(donationCase);
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -102,8 +105,8 @@ export const updateDonationCase = async (req, res, next) => {
     );
     
     res.status(200).json(updatedDonationCase);
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -146,13 +149,21 @@ export const createDonationTransaction = async (req, res, next) => {
       }
     );
     
+    // Create notifications for admins
+    await createDonationTransactionNotifications(
+      donationCaseId,
+      donationCase.title,
+      amount,
+      newDonationTransaction.donorName,
+      req.user ? req.user.id : null
+    );
+    
     res.status(201).json(savedDonationTransaction);
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
-// Get donation transactions for a case
 export const getDonationTransactions = async (req, res, next) => {
   try {
     if (!req.user.isAdmin) {
@@ -166,12 +177,11 @@ export const getDonationTransactions = async (req, res, next) => {
       .populate('donor', 'username email');
     
     res.status(200).json(donationTransactions);
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
-// Update donation transaction status (after payment processing)
 export const updateDonationTransactionStatus = async (req, res, next) => {
   try {
     const { status, transactionId } = req.body;
@@ -194,8 +204,7 @@ export const updateDonationTransactionStatus = async (req, res, next) => {
           $inc: { raisedAmount: -donationTransaction.amount },
         }
       );
-    }
-    
+    }  
     const updatedDonationTransaction = await DonationTransaction.findByIdAndUpdate(
       req.params.id,
       {
@@ -205,31 +214,43 @@ export const updateDonationTransactionStatus = async (req, res, next) => {
         },
       },
       { new: true }
-    );
+    );   
+    // Only create notification for successful transactions
+    if (status === 'completed' && donationTransaction.status !== 'completed') {
+      // Get the donation case details
+      const donationCase = await DonationCase.findById(donationTransaction.donationCase);
+
+      if (donationCase) {
+        // Create notifications for admins about the completed donation
+        await createDonationTransactionNotifications(
+          donationTransaction.donationCase,
+          donationCase.title,
+          donationTransaction.amount,
+          donationTransaction.donorName,
+          donationTransaction.donor
+        );
+      }
+    }
     
     res.status(200).json(updatedDonationTransaction);
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 
-// Delete a donation case (admin only)
 export const deleteDonationCase = async (req, res, next) => {
   if (!req.user.isAdmin) {
     return next(errorHandler(403, 'You are not allowed to delete donation cases'));
   }
-  
   try {
     const donationCase = await DonationCase.findById(req.params.id);
     
     if (!donationCase) {
       return next(errorHandler(404, 'Donation case not found'));
     }
-    
     await DonationCase.findByIdAndDelete(req.params.id);
-    
     res.status(200).json({ message: 'Donation case has been deleted' });
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 }; 
