@@ -22,7 +22,6 @@ const getAndEmitUnreadCount = async (req, userId) => {
     // If user is online, send them the current unread count
     if (onlineUsers.has(userId.toString())) {
       const socketId = onlineUsers.get(userId.toString());
-      console.log(`Emitting unread count update to user ${userId} (Socket: ${socketId}): ${unreadCount}`);
       
       io.to(socketId).emit('unread-count-update', {
         unreadCount
@@ -71,7 +70,7 @@ export const createNotification = async (req, notificationData) => {
         unreadCount: unreadCount
       });
     } else {
-      console.log(`Recipient ${notificationData.recipient} is not online, notification saved but not emitted`);
+      // Log removed as requested
     }
     
     return newNotification;
@@ -153,7 +152,6 @@ export const markAsRead = async (req, res, next) => {
       // If user is online, update unread count in real-time
       if (onlineUsers && onlineUsers.has(req.user.id)) {
         const userSocketId = onlineUsers.get(req.user.id);
-        console.log(`Emitting notification-read to user ${req.user.id} (Socket: ${userSocketId}), unread count: ${unreadCount}`);
         
         // Emit the specific notification read event
         io.to(userSocketId).emit('notification-read', {
@@ -166,8 +164,6 @@ export const markAsRead = async (req, res, next) => {
           unreadCount
         });
       }
-      
-      console.log(`Notification ${notificationId} marked as read, new unread count: ${unreadCount}`);
       
       res.status(200).json({ 
         success: true, 
@@ -220,8 +216,6 @@ export const markAllAsRead = async (req, res, next) => {
       { read: true }
     );
     
-    console.log(`Marked ${result.modifiedCount} notifications as read for user ${req.user.id}`);
-    
     // Get the io instance and online users map
     const io = req.app.get('io');
     const onlineUsers = req.app.get('onlineUsers');
@@ -229,7 +223,6 @@ export const markAllAsRead = async (req, res, next) => {
     // If user is online, update unread count in real-time
     if (onlineUsers && onlineUsers.has(req.user.id)) {
       const userSocketId = onlineUsers.get(req.user.id);
-      console.log(`Emitting all-notifications-read to user ${req.user.id} (Socket: ${userSocketId})`);
       
       // Emit the specific all-read event
       io.to(userSocketId).emit('all-notifications-read', {
@@ -286,7 +279,6 @@ export const deleteNotification = async (req, res, next) => {
     // If user is online, update deleted notification in real-time
     if (onlineUsers && onlineUsers.has(req.user.id)) {
       const userSocketId = onlineUsers.get(req.user.id);
-      console.log(`Emitting notification-deleted to user ${req.user.id} (Socket: ${userSocketId}), unread count: ${unreadCount}`);
       
       // Emit the specific notification deleted event
       io.to(userSocketId).emit('notification-deleted', {
@@ -301,8 +293,6 @@ export const deleteNotification = async (req, res, next) => {
         });
       }
     }
-    
-    console.log(`Notification ${notificationId} deleted, unread status: ${wasUnread}, new unread count: ${unreadCount}`);
     
     res.status(200).json({ 
       success: true, 

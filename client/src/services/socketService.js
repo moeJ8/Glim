@@ -23,7 +23,7 @@ export const initSocket = () => {
     });
 
     socket.on('connect', () => {
-        console.log('Socket connected, ID:', socket.id);
+        // Connection success log removed
     });
 
     socket.on('connect_error', (err) => {
@@ -31,7 +31,7 @@ export const initSocket = () => {
     });
     
     socket.on('disconnect', (reason) => {
-        console.log('Socket disconnected:', reason);
+        // Disconnect log removed
         if (reason === 'io server disconnect') {
             socket.connect();
         }
