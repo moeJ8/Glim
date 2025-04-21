@@ -87,7 +87,7 @@ export default function SignIn() {
                 onChange={handleChange}
               />
               <div className="flex justify-end mt-0.5">
-                <Link to="/request-password-reset" className="text-sm text-blue-500 hover:underline">
+                <Link to="/request-password-reset" className="text-xs text-blue-500 hover:underline">
                   Forgot password?
                 </Link>
               </div>

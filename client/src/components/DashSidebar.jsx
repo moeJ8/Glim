@@ -69,7 +69,7 @@ export default function DashSidebar() {
             {
               currentUser && currentUser.isAdmin && (
                <Link to={`/dashboard?tab=dashboard`}>
-                <Sidebar.Item active={tab==='dashboard' || !tab} icon={HiChartPie}>
+                <Sidebar.Item active={tab==='dashboard' || !tab} icon={HiChartPie} as='div'>
                   Dashboard
                 </Sidebar.Item>
                 </Link>
@@ -136,7 +136,7 @@ export default function DashSidebar() {
             </Link>
           )}
           
-          <Sidebar.Item icon={HiArrowSmRight} className='cursor-pointer' onClick={handleSignOut}>
+          <Sidebar.Item icon={HiArrowSmRight} className='cursor-pointer' onClick={handleSignOut} as='div'>
             Sign Out
           </Sidebar.Item>
         </Sidebar.ItemGroup>
