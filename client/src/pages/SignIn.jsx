@@ -63,12 +63,12 @@ export default function SignIn() {
       
       {/* Form Section */} 
       <div className="flex-[1.3] flex items-center justify-center p-4 sm:p-6 md:p-8">
-        <div className="w-full max-w-[450px] sm:w-[450px] p-3 flex flex-col gap-5">
-          <div className="text-center mb-1">
-            <h2 className="text-2xl font-bold mb-2">Welcome Back!</h2>
+        <div className="w-full max-w-[450px] sm:w-[450px] p-3 flex flex-col gap-3">
+          <div className="text-center mb-0">
+            <h2 className="text-2xl font-bold mb-1">Welcome Back!</h2>
             <p className="text-gray-600 dark:text-gray-400">Sign in to continue</p>
           </div>
-          <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div>
               <Label value="Email or Username" className="block" />
               <TextInput 
@@ -86,28 +86,36 @@ export default function SignIn() {
                 id="password" 
                 onChange={handleChange}
               />
+              <div className="flex justify-end mt-0.5">
+                <Link to="/request-password-reset" className="text-sm text-blue-500 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
             </div>
             <Button 
               gradientDuoTone="purpleToPink" 
               type="submit" 
               disabled={loading}
+              
             >
               {
                 loading ? <> <Spinner size="sm"/> <span className="pl-3">Loading...</span></> : 'Sign In'
               }
             </Button>
-            <OAuth />
-            <FOAuth />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <OAuth />
+              <FOAuth />
+            </div>
           </form>
 
-          <div className="flex gap-2 text-sm mt-3 justify-center">
+          <div className="flex gap-2 text-sm justify-center">
             <span>don&apos;t Have an account?</span>
             <Link to='/sign-up' className="text-blue-500">
               Sign Up
             </Link>
           </div>
           {errorMessage && (
-            <Alert className="mt-5" color="failure">
+            <Alert className="mt-2" color="failure">
               {errorMessage}
             </Alert>
           )}

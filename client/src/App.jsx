@@ -24,6 +24,8 @@ import EditDonation from './pages/EditDonation.jsx'
 import UserProfile from './pages/UserProfile'
 import Notifications from './pages/Notifications'
 import EmailVerification from './pages/EmailVerification'
+import RequestPasswordReset from './pages/RequestPasswordReset'
+import ResetPassword from './pages/ResetPassword'
 
 
 export default function App() {
@@ -43,6 +45,8 @@ export default function App() {
       <Route path="/donate/success" element={<DonateSuccess/>}/>
       <Route path="/profile/:username" element={<UserProfile/>}/>
       <Route path="/users/:userId/verify/:token" element={<EmailVerification/>}/>
+      <Route path="/request-password-reset" element={<RequestPasswordReset/>}/>
+      <Route path="/reset-password/:userId/:token" element={<ResetPassword/>}/>
       <Route element ={<PrivateRoute/>} >
         <Route path="/dashboard" element={<Dashboard/>}/>
         <Route path="/notifications" element={<Notifications/>}/>

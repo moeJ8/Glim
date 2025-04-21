@@ -43,8 +43,10 @@ export default function FOAuth() {
 
   return (
     <Button type="button" className="bg-gradient-to-r from-pink-500 to-blue-500 text-white" outline onClick={handleFacebookClick}>
-      <AiFillFacebook size={21} className=" mr-2 "/>
-      Continue with Facebook
+      <div className="flex items-center justify-center">
+        <AiFillFacebook size={20} className="mr-2 ml-3 sm:ml-0" />
+        <span className="text-xs">Continue with Facebook</span>
+      </div>
     </Button>
   )
 } 
