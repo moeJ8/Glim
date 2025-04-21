@@ -3,6 +3,9 @@ import bcryptjs from "bcryptjs";
 import User from "../models/user.model.js";
 import PublisherRequest from '../models/publisherRequest.model.js';
 import jwt from "jsonwebtoken";
+import Token from '../models/token.js';
+import { sendEmail } from '../utils/sendEmail.js';
+import crypto from 'crypto';
 
 export const test = (req, res) => {
   res.json({ message: "API is working" });
@@ -306,6 +309,47 @@ export const searchUsers = async (req, res, next) => {
     .select('-password -email'); // Exclude sensitive data
     
     res.status(200).json({ users });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const resendVerificationLink = async (req, res, next) => {
+  try {
+    // Check if user is requesting for themselves
+    if (req.user.id !== req.params.userId) {
+      return next(errorHandler(403, "You can only request verification for your own account"));
+    }
+
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      return next(errorHandler(404, "User not found"));
+    }
+
+    if (user.verified) {
+      return res.status(400).json({ message: "This account is already verified" });
+    }
+
+    // Delete any existing tokens
+    await Token.deleteMany({ userId: user._id });
+
+    // Create new verification token
+    const token = await new Token({
+      userId: user._id,
+      token: crypto.randomBytes(32).toString("hex")
+    }).save();
+
+    // Create verification URL
+    const url = `${process.env.BASE_URL}/users/${user._id}/verify/${token.token}`;
+
+    // Send verification email
+    await sendEmail(
+      user.email,
+      "Verify Your Email",
+      `Please click the link to verify your email: ${url}`
+    );
+
+    res.status(200).json({ message: "Verification link has been sent to your email" });
   } catch (err) {
     next(err);
   }

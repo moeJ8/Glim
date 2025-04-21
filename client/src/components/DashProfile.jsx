@@ -8,8 +8,8 @@ import 'react-circular-progressbar/dist/styles.css';
 import {updateStart, updateSuccess, updateFailure, deleteUserStart, deleteUserSuccess, deleteUserFailure, signoutSuccess} from "../redux/user/userSlice"
 import { useDispatch } from "react-redux"
 import {HiOutlineExclamationCircle} from "react-icons/hi"
-import {FaEye} from "react-icons/fa"
-import { Link } from "react-router-dom"
+import {FaEye, FaCheckCircle, FaTimesCircle} from "react-icons/fa"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import UserPosts from "./UserPosts"
 
 export default function DashProfile() {
@@ -25,6 +25,47 @@ export default function DashProfile() {
     const [showModal, setShowModal] = useState(false);
     const filePickerRef = useRef(null);
     const dispatch = useDispatch()
+    const [sendingVerification, setSendingVerification] = useState(false);
+    const [verificationMessage, setVerificationMessage] = useState(null);
+    const location = useLocation();
+    const navigate = useNavigate();
+    
+    // Check for verification success in URL
+    useEffect(() => {
+      const queryParams = new URLSearchParams(location.search);
+      const verificationStatus = queryParams.get('verified');
+      const tab = queryParams.get('tab');
+      
+      if (verificationStatus === 'success') {
+        setVerificationMessage({ 
+          type: 'success', 
+          message: 'Your email has been verified successfully!' 
+        });
+        
+        // Keep the tab parameter but remove the verified parameter
+        if (tab) {
+          navigate(`${location.pathname}?tab=${tab}`, { replace: true });
+        } else {
+          navigate(location.pathname, { replace: true });
+        }
+        
+        // Check with server for the latest user data, including verification status
+        const fetchUpdatedUser = async () => {
+          try {
+            const res = await fetch(`/api/user/${currentUser._id}`);
+            const data = await res.json();
+            if (res.ok && data.verified) {
+              dispatch(updateSuccess({...currentUser, verified: true}));
+            }
+          } catch (err) {
+            console.error("Failed to fetch updated user data:", err);
+          }
+        };
+        
+        fetchUpdatedUser();
+      }
+    }, [location, navigate, dispatch, currentUser._id, currentUser]);
+
     const handleImageChange = (e) => {
       const file = e.target.files[0];
       if (file) {
@@ -155,6 +196,44 @@ export default function DashProfile() {
         console.log(error.message)
       }
     };
+    const handleSendVerification = async () => {
+      if (currentUser.verified) {
+        setVerificationMessage({ type: 'failure', message: 'Your account is already verified' });
+        return;
+      }
+
+      try {
+        setSendingVerification(true);
+        setVerificationMessage(null);
+        
+        const res = await fetch(`/api/user/${currentUser._id}/resend-verification`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+          setVerificationMessage({ type: 'failure', message: data.message || 'Failed to send verification email' });
+        } else {
+          setVerificationMessage({ type: 'success', message: data.message || 'Verification email sent successfully' });
+        }
+      } catch (err) {
+        setVerificationMessage({ type: 'failure', message: err.message || 'An error occurred' });
+      } finally {
+        setSendingVerification(false);
+      }
+    };
+
+    // Custom icon component to handle color
+    const VerificationIcon = () => {
+      return currentUser.verified ? 
+        <FaCheckCircle className="text-green-500" /> : 
+        <FaTimesCircle className="text-red-500" />;
+    };
+
   return (
     <div className="max-w-lg mx-auto p-3 w-full">
       <h1 className="my-7 text-center font-semibold text-3xl">Profile</h1>
@@ -182,10 +261,43 @@ export default function DashProfile() {
         {imageFileUploadError && <Alert color="failure">{imageFileUploadError}</Alert>}
         
         <TextInput type="text" id="username" placeholder="Username" defaultValue={currentUser.username} onChange={handleChange}/>
-        <TextInput type="email" id="email" placeholder="Email" defaultValue={currentUser.email} onChange={handleChange}/>
+        
+        {/* Email field with verification elements */}
+        <div className="space-y-1">
+          <div className="relative">
+            <TextInput 
+              type="email" 
+              id="email" 
+              placeholder="Email" 
+              defaultValue={currentUser.email} 
+              onChange={handleChange}
+              className="w-full"
+              rightIcon={VerificationIcon}
+            />
+          </div>
+          
+          {/* Centered verification link - now bigger and bold */}
+          {!currentUser.verified && (
+            <div className="flex justify-center">
+              <p 
+                onClick={handleSendVerification} 
+                className="text-sm font-medium text-blue-600 hover:underline cursor-pointer"
+              >
+                {sendingVerification ? 'Sending...' : 'Verify email'}
+              </p>
+            </div>
+          )}
+        </div>
+        
+        {verificationMessage && (
+          <Alert color={verificationMessage.type} className="mt-2">
+            {verificationMessage.message}
+          </Alert>
+        )}
+
         <TextInput type="password" id="password" placeholder="Password" onChange={handleChange}/>
 
-        <Button type="submit" gradientDuoTone="purpleToBlue" outline disabled={loading || imageFileUploading}>
+        <Button type="submit" gradientDuoTone="purpleToBlue" outline disabled={loading || imageFileUploading} className="mt-2">
             {loading ? 'Updating...' : 'Update'}
         </Button>
 

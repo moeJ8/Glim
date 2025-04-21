@@ -1,7 +1,6 @@
 import express from 'express';
 import { verifyToken } from '../utils/verifyUser.js';
-import { deleteUser, signout, updateUser, test, getUsers, getUser, getUserByUsername, updateUserRole, requestPublisher, getPublisherRequests, updatePublisherRequest, searchUsers } from '../controllers/user.controller.js';
-
+import { deleteUser, signout, updateUser, test, getUsers, getUser, getUserByUsername, updateUserRole, requestPublisher, getPublisherRequests, updatePublisherRequest, searchUsers, resendVerificationLink } from '../controllers/user.controller.js';
 
 const router = express.Router();
 
@@ -17,7 +16,6 @@ router.put('/update-role',verifyToken, updateUserRole);
 router.post('/request-publisher', verifyToken, requestPublisher);
 router.get('/publisher-requests/get', verifyToken, getPublisherRequests);
 router.put('/publisher-requests/update', verifyToken, updatePublisherRequest);
-
-
+router.post('/:userId/resend-verification', verifyToken, resendVerificationLink);
 
 export default router;

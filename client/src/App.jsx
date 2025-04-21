@@ -23,6 +23,7 @@ import DonationDashboard from './pages/DonationDashboard'
 import EditDonation from './pages/EditDonation.jsx'
 import UserProfile from './pages/UserProfile'
 import Notifications from './pages/Notifications'
+import EmailVerification from './pages/EmailVerification'
 
 
 export default function App() {
@@ -41,6 +42,7 @@ export default function App() {
       <Route path="/donate/:id" element={<DonateCase/>}/>
       <Route path="/donate/success" element={<DonateSuccess/>}/>
       <Route path="/profile/:username" element={<UserProfile/>}/>
+      <Route path="/users/:userId/verify/:token" element={<EmailVerification/>}/>
       <Route element ={<PrivateRoute/>} >
         <Route path="/dashboard" element={<Dashboard/>}/>
         <Route path="/notifications" element={<Notifications/>}/>
