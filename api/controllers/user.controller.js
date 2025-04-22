@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import Token from '../models/token.js';
 import { sendEmail } from '../utils/sendEmail.js';
 import crypto from 'crypto';
+import Notification from '../models/notification.model.js';
 
 export const test = (req, res) => {
   res.json({ message: "API is working" });
@@ -279,9 +280,11 @@ export const updatePublisherRequest = async (req, res, next) => {
 
 export const getUserByUsername = async (req, res, next) => {
   try {
+    // Find user and populate followers/following
     const user = await User.findOne({ username: req.params.username });
     if (!user) return next(errorHandler(404, "User not found"));
 
+    // Don't send password in response
     const { password, ...rest } = user._doc;
     res.status(200).json(rest);
   } catch (err) {
@@ -352,5 +355,133 @@ export const resendVerificationLink = async (req, res, next) => {
     res.status(200).json({ message: "Verification link has been sent to your email" });
   } catch (err) {
     next(err);
+  }
+};
+
+export const followUser = async (req, res, next) => {
+  try {
+    const userToFollow = await User.findById(req.params.id);
+    const currentUser = await User.findById(req.user.id);
+
+    if (!userToFollow) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (!userToFollow.isAdmin && !userToFollow.isPublisher) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'You can only follow publishers and admins' 
+      });
+    }
+
+    if (currentUser.following.includes(userToFollow._id)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'You are already following this user' 
+      });
+    }
+
+    if (userToFollow._id.toString() === currentUser._id.toString()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'You cannot follow yourself' 
+      });
+    }
+
+    // Update following list for current user
+    await User.findByIdAndUpdate(currentUser._id, {
+      $push: { following: userToFollow._id }
+    });
+
+    // Update followers list for target user
+    await User.findByIdAndUpdate(userToFollow._id, {
+      $push: { followers: currentUser._id }
+    });
+
+    // Create a notification for the followed user
+    const notification = new Notification({
+      recipient: userToFollow._id,
+      title: 'New Follower',
+      message: `${currentUser.username} started following you`,
+      type: 'follow',
+      triggeredBy: currentUser._id
+    });
+    await notification.save();
+
+    res.status(200).json({ 
+      success: true, 
+      message: `You are now following ${userToFollow.username}` 
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const unfollowUser = async (req, res, next) => {
+  try {
+    const userToUnfollow = await User.findById(req.params.id);
+    const currentUser = await User.findById(req.user.id);
+
+    if (!userToUnfollow) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (!currentUser.following.includes(userToUnfollow._id)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'You are not following this user' 
+      });
+    }
+
+    // Update following list for current user
+    await User.findByIdAndUpdate(currentUser._id, {
+      $pull: { following: userToUnfollow._id }
+    });
+
+    // Update followers list for target user
+    await User.findByIdAndUpdate(userToUnfollow._id, {
+      $pull: { followers: currentUser._id }
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      message: `You have unfollowed ${userToUnfollow.username}` 
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUserFollowers = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const followers = await User.find({ _id: { $in: user.followers } })
+      .select('username profilePicture isAdmin isPublisher');
+
+    res.status(200).json(followers);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUserFollowing = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const following = await User.find({ _id: { $in: user.following } })
+      .select('username profilePicture isAdmin isPublisher');
+
+    res.status(200).json(following);
+  } catch (error) {
+    next(error);
   }
 };

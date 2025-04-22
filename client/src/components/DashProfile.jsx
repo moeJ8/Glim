@@ -11,6 +11,7 @@ import {HiOutlineExclamationCircle} from "react-icons/hi"
 import {FaEye, FaCheckCircle, FaTimesCircle} from "react-icons/fa"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import UserPosts from "./UserPosts"
+import UserListModal from "./UserListModal"
 
 export default function DashProfile() {
     const {currentUser, errormodal, loading} = useSelector(state => state.user)
@@ -29,6 +30,15 @@ export default function DashProfile() {
     const [verificationMessage, setVerificationMessage] = useState(null);
     const location = useLocation();
     const navigate = useNavigate();
+    
+    const [followersCount, setFollowersCount] = useState(0);
+    const [followingCount, setFollowingCount] = useState(0);
+    const [showFollowersModal, setShowFollowersModal] = useState(false);
+    const [showFollowingModal, setShowFollowingModal] = useState(false);
+    const [followers, setFollowers] = useState([]);
+    const [following, setFollowing] = useState([]);
+    const [loadingFollowers, setLoadingFollowers] = useState(false);
+    const [loadingFollowing, setLoadingFollowing] = useState(false);
     
     // Check for verification success in URL
     useEffect(() => {
@@ -52,10 +62,16 @@ export default function DashProfile() {
         // Check with server for the latest user data, including verification status
         const fetchUpdatedUser = async () => {
           try {
-            const res = await fetch(`/api/user/${currentUser._id}`);
+            const res = await fetch(`/api/user/${currentUser._id}`, {
+              credentials: 'include'
+            });
             const data = await res.json();
-            if (res.ok && data.verified) {
-              dispatch(updateSuccess({...currentUser, verified: true}));
+            if (res.ok) {
+              // Update Redux with complete user data including followers/following
+              dispatch(updateSuccess(data));
+              // Update local state with follower/following counts
+              setFollowersCount(data.followers?.length || 0);
+              setFollowingCount(data.following?.length || 0);
             }
           } catch (err) {
             console.error("Failed to fetch updated user data:", err);
@@ -66,20 +82,54 @@ export default function DashProfile() {
       }
     }, [location, navigate, dispatch, currentUser._id, currentUser]);
 
+    // Get follower and following counts when component mounts
+    useEffect(() => {
+      if (currentUser) {
+        // Set follower and following counts from currentUser
+        setFollowersCount(currentUser.followers?.length || 0);
+        setFollowingCount(currentUser.following?.length || 0);
+        
+        // Fetch latest user data including followers/following
+        const fetchCompleteUserData = async () => {
+          try {
+            const res = await fetch(`/api/user/${currentUser._id}`, {
+              credentials: 'include'
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+              console.log("User data received:", data);
+              console.log("Followers:", data.followers);
+              console.log("Following:", data.following);
+              
+              // Update Redux with complete user data
+              dispatch(updateSuccess(data));
+              // Update local state with follower/following counts
+              setFollowersCount(data.followers?.length || 0);
+              setFollowingCount(data.following?.length || 0);
+            }
+          } catch (err) {
+            console.error("Failed to fetch complete user data:", err);
+          }
+        };
+        
+        fetchCompleteUserData();
+      }
+    }, [currentUser, dispatch]);
+
     const handleImageChange = (e) => {
       const file = e.target.files[0];
       if (file) {
         setImageFile(file);
         setImageFileUrl(URL.createObjectURL(file));
       }
-
     }
+    
     useEffect(() => {
       if (imageFile) {
         uploadImage();
       }
     }, [imageFile]);
-
 
     const uploadImage = async () => {
      /* rules_version = '2';
@@ -125,6 +175,7 @@ export default function DashProfile() {
           }
         );
     };
+    
     const handleChange = (e) => {
       setFormData({...formData, [e.target.id]: e.target.value});
     };
@@ -163,6 +214,7 @@ export default function DashProfile() {
         setUpdateUserError(err.message)
       }
     };
+    
     const handleDeleteUser = async () => {
       setShowModal(false);
       try{
@@ -181,6 +233,7 @@ export default function DashProfile() {
         dispatch(deleteUserFailure(error.message));
       }
     };
+    
     const handleSignOut = async () => {
       try{
         const res = await fetch('api/user/signout',{
@@ -196,6 +249,7 @@ export default function DashProfile() {
         console.log(error.message)
       }
     };
+    
     const handleSendVerification = async () => {
       if (currentUser.verified) {
         setVerificationMessage({ type: 'failure', message: 'Your account is already verified' });
@@ -224,6 +278,57 @@ export default function DashProfile() {
         setVerificationMessage({ type: 'failure', message: err.message || 'An error occurred' });
       } finally {
         setSendingVerification(false);
+      }
+    };
+    
+    // Functions to fetch followers and following
+    const fetchFollowers = async () => {
+      if (!currentUser || loadingFollowers) return;
+      
+      setLoadingFollowers(true);
+      
+      try {
+        const res = await fetch(`/api/user/${currentUser._id}/followers`, {
+          credentials: 'include'
+        });
+        const data = await res.json();
+        
+        if (!res.ok) {
+          console.error("Failed to fetch followers");
+          return;
+        }
+        
+        setFollowers(data);
+        setShowFollowersModal(true);
+      } catch (err) {
+        console.error("Error fetching followers:", err);
+      } finally {
+        setLoadingFollowers(false);
+      }
+    };
+    
+    const fetchFollowing = async () => {
+      if (!currentUser || loadingFollowing) return;
+      
+      setLoadingFollowing(true);
+      
+      try {
+        const res = await fetch(`/api/user/${currentUser._id}/following`, {
+          credentials: 'include'
+        });
+        const data = await res.json();
+        
+        if (!res.ok) {
+          console.error("Failed to fetch following");
+          return;
+        }
+        
+        setFollowing(data);
+        setShowFollowingModal(true);
+      } catch (err) {
+        console.error("Error fetching following:", err);
+      } finally {
+        setLoadingFollowing(false);
       }
     };
 
@@ -259,6 +364,26 @@ export default function DashProfile() {
         </div>
 
         {imageFileUploadError && <Alert color="failure">{imageFileUploadError}</Alert>}
+        
+        {/* Follow Stats */}
+        <div className="flex justify-center gap-6 my-2">
+          <button 
+            type="button"
+            onClick={fetchFollowers}
+            className="text-gray-600 dark:text-gray-400 hover:underline"
+            disabled={loadingFollowers}
+          >
+            <span className="font-bold text-gray-800 dark:text-gray-200">{followersCount}</span> Followers
+          </button>
+          <button 
+            type="button"
+            onClick={fetchFollowing}
+            className="text-gray-600 dark:text-gray-400 hover:underline"
+            disabled={loadingFollowing}
+          >
+            <span className="font-bold text-gray-800 dark:text-gray-200">{followingCount}</span> Following
+          </button>
+        </div>
         
         <TextInput type="text" id="username" placeholder="Username" defaultValue={currentUser.username} onChange={handleChange}/>
         
@@ -358,6 +483,30 @@ export default function DashProfile() {
       <div className="mt-10">
         {currentUser && <UserPosts userId={currentUser._id} username={currentUser.username} />}
       </div>
+      
+      {/* Followers Modal */}
+      <UserListModal
+        isOpen={showFollowersModal}
+        onClose={() => setShowFollowersModal(false)}
+        title="Followers"
+        users={followers}
+        loading={loadingFollowers}
+        emptyIcon="👥"
+        emptyTitle="No followers yet"
+        emptyMessage="When someone follows you, they'll appear here."
+      />
+      
+      {/* Following Modal */}
+      <UserListModal
+        isOpen={showFollowingModal}
+        onClose={() => setShowFollowingModal(false)}
+        title="Following"
+        users={following}
+        loading={loadingFollowing}
+        emptyIcon="👤"
+        emptyTitle="Not following anyone yet"
+        emptyMessage="When you follow someone, they'll appear here."
+      />
     </div>
   )
 }

@@ -4,7 +4,8 @@ import { Link, useParams } from "react-router-dom"
 import CallToAction from "../components/CallToAction";
 import CommentSection from "../components/CommentSection";
 import PostCard from "../components/PostCard";
-
+import { useSelector } from "react-redux";
+import { HiPlus, HiMinus } from "react-icons/hi";
 
 export default function PostPage() {
     const {postSlug} = useParams()
@@ -12,6 +13,9 @@ export default function PostPage() {
     const [error, setError] = useState(false);
     const [post, setPost] = useState(null);
     const [recentPosts, setRecentPosts] = useState(null);
+    const { currentUser } = useSelector(state => state.user);
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [followLoading, setFollowLoading] = useState(false);
     
 
     useEffect(() => {
@@ -26,7 +30,29 @@ export default function PostPage() {
                     return;
                 }
                 if(res.ok){
-                    setPost(data.posts[0]);
+                    const postData = data.posts[0];
+                    setPost(postData);
+                    
+                    // Get complete author data with followers information
+                    if (postData?.userId?._id) {
+                        try {
+                            const authorRes = await fetch(`/api/user/${postData.userId._id}`, {
+                                credentials: 'include'
+                            });
+                            const authorData = await authorRes.json();
+                            
+                            if (authorRes.ok) {
+                                // Update post with complete author data
+                                setPost(prev => ({
+                                    ...prev,
+                                    userId: authorData
+                                }));
+                            }
+                        } catch (error) {
+                            console.error('Error fetching author data:', error);
+                        }
+                    }
+                    
                     setLoading(false);
                     setError(false);
                     
@@ -51,6 +77,37 @@ export default function PostPage() {
         fetchPost();
     }, [postSlug])
 
+    // Check if the current user is following the post author
+    useEffect(() => {
+        const checkFollowStatus = async () => {
+            if (!post?.userId || !currentUser) {
+                console.log("Missing data for follow check:", { 
+                    hasPostUserId: !!post?.userId,
+                    hasCurrentUser: !!currentUser
+                });
+                return;
+            }
+            
+            console.log("Follow check data:", {
+                postAuthorId: post.userId._id,
+                authorFollowers: post.userId.followers,
+                currentUserId: currentUser._id,
+                isAdmin: post.userId.isAdmin,
+                isPublisher: post.userId.isPublisher,
+                isSameUser: post.userId._id === currentUser._id
+            });
+            
+            // Check if user's followers array includes currentUser id
+            if (post.userId.followers && post.userId.followers.includes(currentUser._id)) {
+                setIsFollowing(true);
+            } else {
+                setIsFollowing(false);
+            }
+        };
+        
+        checkFollowStatus();
+    }, [post, currentUser]);
+
     useEffect(() => {
         try{
             const fetchRecentPosts = async () => {
@@ -65,6 +122,72 @@ export default function PostPage() {
             console.log(err);
         }
     }, [])
+
+    const handleFollow = async () => {
+        if (!currentUser) {
+            // Redirect to sign in if not logged in
+            window.location.href = "/sign-in";
+            return;
+        }
+        
+        if (!post?.userId || followLoading) return;
+        
+        setFollowLoading(true);
+        
+        try {
+            const res = await fetch(`/api/user/follow/${post.userId._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+            
+            const data = await res.json();
+            
+            if (!res.ok) {
+                console.error(data.message);
+                return;
+            }
+            
+            setIsFollowing(true);
+            
+        } catch (err) {
+            console.error("Error following user:", err);
+        } finally {
+            setFollowLoading(false);
+        }
+    };
+    
+    const handleUnfollow = async () => {
+        if (!currentUser || !post?.userId || followLoading) return;
+        
+        setFollowLoading(true);
+        
+        try {
+            const res = await fetch(`/api/user/unfollow/${post.userId._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+            
+            const data = await res.json();
+            
+            if (!res.ok) {
+                console.error(data.message);
+                return;
+            }
+            
+            setIsFollowing(false);
+            
+        } catch (err) {
+            console.error("Error unfollowing user:", err);
+        } finally {
+            setFollowLoading(false);
+        }
+    };
 
     if(loading){
         return (
@@ -90,15 +213,45 @@ export default function PostPage() {
   {/* Author Info */}
   <div className="flex items-center justify-center gap-2 mt-6 mb-2">
     {post && post.userId && (
-      <Link to={`/profile/${post.userId.username}`} className="flex items-center gap-2 hover:text-purple-700 dark:hover:text-purple-500 ">
-        <img 
-          src={post.userId.profilePicture} 
-          alt={post.userId.username} 
-          className="w-8 h-8 rounded-full object-cover border border-purple-800 dark:border-purple-500"
-          loading="lazy"
-        />
-        <p className="text-sm font-medium bo">{post.userId.username}</p>
-      </Link>
+      <div className="flex items-center gap-2">
+        <Link to={`/profile/${post.userId.username}`} className="flex items-center gap-2 hover:text-purple-700 dark:hover:text-purple-500">
+          <img 
+            src={post.userId.profilePicture} 
+            alt={post.userId.username} 
+            className="w-8 h-8 rounded-full object-cover border border-purple-800 dark:border-purple-500"
+            loading="lazy"
+          />
+          <p className="text-sm font-medium">{post.userId.username}</p>
+        </Link>
+        
+        {/* Follow/Unfollow button */}
+        {currentUser && 
+         post.userId && 
+         currentUser._id !== post.userId._id && 
+         (post.userId.isAdmin || post.userId.isPublisher) && (
+          <div className="flex items-center ml-1 border-l border-gray-300 dark:border-gray-700 pl-2">
+            {isFollowing ? (
+              <button 
+                onClick={handleUnfollow}
+                disabled={followLoading}
+                className="bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-full p-0.5 hover:opacity-90 w-5 h-5 flex items-center justify-center"
+                title="Unfollow"
+              >
+                <HiMinus className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <button 
+                onClick={handleFollow}
+                disabled={followLoading}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full p-0.5 hover:opacity-90 w-5 h-5 flex items-center justify-center"
+                title="Follow"
+              >
+                <HiPlus className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     )}
   </div>
 

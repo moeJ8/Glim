@@ -326,4 +326,61 @@ export const createDonationTransactionNotifications = async (
     console.error('Error creating donation transaction notifications:', err);
     return null;
   }
+};
+
+/**
+ * Create notifications for followers when a user publishes a new post
+ * @param {Object} req - Express request object
+ * @param {String} postId - Post ID
+ * @param {String} postSlug - Post slug
+ * @param {String} postTitle - Post title
+ * @param {String} authorId - User ID of the post author
+ * @returns {Promise<Array>} - Array of created notifications
+ */
+export const createFollowerNotifications = async (
+  req,
+  postId,
+  postSlug,
+  postTitle,
+  authorId
+) => {
+  try {
+    const author = await User.findById(authorId);
+    if (!author) {
+      console.error('Author not found');
+      return null;
+    }
+
+    // Find the author's followers
+    const followers = await User.find({ 
+      following: authorId
+    }).select('_id');
+
+    if (!followers || followers.length === 0) {
+      return null;
+    }
+
+    const title = 'New Post From User You Follow';
+    const message = `${author.username} published a new post: "${postTitle.substring(0, 30)}${postTitle.length > 30 ? '...' : ''}"`;
+
+    const notifications = [];
+    for (const follower of followers) {
+      const notification = await createNotification(req, {
+        recipient: follower._id,
+        title,
+        message,
+        type: 'new_post',
+        postId,
+        postSlug,
+        triggeredBy: authorId
+      });    
+      if (notification) {
+        notifications.push(notification);
+      }
+    }
+    return notifications;
+  } catch (err) {
+    console.error('Error creating follower notifications:', err);
+    return null;
+  }
 }; 

@@ -171,10 +171,14 @@ export default function Notifications() {
         return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
       case 'like_comment':
         return 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300';
+      case 'new_post':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
       case 'new_donation':
         return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
       case 'donation_received':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+      case 'follow':
+        return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
     }
@@ -188,18 +192,37 @@ export default function Notifications() {
         return 'Reply';
       case 'like_comment':
         return 'Like';
+      case 'new_post':
+        return 'New Post';
       case 'new_donation':
         return 'Donation';
       case 'donation_received':
         return 'Donation Received';
+      case 'follow':
+        return 'New Follower';
       default:
         return type;
     }
   };
 
   const getNotificationLink = (notification) => {
+    console.log("Notification data:", notification);
+    
     if (notification.type === 'new_donation' || notification.type === 'donation_received') {
       return `/donate/${notification.donationId}`;
+    }
+    if (notification.type === 'follow') {
+      // For follow notifications, redirect to the user profile page
+      if (notification.triggeredBy && notification.triggeredBy.username) {
+        return `/profile/${notification.triggeredBy.username}`;
+      } else {
+        // Fallback to home page if no triggeredBy data
+        return `/`;
+      }
+    }
+    if (!notification.postSlug) {
+      // Fallback for any notification without a valid target
+      return `/`;
     }
     return `/post/${notification.postSlug}`;
   };
