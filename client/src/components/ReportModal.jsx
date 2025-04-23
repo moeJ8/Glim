@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button, Label, Textarea, Alert } from 'flowbite-react';
 import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
-import { HiExclamationCircle } from 'react-icons/hi';
+import { HiExclamationCircle, HiBell } from 'react-icons/hi';
 import CustomModal from './CustomModal';
 
 export default function ReportModal({ show, onClose, targetId, targetType }) {
@@ -99,6 +99,7 @@ export default function ReportModal({ show, onClose, targetId, targetType }) {
                         <div className="flex flex-col">
                             <h3 className="font-medium mb-1">Report Submitted</h3>
                             <p>Thank you for helping to keep our community safe.</p>
+                            <p className="text-sm mt-2">Admins have been notified and you&apos;ll receive a notification when your report is reviewed.</p>
                         </div>
                     </Alert>
                 ) : (
@@ -114,9 +115,13 @@ export default function ReportModal({ show, onClose, targetId, targetType }) {
                                 onChange={(e) => setReason(e.target.value)}
                                 className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:ring-purple-500 focus:border-purple-500 dark:focus:ring-purple-500 dark:focus:border-purple-500 rounded-lg"
                             />
-                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                Your report will be reviewed by our moderation team.
-                            </p>
+                            <div className="mt-2 flex items-start gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-xs text-blue-800 dark:text-blue-300">
+                                <HiBell className="flex-shrink-0 w-4 h-4 mt-0.5" />
+                                <div>
+                                    <p>Your report will be reviewed by our moderation team.</p>
+                                    <p className="mt-1">Admins will be notified immediately, and you&apos;ll receive a notification when your report is reviewed.</p>
+                                </div>
+                            </div>
                         </div>
                         {error && (
                             <Alert color="failure" className="border-l-4 border-red-500">

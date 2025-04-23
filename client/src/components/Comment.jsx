@@ -17,6 +17,7 @@ export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
     const [replyError, setReplyError] = useState(null);
     const [showReplies, setShowReplies] = useState(false);
     const [showReportModal, setShowReportModal] = useState(false);
+    const [currentReportTarget, setCurrentReportTarget] = useState(null);
 
     const handleEdit = () => {
         setIsEditing(true);
@@ -76,6 +77,16 @@ export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
         } catch (err) {
             setReplyError(err.message);
         }
+    }
+
+    const handleReportComment = () => {
+        setCurrentReportTarget(comment._id);
+        setShowReportModal(true);
+    }
+
+    const handleReportReply = (replyId) => {
+        setCurrentReportTarget(replyId);
+        setShowReportModal(true);
     }
 
     return (
@@ -166,7 +177,7 @@ export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
                             {currentUser && currentUser._id !== comment.userId._id && (
                                 <button 
                                     type="button" 
-                                    onClick={() => setShowReportModal(true)} 
+                                    onClick={handleReportComment} 
                                     className="text-gray-400 hover:text-red-500 flex items-center gap-1"
                                 >
                                     <FaFlag className="text-sm"/>
@@ -278,7 +289,7 @@ export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
                                                     {currentUser && reply.userId && currentUser._id !== reply.userId._id && (
                                                         <button 
                                                             type="button" 
-                                                            onClick={() => setShowReportModal(true)} 
+                                                            onClick={() => handleReportReply(reply._id)} 
                                                             className="text-gray-400 hover:text-red-500 flex items-center gap-1"
                                                         >
                                                             <FaFlag className="text-xs"/>
@@ -299,7 +310,7 @@ export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
                 <ReportModal
                     show={showReportModal}
                     onClose={() => setShowReportModal(false)}
-                    targetId={comment._id}
+                    targetId={currentReportTarget}
                     targetType="comment"
                 />
             )}

@@ -93,7 +93,7 @@ export default function DashReports() {
                 dispatch(decrementPendingReports());
             }
             
-            setSuccessMessage('Report marked as reviewed');
+            setSuccessMessage('Report marked as reviewed. A notification has been sent to the user.');
             setTimeout(() => {
                 setSuccessMessage('');
                 setShowModal(false);
@@ -124,11 +124,14 @@ export default function DashReports() {
             setTotalReports(prev => prev - 1);
             
             setSuccessMessage('Report deleted successfully');
+            // Close modals immediately without delay
+            setShowDeleteModal(false);
+            setShowModal(false);
+            
+            // Clear success message after 3 seconds
             setTimeout(() => {
                 setSuccessMessage('');
-                setShowDeleteModal(false);
-                setShowModal(false);
-            }, 1500);
+            }, 3000);
             
         } catch (err) {
             setError(err.message);
@@ -150,12 +153,14 @@ export default function DashReports() {
     const getTargetLink = (report) => {
         if (report.targetType === 'post' && report.targetContent?.slug) {
             return `/post/${report.targetContent.slug}`;
-        } else if (report.targetType === 'comment') {
-            return `#`;
+        } else if (report.targetType === 'comment' && report.targetContent?.postId?.slug) {
+            // For comments and replies, link to the parent post
+            return `/post/${report.targetContent.postId.slug}`;
         }
+        // Fallback if we can't determine the link
         return '#';
     };
-
+    
     return (
         <div className="max-w-7xl mx-auto p-3">
             <h1 className="text-center text-3xl my-5 font-bold text-gray-800 dark:text-gray-100 ">
@@ -232,15 +237,20 @@ export default function DashReports() {
                             <div className="flex flex-col sm:flex-row justify-between items-start gap-2 mb-3">
                                 <div className="flex flex-wrap gap-2">
                                     <Badge 
-                                        color={report.targetType === 'post' ? 'info' : 'purple'} 
+                                        color={report.targetType === 'post' ? 'info' : (report.targetContent?.parentId || report.targetContent?.isReply) ? 'purple' : 'success'} 
                                         className="inline-flex"
                                         style={{
                                             background: report.targetType === 'post' 
                                                 ? 'linear-gradient(to right, #3b82f6, #60a5fa)' 
-                                                : 'linear-gradient(to right, #8b5cf6, #a78bfa)'
+                                                : (report.targetContent?.parentId || report.targetContent?.isReply)
+                                                    ? 'linear-gradient(to right, #8b5cf6, #a78bfa)'
+                                                    : 'linear-gradient(to right, #10b981, #34d399)'
                                         }}
                                     >
-                                        {report.targetType}
+                                        {report.targetType === 'post' 
+                                            ? 'post' 
+                                            : (report.targetContent?.parentId || report.targetContent?.isReply) ? 'reply' : 'comment'
+                                        }
                                     </Badge>
                                     <Badge 
                                         color={report.status === 'pending' ? 'warning' : 'success'}
@@ -348,9 +358,14 @@ export default function DashReports() {
                                             <span className={`px-2 py-1 rounded-full text-xs ${
                                                 report.targetType === 'post' 
                                                     ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' 
-                                                    : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                                                    : (report.targetContent?.parentId || report.targetContent?.isReply)
+                                                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                                                        : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                                             }`}>
-                                                {report.targetType}
+                                                {report.targetType === 'post' 
+                                                    ? 'post' 
+                                                    : (report.targetContent?.parentId || report.targetContent?.isReply) ? 'reply' : 'comment'
+                                                }
                                             </span>
                                         </Table.Cell>
                                         <Table.Cell className="whitespace-nowrap py-3">
@@ -514,9 +529,14 @@ export default function DashReports() {
                                 <span className={`capitalize ml-2 px-2 py-1 rounded-full text-xs ${
                                     currentReport.targetType === 'post' 
                                         ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' 
-                                        : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                                        : (currentReport.targetContent?.parentId || currentReport.targetContent?.isReply)
+                                            ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                                            : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                                 }`}>
-                                    {currentReport.targetType}
+                                    {currentReport.targetType === 'post' 
+                                        ? 'post' 
+                                        : (currentReport.targetContent?.parentId || currentReport.targetContent?.isReply) ? 'reply' : 'comment'
+                                    }
                                 </span>
                             </div>
                             <div className="sm:w-1/2">

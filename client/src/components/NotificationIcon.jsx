@@ -5,6 +5,8 @@ import { IoMdNotificationsOutline } from 'react-icons/io';
 import { BsArrowRightCircle } from 'react-icons/bs';
 import { useSelector } from 'react-redux';
 import { getSocket, authenticateSocket } from '../services/socketService';
+import { HiOutlineExclamationCircle } from 'react-icons/hi';
+import moment from 'moment';
 
 export default function NotificationIcon() {
   const { currentUser } = useSelector(state => state.user);
@@ -73,8 +75,6 @@ export default function NotificationIcon() {
       }
       
       if (data.notification) {
-        // Always update the notification list when a new one comes in,
-        // regardless of dropdown state
         setRecentNotifications(prev => {
           // Check if notification already exists
           if (prev.some(n => n._id === data.notification._id)) {
@@ -221,45 +221,27 @@ export default function NotificationIcon() {
     }
   };
   
-  const getNotificationTypeStyle = (type) => {
-    switch (type) {
-      case 'comment':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
-      case 'reply':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
-      case 'like_comment':
-        return 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300';
-      case 'new_post':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
-      case 'new_donation':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
-      case 'donation_received':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
-      case 'follow':
-        return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
-    }
-  };
-  
   const getNotificationLink = (notification) => {
-    // Add console log to debug notification data
     console.log("Notification link data:", notification);
     
     if (notification.type === 'new_donation' || notification.type === 'donation_received') {
       return `/donate/${notification.donationId}`;
     }
     if (notification.type === 'follow') {
-      // For follow notifications, redirect to the user profile page
       if (notification.triggeredBy && notification.triggeredBy.username) {
         return `/profile/${notification.triggeredBy.username}`;
       } else {
-        // Fallback to home page if no triggeredBy data
+        return `/`;
+      }
+    }
+    if (notification.type === 'report') {
+      if (currentUser?.isAdmin) {
+        return `/dashboard?tab=reports`;
+      } else {
         return `/`;
       }
     }
     if (!notification.postSlug) {
-      // Fallback for any notification without a valid target
       return `/`;
     }
     return `/post/${notification.postSlug}`;
@@ -267,7 +249,6 @@ export default function NotificationIcon() {
   
   const markAsRead = async (notificationId) => {
     try {
-      // Optimistic UI update - update the notification state immediately
       setRecentNotifications(prev => 
         prev.map(notification => 
           notification._id === notificationId 
@@ -275,20 +256,193 @@ export default function NotificationIcon() {
             : notification
         )
       );
-      
-      // Also optimistically decrease the unread count
+
       setUnreadCount(prevCount => Math.max(0, prevCount - 1));
-      
-      // Then send the API request
+
       await fetch(`/api/notification/${notificationId}/read`, {
         method: 'PUT',
       });
-      
-      // The socket update will eventually confirm the change
+
     } catch (error) {
       console.error('Error marking notification as read:', error);
-      // If there's an error, revert the optimistic UI updates
       fetchUnreadCount();
+    }
+  };
+  
+  const renderNotification = (notification) => {
+    const { type } = notification;
+    switch (type) {
+        case 'comment':
+            return (
+                <div className="flex items-start gap-3">
+                    <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
+                        <IoMdNotificationsOutline className="text-blue-600 dark:text-blue-400 w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                            {notification.title}
+                        </h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {notification.message}
+                        </p>
+                        <span className="text-xs text-gray-500 dark:text-gray-500 mt-1 block">
+                            {moment(notification.createdAt).fromNow()}
+                        </span>
+                    </div>
+                </div>
+            );
+        case 'reply':
+            return (
+                <div className="flex items-start gap-3">
+                    <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-lg">
+                        <IoMdNotificationsOutline className="text-purple-600 dark:text-purple-400 w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                            {notification.title}
+                        </h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {notification.message}
+                        </p>
+                        <span className="text-xs text-gray-500 dark:text-gray-500 mt-1 block">
+                            {moment(notification.createdAt).fromNow()}
+                        </span>
+                    </div>
+                </div>
+            );
+        case 'like_comment':
+            return (
+                <div className="flex items-start gap-3">
+                    <div className="bg-pink-100 dark:bg-pink-900/30 p-2 rounded-lg">
+                        <IoMdNotificationsOutline className="text-pink-600 dark:text-pink-400 w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                            {notification.title}
+                        </h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {notification.message}
+                        </p>
+                        <span className="text-xs text-gray-500 dark:text-gray-500 mt-1 block">
+                            {moment(notification.createdAt).fromNow()}
+                        </span>
+                    </div>
+                </div>
+            );
+        case 'new_post':
+            return (
+                <div className="flex items-start gap-3">
+                    <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-lg">
+                        <IoMdNotificationsOutline className="text-green-600 dark:text-green-400 w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                            {notification.title}
+                        </h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {notification.message}
+                        </p>
+                        <span className="text-xs text-gray-500 dark:text-gray-500 mt-1 block">
+                            {moment(notification.createdAt).fromNow()}
+                        </span>
+                    </div>
+                </div>
+            );
+        case 'new_donation':
+            return (
+                <div className="flex items-start gap-3">
+                    <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-lg">
+                        <IoMdNotificationsOutline className="text-green-600 dark:text-green-400 w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                            {notification.title}
+                        </h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {notification.message}
+                        </p>
+                        <span className="text-xs text-gray-500 dark:text-gray-500 mt-1 block">
+                            {moment(notification.createdAt).fromNow()}
+                        </span>
+                    </div>
+                </div>
+            );
+        case 'donation_received':
+            return (
+                <div className="flex items-start gap-3">
+                    <div className="bg-yellow-100 dark:bg-yellow-900/30 p-2 rounded-lg">
+                        <IoMdNotificationsOutline className="text-yellow-600 dark:text-yellow-400 w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                            {notification.title}
+                        </h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {notification.message}
+                        </p>
+                        <span className="text-xs text-gray-500 dark:text-gray-500 mt-1 block">
+                            {moment(notification.createdAt).fromNow()}
+                        </span>
+                    </div>
+                </div>
+            );
+        case 'follow':
+            return (
+                <div className="flex items-start gap-3">
+                    <div className="bg-indigo-100 dark:bg-indigo-900/30 p-2 rounded-lg">
+                        <IoMdNotificationsOutline className="text-indigo-600 dark:text-indigo-400 w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                            {notification.title}
+                        </h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {notification.message}
+                        </p>
+                        <span className="text-xs text-gray-500 dark:text-gray-500 mt-1 block">
+                            {moment(notification.createdAt).fromNow()}
+                        </span>
+                    </div>
+                </div>
+            );
+        case 'report':
+            return (
+                <div className="flex items-start gap-3">
+                    <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-lg">
+                        <HiOutlineExclamationCircle className="text-purple-600 dark:text-purple-400 w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                            {notification.title}
+                        </h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {notification.message}
+                        </p>
+                        <span className="text-xs text-gray-500 dark:text-gray-500 mt-1 block">
+                            {moment(notification.createdAt).fromNow()}
+                        </span>
+                    </div>
+                </div>
+            );
+        default:
+            return (
+                <div className="flex items-start gap-3">
+                    <div className="bg-gray-100 dark:bg-gray-900/30 p-2 rounded-lg">
+                        <IoMdNotificationsOutline className="text-gray-600 dark:text-gray-400 w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                            {notification.title}
+                        </h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {notification.message}
+                        </p>
+                        <span className="text-xs text-gray-500 dark:text-gray-500 mt-1 block">
+                            {moment(notification.createdAt).fromNow()}
+                        </span>
+                    </div>
+                </div>
+            );
     }
   };
   
@@ -350,23 +504,7 @@ export default function NotificationIcon() {
                       !notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                     }`}
                   >
-                    <div className="flex items-start">
-                      <div className={`flex-shrink-0 w-2 h-2 mt-2 rounded-full ${!notification.read ? 'bg-blue-600' : 'bg-transparent'}`}></div>
-                      <div className="ml-2 flex-1 overflow-hidden">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium text-sm text-gray-900 dark:text-white truncate">{notification.title}</p>
-                          <span className={`text-xs px-1.5 py-0.5 rounded-full ${getNotificationTypeStyle(notification.type)}`}>
-                            {notification.type.replace('_', ' ')}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">
-                          {notification.message}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {new Date(notification.createdAt).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
+                    {renderNotification(notification)}
                   </Link>
                 ))}
               </div>
