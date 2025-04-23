@@ -7,6 +7,7 @@ import DashUsers from "../components/DashUsers";
 import DashComments from "../components/DashComments";
 import DashboardComp from "../components/DashboardComp";
 import DashRequests from "../components/DashRequests";
+import DashReports from "../components/DashReports";
 
 export default function Dashboard() {
 const location = useLocation();
@@ -38,6 +39,8 @@ useEffect(() => {
       {tab === 'dashboard' && <DashboardComp/>}
       {/* Publisher Requests */}
       {tab === 'requests' && <DashRequests/>}
+      {/* Reports */}
+      {tab === 'reports' && <DashReports/>}
     </div>
   )
 }

@@ -1,16 +1,18 @@
 import { Sidebar } from "flowbite-react";
-import { HiUser, HiArrowSmRight, HiDocumentText, HiOutlineUserGroup, HiAnnotation, HiChartPie, HiInboxIn, HiCash } from "react-icons/hi";
+import { HiUser, HiArrowSmRight, HiDocumentText, HiOutlineUserGroup, HiAnnotation, HiChartPie, HiInboxIn, HiCash, HiExclamation } from "react-icons/hi";
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { signoutSuccess } from "../redux/user/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { setPendingRequests } from "../redux/request/requestSlice";
+import { setPendingReports } from "../redux/report/reportSlice";
 
 export default function DashSidebar() {
   const location = useLocation();
   const dispatch = useDispatch();
   const {currentUser} = useSelector((state) => state.user);
   const {pendingRequests} = useSelector((state) => state.request);
+  const {pendingReports} = useSelector((state) => state.report);
   const [tab, setTab] = useState('');
 
   useEffect(() => {
@@ -42,6 +44,29 @@ export default function DashSidebar() {
       fetchPendingRequests();
       // Set up polling every 30 seconds
       const interval = setInterval(fetchPendingRequests, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [currentUser, dispatch]);
+
+  useEffect(() => {
+    const fetchPendingReports = async () => {
+      try {
+        const res = await fetch('/api/report?status=pending&page=1&limit=1', {
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (res.ok) {
+          dispatch(setPendingReports(data.totalReports));
+        }
+      } catch (error) {
+        console.log(error.message);
+      }
+    };
+
+    if (currentUser && currentUser.isAdmin) {
+      fetchPendingReports();
+      // Set up polling every 30 seconds
+      const interval = setInterval(fetchPendingReports, 30000);
       return () => clearInterval(interval);
     }
   }, [currentUser, dispatch]);
@@ -124,16 +149,28 @@ export default function DashSidebar() {
             </Link>
           )}
           {currentUser.isAdmin && (
-            <Link to={`/dashboard?tab=requests`}>
-              <Sidebar.Item active={tab === 'requests'} icon={HiInboxIn} as='div'>
-                Requests
-                {pendingRequests > 0 && (
-                  <span className="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
-                    {pendingRequests}
-                  </span>
-                )}
-              </Sidebar.Item>
-            </Link>
+            <>
+              <Link to={`/dashboard?tab=requests`}>
+                <Sidebar.Item active={tab === 'requests'} icon={HiInboxIn} as='div'>
+                  Requests
+                  {pendingRequests > 0 && (
+                    <span className="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                      {pendingRequests}
+                    </span>
+                  )}
+                </Sidebar.Item>
+              </Link>
+              <Link to={`/dashboard?tab=reports`}>
+                <Sidebar.Item active={tab === 'reports'} icon={HiExclamation} as='div'>
+                  Reports
+                  {pendingReports > 0 && (
+                    <span className="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                      {pendingReports}
+                    </span>
+                  )}
+                </Sidebar.Item>
+              </Link>
+            </>
           )}
           
           <Sidebar.Item icon={HiArrowSmRight} className='cursor-pointer' onClick={handleSignOut} as='div'>

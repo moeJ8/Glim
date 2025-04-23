@@ -6,6 +6,8 @@ import CommentSection from "../components/CommentSection";
 import PostCard from "../components/PostCard";
 import { useSelector } from "react-redux";
 import { HiPlus, HiMinus } from "react-icons/hi";
+import { FaFlag } from "react-icons/fa";
+import ReportModal from "../components/ReportModal";
 
 export default function PostPage() {
     const {postSlug} = useParams()
@@ -16,6 +18,7 @@ export default function PostPage() {
     const { currentUser } = useSelector(state => state.user);
     const [isFollowing, setIsFollowing] = useState(false);
     const [followLoading, setFollowLoading] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
     
 
     useEffect(() => {
@@ -96,7 +99,6 @@ export default function PostPage() {
                 isPublisher: post.userId.isPublisher,
                 isSameUser: post.userId._id === currentUser._id
             });
-            
             // Check if user's followers array includes currentUser id
             if (post.userId.followers && post.userId.followers.includes(currentUser._id)) {
                 setIsFollowing(true);
@@ -261,8 +263,23 @@ export default function PostPage() {
     <span className="italic">{post && (post.content.length /1000).toFixed(0)} mins read</span>
   </div>
   <div className="p-3 max-w-2xl mx-auto w-full post-content" dangerouslySetInnerHTML={{__html: post && post.content}}>
-
   </div>
+  
+  {/* Report button placed under post content */}
+  {currentUser && post && post.userId && currentUser._id !== post.userId._id && !currentUser.isAdmin && (
+    <div className="self-center mt-2 mb-4">
+      <Button 
+        onClick={() => setShowReportModal(true)}
+        color="light" 
+        size="xs"
+        className="flex items-center gap-1"
+      >
+        <FaFlag className="text-red-500" />
+        <span className="ml-2">Report This Post</span>
+      </Button>
+    </div>
+  )}
+  
   <div className="max-w-4xl mx-auto w-full">
     <CallToAction/>
   </div>
@@ -282,5 +299,31 @@ export default function PostPage() {
         }
     </div>
   </div>
+  <div className="flex justify-between items-center gap-2 p-2 text-xs border-b border-slate-500 max-w-2xl mx-auto w-full">
+    <Link to={`/profile/${post && post.userId && post.userId.username}`} className="flex gap-1 items-center">
+        <img src={post && post.userId && post.userId.profilePicture} className="h-5 w-5 rounded-full object-cover" alt={post && post.userId && post.userId.username} />
+        <span>{post && post.userId && post.userId.username}</span>
+    </Link>
+    <span className="italic">{post && new Date(post.createdAt).toLocaleDateString()}</span>
+    
+    {/* Make the report button more visible */}
+    {currentUser && post && post.userId && currentUser._id !== post.userId._id && !currentUser.isAdmin && (
+        <button 
+            onClick={() => setShowReportModal(true)}
+            className="bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-500 flex items-center gap-1 px-2 py-1 rounded"
+        >
+            <FaFlag className="text-xs" />
+            <span>Report</span>
+        </button>
+    )}
+  </div>
+  {showReportModal && post && (
+    <ReportModal
+        show={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        targetId={post._id}
+        targetType="post"
+    />
+  )}
   </main>
 }

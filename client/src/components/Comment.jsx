@@ -5,7 +5,8 @@ import {FaThumbsUp} from 'react-icons/fa';
 import { useSelector } from "react-redux";
 import { Button, Textarea, Alert } from "flowbite-react";
 import { Link } from "react-router-dom";
-import { FaReply, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaReply, FaChevronDown, FaChevronUp, FaFlag } from 'react-icons/fa';
+import ReportModal from './ReportModal';
 
 export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
     const [isEditing, setIsEditing] = useState(false);
@@ -15,6 +16,7 @@ export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
     const [replyContent, setReplyContent] = useState('');
     const [replyError, setReplyError] = useState(null);
     const [showReplies, setShowReplies] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
 
     const handleEdit = () => {
         setIsEditing(true);
@@ -140,14 +142,16 @@ export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
                                 {comment.likes.length > 0 && comment.numberOfLikes + " " + (comment.numberOfLikes === 1 ? "like" : "likes")}
                             </p>
                             {currentUser && (
-                                <button 
-                                    type="button" 
-                                    onClick={() => setShowReplyForm(!showReplyForm)} 
-                                    className="text-gray-400 hover:text-blue-500 flex items-center gap-1"
-                                >
-                                    <FaReply className="text-sm"/>
-                                    Reply
-                                </button>
+                                <>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setShowReplyForm(!showReplyForm)} 
+                                        className="text-gray-400 hover:text-blue-500 flex items-center gap-1"
+                                    >
+                                        <FaReply className="text-sm"/>
+                                        Reply
+                                    </button>
+                                </>
                             )}
                             {currentUser && (currentUser._id === comment.userId._id || currentUser.isAdmin) && (
                                 <>
@@ -158,6 +162,16 @@ export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
                                         Delete
                                     </button>
                                 </>
+                            )}
+                            {currentUser && currentUser._id !== comment.userId._id && (
+                                <button 
+                                    type="button" 
+                                    onClick={() => setShowReportModal(true)} 
+                                    className="text-gray-400 hover:text-red-500 flex items-center gap-1"
+                                >
+                                    <FaFlag className="text-sm"/>
+                                    Report
+                                </button>
                             )}
                         </div>
                         
@@ -220,18 +234,24 @@ export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
                                         {comment.replies.map(reply => (
                                             <div key={reply._id} className="py-2 border-b dark:border-gray-700 last:border-0">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <Link to={`/profile/${reply.userId.username}`}>
-                                                        <img 
-                                                            src={reply.userId.profilePicture} 
-                                                            alt={reply.userId.username} 
-                                                            className="w-6 h-6 rounded-full bg-gray-200" 
-                                                        />
-                                                    </Link>
-                                                    <Link to={`/profile/${reply.userId.username}`} className="hover:text-blue-500">
-                                                        <span className="font-bold text-xs">
-                                                            @{reply.userId.username}
-                                                        </span>
-                                                    </Link>
+                                                    {reply.userId ? (
+                                                        <>
+                                                            <Link to={`/profile/${reply.userId.username}`}>
+                                                                <img 
+                                                                    src={reply.userId.profilePicture} 
+                                                                    alt={reply.userId.username} 
+                                                                    className="w-6 h-6 rounded-full bg-gray-200" 
+                                                                />
+                                                            </Link>
+                                                            <Link to={`/profile/${reply.userId.username}`} className="hover:text-blue-500">
+                                                                <span className="font-bold text-xs">
+                                                                    @{reply.userId.username}
+                                                                </span>
+                                                            </Link>
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-xs text-gray-500">Deleted User</span>
+                                                    )}
                                                     <span className="text-gray-500 text-xs">
                                                         {moment(reply.createdAt).fromNow()}
                                                     </span>
@@ -248,12 +268,22 @@ export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
                                                     <p className="text-gray-400 text-xs">
                                                         {reply.likes && reply.likes.length > 0 && reply.numberOfLikes + " " + (reply.numberOfLikes === 1 ? "like" : "likes")}
                                                     </p>
-                                                    {currentUser && (currentUser._id === reply.userId._id || currentUser.isAdmin) && (
+                                                    {currentUser && reply.userId && (currentUser._id === reply.userId._id || currentUser.isAdmin) && (
                                                         <>
                                                             <button type="button" onClick={() => onDelete(reply._id)} className="text-gray-400 hover:text-red-500 text-xs">
                                                                 Delete
                                                             </button>
                                                         </>
+                                                    )}
+                                                    {currentUser && reply.userId && currentUser._id !== reply.userId._id && (
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => setShowReportModal(true)} 
+                                                            className="text-gray-400 hover:text-red-500 flex items-center gap-1"
+                                                        >
+                                                            <FaFlag className="text-xs"/>
+                                                            Report
+                                                        </button>
                                                     )}
                                                 </div>
                                             </div>
@@ -265,6 +295,14 @@ export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
                     </>
                 )}
             </div>
+            {showReportModal && (
+                <ReportModal
+                    show={showReportModal}
+                    onClose={() => setShowReportModal(false)}
+                    targetId={comment._id}
+                    targetType="comment"
+                />
+            )}
         </div>
     )
 }
