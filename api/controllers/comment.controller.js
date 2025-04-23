@@ -2,7 +2,12 @@ import { errorHandler } from "../utils/error.js";
 import Comment from "../models/comment.model.js";
 import Post from "../models/post.model.js";
 import mongoose from "mongoose";
-import { createCommentNotification, createReplyNotification, createLikeCommentNotification } from "../utils/createNotification.js";
+import { 
+    createCommentNotification, 
+    createReplyNotification, 
+    createLikeCommentNotification,
+    createMentionNotifications
+} from "../utils/createNotification.js";
 
 export const createComment = async (req, res, next) => {
     try {
@@ -61,6 +66,17 @@ export const createComment = async (req, res, next) => {
                 post.title,
                 newComment._id.toString(),
                 post.userId,
+                userId
+            );
+            
+            // Create notifications for mentioned users
+            await createMentionNotifications(
+                req,
+                postId,
+                post.slug,
+                post.title,
+                newComment._id.toString(),
+                content,
                 userId
             );
         }
@@ -140,6 +156,17 @@ export const createReply = async (req, res, next) => {
                 post.title,
                 newReply._id.toString(),
                 parentComment.userId.toString(),
+                userId
+            );
+            
+            // Create notifications for mentioned users
+            await createMentionNotifications(
+                req,
+                postId,
+                post.slug,
+                post.title,
+                newReply._id.toString(),
+                content,
                 userId
             );
         }

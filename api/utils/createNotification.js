@@ -383,4 +383,95 @@ export const createFollowerNotifications = async (
     console.error('Error creating follower notifications:', err);
     return null;
   }
+};
+
+/**
+ * Extract mentions from comment content
+ * @param {String} content - Comment or reply content
+ * @returns {Array} Array of mentioned usernames
+ */
+export const extractMentions = (content) => {
+  if (!content) return [];
+  
+  // Regular expression to match @username pattern
+  // Username can contain letters, numbers, underscores, and hyphens
+  const mentionRegex = /@([a-zA-Z0-9_-]+)/g;
+  const matches = content.match(mentionRegex);
+  
+  if (!matches) return [];
+  
+  // Remove @ symbol and return unique mentions
+  return [...new Set(matches.map(match => match.substring(1)))];
+};
+
+/**
+ * Create mention notifications for users mentioned in a comment
+ * @param {Object} req - Express request object
+ * @param {String} postId - Post ID
+ * @param {String} postSlug - Post slug
+ * @param {String} postTitle - Post title
+ * @param {String} commentId - Comment ID
+ * @param {String} content - Comment content
+ * @param {String} mentionerId - User ID of the person mentioning
+ * @returns {Promise<Array>} - Array of created notifications
+ */
+export const createMentionNotifications = async (
+  req,
+  postId,
+  postSlug,
+  postTitle,
+  commentId,
+  content,
+  mentionerId
+) => {
+  try {
+    const mentioner = await User.findById(mentionerId);
+    if (!mentioner) {
+      console.error('Mentioner not found');
+      return null;
+    }
+    
+    // Extract usernames from mentions
+    const mentionedUsernames = extractMentions(content);
+    if (mentionedUsernames.length === 0) return null;
+    
+    // Find mentioned users
+    const mentionedUsers = await User.find({
+      username: { $in: mentionedUsernames },
+      _id: { $ne: mentionerId } // Don't notify the user who is mentioning
+    });
+    
+    if (!mentionedUsers || mentionedUsers.length === 0) return null;
+    
+    const title = 'You Were Mentioned';
+    const truncatedTitle = postTitle ? 
+      `${postTitle.substring(0, 30)}${postTitle.length > 30 ? '...' : ''}` : 
+      'a post';
+    
+    const notifications = [];
+    
+    for (const user of mentionedUsers) {
+      const message = `${mentioner.username} mentioned you in a comment on "${truncatedTitle}"`;
+      
+      const notification = await createNotification(req, {
+        recipient: user._id,
+        title,
+        message,
+        type: 'mention',
+        postId,
+        postSlug,
+        commentId,
+        triggeredBy: mentionerId
+      });
+      
+      if (notification) {
+        notifications.push(notification);
+      }
+    }
+    
+    return notifications;
+  } catch (err) {
+    console.error('Error creating mention notifications:', err);
+    return null;
+  }
 }; 
