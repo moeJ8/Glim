@@ -33,6 +33,54 @@ export default function Header() {
         return tmp.textContent || tmp.innerText || '';
     };
 
+    // Close mobile menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            const mobileMenuSelectors = [
+                '[data-testid="flowbite-navbar-collapse"]',
+                '.navbar-collapse',
+                '.md\\:hidden.block', 
+                'nav div[aria-expanded="true"]'
+            ];
+
+            const toggleButtonSelectors = [
+                '[data-testid="flowbite-navbar-toggle"]',
+                'button[data-collapse-toggle]',
+                'button[aria-expanded="true"]',
+                '.navbar-toggler'
+            ];
+
+            let mobileMenu = null;
+            for (const selector of mobileMenuSelectors) {
+                const element = document.querySelector(selector);
+                if (element && window.getComputedStyle(element).display !== 'none') {
+                    mobileMenu = element;
+                    break;
+                }
+            }
+
+            let toggleButton = null;
+            for (const selector of toggleButtonSelectors) {
+                const element = document.querySelector(selector);
+                if (element) {
+                    toggleButton = element;
+                    break;
+                }
+            }
+            if (mobileMenu && 
+                toggleButton && 
+                !mobileMenu.contains(event.target) && 
+                !toggleButton.contains(event.target)) {
+                toggleButton.click();
+            }
+        };
+        
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {

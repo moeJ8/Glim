@@ -180,11 +180,18 @@ export const google = async (req, res, next) => {
         } else {
             const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
             const hashedPassword = await bcryptjs.hashSync(generatedPassword, 10);
+            
+            // Set a default dateOfBirth (13 years ago from today)
+            const defaultDateOfBirth = new Date();
+            defaultDateOfBirth.setFullYear(defaultDateOfBirth.getFullYear() - 13);
+            
             const newUser = new User({
                 username: name.toLowerCase().split(" ").join("") + Math.random().toString(9).slice(-4),
                 email,
                 password: hashedPassword,
                 profilePicture: googlePhotoUrl,
+                dateOfBirth: defaultDateOfBirth, // Add default dateOfBirth
+                verified: true, // Auto-verify Google users since their email is verified by Google
             });
             await newUser.save();
             const token = jwt.sign(
@@ -224,11 +231,18 @@ export const facebook = async (req, res, next) => {
         } else {
             const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
             const hashedPassword = await bcryptjs.hashSync(generatedPassword, 10);
+            
+            // Set a default dateOfBirth (13 years ago from today)
+            const defaultDateOfBirth = new Date();
+            defaultDateOfBirth.setFullYear(defaultDateOfBirth.getFullYear() - 13);
+            
             const newUser = new User({
                 username: name.toLowerCase().split(" ").join("") + Math.random().toString(9).slice(-4),
                 email,
                 password: hashedPassword,
                 profilePicture: facebookPhotoUrl,
+                dateOfBirth: defaultDateOfBirth, // Add default dateOfBirth
+                verified: true, // Auto-verify Facebook users since their email is verified by Facebook
             });
             await newUser.save();
             const token = jwt.sign(

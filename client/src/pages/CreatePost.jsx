@@ -61,7 +61,7 @@ export default function CreatePost() {
     e.preventDefault();
     try{
       // Check if user is authenticated
-      if (!currentUser || !currentUser.token) {
+      if (!currentUser) {
         setPublishError("You must be logged in to create a post");
         return;
       }
@@ -71,7 +71,6 @@ export default function CreatePost() {
         credentials: 'include', // Include cookies
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentUser.token}`,
         },
         body: JSON.stringify(formData),
       });
