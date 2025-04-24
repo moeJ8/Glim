@@ -6,6 +6,7 @@ import PostCard from "../components/PostCard";
 import MostReadPosts from "../components/MostReadPosts";
 import { useSelector } from "react-redux";
 import { Button } from "flowbite-react";
+import FrequentlyAskedQuestions from "../components/FrequentlyAskedQuestions";
 
 export default function Home() {
   const [posts, setPosts] = useState([]);
@@ -70,6 +71,9 @@ export default function Home() {
       <div className="p-1">
         <CallToAction />
       </div>
+
+      {/* FAQ Section */}
+      <FrequentlyAskedQuestions />
     </div>
   )
 }
