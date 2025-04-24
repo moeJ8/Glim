@@ -12,6 +12,7 @@ import cookieParser from 'cookie-parser';
 import http from 'http';
 import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
+import path from 'path';
 
 dotenv.config();
 
@@ -23,6 +24,8 @@ mongoose
 .catch((error) => {
     console.error('Error connecting to MongoDB', error);
 });
+
+const __dirname = path.resolve();
 
 const app = express();
 app.use(express.json());
@@ -98,6 +101,11 @@ app.use('/api/comment', commentRoutes);
 app.use('/api/donation', donationRoutes);
 app.use('/api/notification', notificationRoutes);
 app.use('/api/report', reportRoutes);
+
+app.use(express.static(path.join(__dirname, 'client', 'dist')));
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
+});
 
 app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
