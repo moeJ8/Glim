@@ -1,5 +1,5 @@
 import { Label, TextInput, Button, Alert, Spinner } from "flowbite-react";
-import {Link, useNavigate} from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from 'react';
 import OAuth from "../components/OAuth";
 import FOAuth from "../components/FOAuth";
@@ -9,6 +9,7 @@ export default function SignUp() {
   const [formData, setFormData] = useState({});
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [dateError, setDateError] = useState(null);
   const navigate = useNavigate();
   const handleChange = (e) => {
     let value = e.target.value.trim(); // Trims the input
@@ -21,9 +22,30 @@ export default function SignUp() {
     // Optional: Force update input field value in real-time
     e.target.value = value;
   };
+  const handleDateChange = (e) => {
+    const birthDate = new Date(e.target.value);
+    const today = new Date();
+    
+    // Calculate age by comparing year, month, and day
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    if (age < 13) {
+      setDateError('You must be at least 13 years old to register');
+    } else {
+      setDateError(null);
+      handleChange(e);
+    }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault() // prevent page refresh
-    if(!formData.username || !formData.password || !formData.email){
+    if (dateError) {
+      return setErrorMessage('You must be at least 13 years old to register');
+    }
+    if(!formData.username || !formData.password || !formData.email || !formData.dateOfBirth){
       return setErrorMessage('Please fill out all fields');
     }
     try {
@@ -49,6 +71,13 @@ export default function SignUp() {
     }
   }
   
+  // Calculate max date (13 years ago from today)
+  const calculateMaxDate = () => {
+    const today = new Date();
+    today.setFullYear(today.getFullYear() - 13);
+    return today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+  };
+  
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Form Section */}
@@ -73,7 +102,20 @@ export default function SignUp() {
               <Label value="Your Password" className="block" />
               <TextInput type="password" placeholder="Password" id="password" onChange={handleChange}/>
             </div>
-            <Button gradientDuoTone="purpleToPink" type="submit" disabled={loading}>
+            <div>
+              <Label value="Date of Birth" className="block" />
+              <TextInput 
+                type="date" 
+                id="dateOfBirth" 
+                onChange={handleDateChange}
+                max={calculateMaxDate()}
+              />
+              {dateError && (
+                <p className="text-sm text-red-500 mt-1">{dateError}</p>
+              )}
+              <p className="text-xs text-gray-500 mt-1">You must be at least 13 years old to register</p>
+            </div>
+            <Button gradientDuoTone="purpleToPink" type="submit" disabled={loading || dateError}>
               {
                 loading ? <> <Spinner size="sm"/> <span className="pl-3">Loading...</span></> : 'Sign Up'
               }

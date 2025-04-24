@@ -8,9 +8,22 @@ import crypto from 'crypto';
 
 
 export const signup = async (req, res, next) => {
-    const {username, email, password } = req.body;
-    if (!username || !email || !password || username === "" || email === "" || password === "") {
-        next(errorHandler(400, "Please provide all the required fields"))
+    const {username, email, password, dateOfBirth } = req.body;
+    if (!username || !email || !password || !dateOfBirth || username === "" || email === "" || password === "") {
+        return next(errorHandler(400, "Please provide all the required fields"));
+    }
+    
+    // Validate age - ensure user is at least 13 years old
+    const birthDate = new Date(dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    
+    if (age < 13) {
+        return next(errorHandler(400, "You must be at least 13 years old to register"));
     }
 
     const hashedPassword =  bcryptjs.hashSync(password, 10);
@@ -19,6 +32,7 @@ export const signup = async (req, res, next) => {
          username,
          email,
          password: hashedPassword,
+         dateOfBirth: birthDate,
         });
 
         try {
