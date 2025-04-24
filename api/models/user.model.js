@@ -36,6 +36,18 @@ const userSchema = new mongoose.Schema({
       type: Boolean,
       default: false
   },
+  isBanned: {
+    type: Boolean,
+    default: false
+  },
+  banExpiresAt: {
+    type: Date,
+    default: null
+  },
+  banReason: {
+    type: String,
+    default: null
+  },
   followers: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

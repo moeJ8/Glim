@@ -1,6 +1,6 @@
 import express from 'express';
 import { verifyToken } from '../utils/verifyUser.js';
-import { deleteUser, signout, updateUser, test, getUsers, getUser, getUserByUsername, updateUserRole, requestPublisher, getPublisherRequests, updatePublisherRequest, searchUsers, resendVerificationLink, followUser, unfollowUser, getUserFollowers, getUserFollowing } from '../controllers/user.controller.js';
+import { deleteUser, signout, updateUser, test, getUsers, getUser, getUserByUsername, updateUserRole, requestPublisher, getPublisherRequests, updatePublisherRequest, searchUsers, resendVerificationLink, followUser, unfollowUser, getUserFollowers, getUserFollowing, banUser, unbanUser } from '../controllers/user.controller.js';
 
 const router = express.Router();
 
@@ -21,5 +21,7 @@ router.put('/follow/:id', verifyToken, followUser);
 router.put('/unfollow/:id', verifyToken, unfollowUser);
 router.get('/:id/followers', getUserFollowers);
 router.get('/:id/following', getUserFollowing);
+router.post('/ban', verifyToken, banUser);
+router.post('/unban/:userId', verifyToken, unbanUser);
 
 export default router;

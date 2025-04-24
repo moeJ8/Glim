@@ -343,6 +343,7 @@ export default function DashReports() {
                             <Table.Head>
                                 <Table.HeadCell className="py-3">Type</Table.HeadCell>
                                 <Table.HeadCell className="py-3">Reported By</Table.HeadCell>
+                                <Table.HeadCell className="py-3">Content Owner</Table.HeadCell>
                                 <Table.HeadCell className="py-3">Content</Table.HeadCell>
                                 <Table.HeadCell className="py-3">Status</Table.HeadCell>
                                 <Table.HeadCell className="py-3">Date</Table.HeadCell>
@@ -372,6 +373,15 @@ export default function DashReports() {
                                             <Link to={`/profile/${report.userId?.username}`} className="font-medium text-purple-600 dark:text-purple-400 hover:underline">
                                                 @{report.userId?.username}
                                             </Link>
+                                        </Table.Cell>
+                                        <Table.Cell className="whitespace-nowrap py-3">
+                                            {report.contentOwner ? (
+                                                <Link to={`/profile/${report.contentOwner?.username}`} className="font-medium text-blue-600 dark:text-blue-400 hover:underline">
+                                                    @{report.contentOwner?.username}
+                                                </Link>
+                                            ) : (
+                                                <span className="text-gray-500 dark:text-gray-400">Unknown</span>
+                                            )}
                                         </Table.Cell>
                                         <Table.Cell className="max-w-[300px] py-3">
                                             <span className="line-clamp-1">
@@ -569,6 +579,17 @@ export default function DashReports() {
                                     {new Date(currentReport.createdAt).toLocaleString()}
                                 </span>
                             </div>
+                        </div>
+                        
+                        <div>
+                            <span className="font-bold text-gray-700 dark:text-gray-300">Content Owner:</span>
+                            {currentReport.contentOwner ? (
+                                <Link to={`/profile/${currentReport.contentOwner?.username}`} className="ml-2 text-blue-600 dark:text-blue-400 hover:underline">
+                                    @{currentReport.contentOwner?.username}
+                                </Link>
+                            ) : (
+                                <span className="ml-2 text-gray-500 dark:text-gray-400">Unknown</span>
+                            )}
                         </div>
                         
                         <div>

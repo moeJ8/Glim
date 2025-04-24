@@ -1,4 +1,4 @@
-import { Table, Modal, Button } from "flowbite-react"
+import { Table, Modal, Button, TextInput, Label, Select } from "flowbite-react"
 import {HiOutlineExclamationCircle} from "react-icons/hi"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
@@ -11,6 +11,12 @@ export default function DashUsers() {
   const [showMore, setShowMore] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [userIdToDelete, setUserIdToDelete] = useState("");
+  const [showBanModal, setShowBanModal] = useState(false);
+  const [userToBan, setUserToBan] = useState(null);
+  const [banDuration, setBanDuration] = useState('1d');
+  const [banReason, setBanReason] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [successIcons, setSuccessIcons] = useState({});
   const [failureIcons, setFailureIcons] = useState({});
 
@@ -93,6 +99,103 @@ export default function DashUsers() {
       console.log(err.message);
     }
   }
+
+  const handleBanUser = async () => {
+    if (!userToBan) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const res = await fetch('/api/user/ban', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userToBan._id,
+          duration: banDuration,
+          reason: banReason
+        })
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        setError(data.message || 'Failed to ban user');
+        setLoading(false);
+        return;
+      }
+
+      // Update using the data from the API
+      setUsers(users.map(user => 
+        user._id === userToBan._id 
+          ? { ...user, ...data.user }
+          : user
+      ));
+      
+      setShowBanModal(false);
+      setLoading(false);
+      setUserToBan(null);
+      setBanReason('');
+      
+    } catch (err) {
+      setError(err.message || 'Something went wrong');
+      setLoading(false);
+    }
+  };
+
+  const handleUnbanUser = async (userId) => {
+    try {
+      setLoading(true);
+      
+      const res = await fetch(`/api/user/unban/${userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        setError(data.message || 'Failed to unban user');
+        setLoading(false);
+        return;
+      }     
+      // Update the user's ban status in the UI
+      setUsers(users.map(user => 
+        user._id === userId 
+          ? { ...user, isBanned: false, banExpiresAt: null, banReason: null } 
+          : user
+      ));
+      
+      setLoading(false);
+      
+    } catch (err) {
+      setError(err.message || 'Something went wrong');
+      setLoading(false);
+    }
+  };
+
+  const formatBanTime = (banExpiresAt) => {
+    if (!banExpiresAt) return { dateStr: 'Permanent', timeStr: '' };
+    
+    const expiryDate = new Date(banExpiresAt);
+    const now = new Date();
+    
+    if (expiryDate < now) return { dateStr: 'Expired', timeStr: '' };
+    
+    // Format date and time separately
+    const dateStr = expiryDate.toLocaleDateString();
+    const timeStr = expiryDate.toLocaleTimeString(undefined, { 
+      hour: 'numeric', 
+      minute: '2-digit', 
+      hour12: true 
+    });
+    
+    return { dateStr, timeStr };
+  };
  
   return (
     <div className="table-auto overflow-x-scroll md:mx-auto p-3 scrollbar scrollbar-track-slate-100 scrollbar-thumb-slate-300 dark:scrollbar-track-slate-700 dark:scrollbar-thumb-slate-500">
@@ -107,7 +210,8 @@ export default function DashUsers() {
           <Table.HeadCell>Email</Table.HeadCell>
           <Table.HeadCell>Publisher</Table.HeadCell>
           <Table.HeadCell>Admin</Table.HeadCell>
-          <Table.HeadCell>Delete</Table.HeadCell>
+          <Table.HeadCell>Ban Status</Table.HeadCell>
+          <Table.HeadCell>Actions</Table.HeadCell>
         </Table.Head>
         {users.map((user) =>(
           <Table.Body key={user._id} className="divide-y">
@@ -143,15 +247,77 @@ export default function DashUsers() {
                      )}
                   </Table.Cell>
               <Table.Cell>
-                {user.isAdmin ? (<FaCheck className = "text-green-500"/>) : (<FaTimes className = "text-red-500"/>)}
+                {user.isAdmin ? (<FaCheck className="text-green-500"/>) : (<FaTimes className="text-red-500"/>)}
               </Table.Cell>
               <Table.Cell>
-                <span onClick={() => {
-                  setShowModal(true)
-                  setUserIdToDelete(user._id)
-                } } className="font-medium text-red-500 hover:underline cursor-pointer">
-                  Delete
-                </span>
+                {user.isBanned ? (
+                  <div className="relative group">
+                    <span className="w-fit px-2 py-0.5 bg-red-100 text-red-800 rounded-md text-xs font-medium mb-1 cursor-help">
+                      Banned
+                    </span>
+                    {/* Tooltip content */}
+                    <div className="absolute left-0 top-full mt-1 z-10 invisible group-hover:visible bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 text-xs border border-gray-200 dark:border-gray-700 min-w-[180px]">
+                      <div className="font-medium">
+                        Until: {formatBanTime(user.banExpiresAt).dateStr}
+                      </div>
+                      <div>
+                        {formatBanTime(user.banExpiresAt).timeStr}
+                      </div>
+                      {user.banReason && (
+                        <div className="mt-1 border-t border-gray-200 dark:border-gray-700 pt-1">
+                          <span className="font-medium">Reason:</span> {user.banReason}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <span className="w-fit px-2 py-0.5 bg-green-100 text-green-800 rounded-md text-xs font-medium">
+                    Active
+                  </span>
+                )}
+              </Table.Cell>
+              <Table.Cell>
+                <div className="flex gap-2">
+                  {!user.isAdmin && (
+                    <>
+                      {user.isBanned ? (
+                        <Button
+                          size="xs"
+                          gradientDuoTone="cyanToBlue"
+                          outline
+                          onClick={() => handleUnbanUser(user._id)}
+                          disabled={loading}
+                        >
+                          Unban
+                        </Button>
+                      ) : (
+                        <Button
+                          size="xs"
+                          gradientDuoTone="pinkToOrange"
+                          outline
+                          onClick={() => {
+                            setUserToBan(user);
+                            setShowBanModal(true);
+                          }}
+                          disabled={loading}
+                        >
+                          Ban
+                        </Button>
+                      )}
+                    </>
+                  )}
+                  <Button
+                    size="xs"
+                    color="failure"
+                    outline
+                    onClick={() => {
+                      setShowModal(true);
+                      setUserIdToDelete(user._id);
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
               </Table.Cell>
               
             </Table.Row>
@@ -179,6 +345,84 @@ export default function DashUsers() {
             <div className="flex justify-center gap-4">
               <Button color="failure" onClick={()=> handleDeleteUser()}>Yes, I&apos;m sure</Button>
               <Button color="gray" onClick={()=> setShowModal(false)}>No, cancel</Button>
+            </div>
+          </div>
+        </Modal.Body>
+      </Modal>
+      <Modal
+        show={showBanModal}
+        onClose={() => setShowBanModal(false)}
+        popup
+        size="md"
+      >
+        <Modal.Header>
+          <div className="text-xl font-bold">Ban User</div>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="space-y-4">
+            {userToBan && (
+              <div className="text-center py-2">
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  {userToBan.username}
+                </span>
+                <p className="text-sm text-gray-500">{userToBan.email}</p>
+              </div>
+            )}
+            
+            <div className="mb-2">
+              <Label htmlFor="banDuration" value="Ban Duration" />
+              <Select
+                id="banDuration"
+                value={banDuration}
+                onChange={(e) => setBanDuration(e.target.value)}
+                required
+              >
+                <option value="30m">30 minutes</option>
+                <option value="1h">1 hour</option>
+                <option value="12h">12 hours</option>
+                <option value="1d">1 day</option>
+                <option value="3d">3 days</option>
+                <option value="1w">1 week</option>
+                <option value="2w">2 weeks</option>
+                <option value="1m">1 month</option>
+                <option value="3m">3 months</option>
+                <option value="6m">6 months</option>
+                <option value="1y">1 year</option>
+                <option value="2y">2 years</option>
+                <option value="permanent">Permanent</option>
+              </Select>
+            </div>
+            
+            <div className="mb-2">
+              <Label htmlFor="banReason" value="Ban Reason" />
+              <TextInput
+                id="banReason"
+                placeholder="Why is this user being banned?"
+                value={banReason}
+                onChange={(e) => setBanReason(e.target.value)}
+              />
+            </div>
+            
+            {error && (
+              <div className="text-sm text-red-600 dark:text-red-500">
+                {error}
+              </div>
+            )}
+            
+            <div className="flex justify-center gap-4">
+              <Button
+                color="failure"
+                onClick={handleBanUser}
+                isProcessing={loading}
+              >
+                Ban User
+              </Button>
+              <Button
+                color="gray"
+                onClick={() => setShowBanModal(false)}
+              >
+                Cancel
+              </Button>
             </div>
           </div>
         </Modal.Body>

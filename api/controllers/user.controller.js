@@ -485,3 +485,116 @@ export const getUserFollowing = async (req, res, next) => {
     next(error);
   }
 };
+
+export const banUser = async (req, res, next) => {
+  try {
+    if (!req.user.isAdmin) {
+      return next(errorHandler(403, "You don't have permission to ban users"));
+    }
+
+    const { userId, duration, reason } = req.body;
+    
+    if (!userId || !duration) {
+      return next(errorHandler(400, "User ID and ban duration are required"));
+    }
+
+    const userToBan = await User.findById(userId);
+    if (!userToBan) {
+      return next(errorHandler(404, "User not found"));
+    }
+
+    if (userToBan.isAdmin) {
+      return next(errorHandler(403, "Cannot ban another admin"));
+    }
+
+    let banExpiresAt = new Date();
+    switch (duration) {
+      case '30m':
+        banExpiresAt.setMinutes(banExpiresAt.getMinutes() + 30);
+        break;
+      case '1h':
+        banExpiresAt.setHours(banExpiresAt.getHours() + 1);
+        break;
+      case '12h':
+        banExpiresAt.setHours(banExpiresAt.getHours() + 12);
+        break;
+      case '1d':
+        banExpiresAt.setDate(banExpiresAt.getDate() + 1);
+        break;
+      case '3d':
+        banExpiresAt.setDate(banExpiresAt.getDate() + 3);
+        break;
+      case '1w':
+        banExpiresAt.setDate(banExpiresAt.getDate() + 7);
+        break;
+      case '2w':
+        banExpiresAt.setDate(banExpiresAt.getDate() + 14);
+        break;
+      case '1m':
+        banExpiresAt.setMonth(banExpiresAt.getMonth() + 1);
+        break;
+      case '3m':
+        banExpiresAt.setMonth(banExpiresAt.getMonth() + 3);
+        break;
+      case '6m':
+        banExpiresAt.setMonth(banExpiresAt.getMonth() + 6);
+        break;
+      case '1y':
+        banExpiresAt.setFullYear(banExpiresAt.getFullYear() + 1);
+        break;
+      case '2y':
+        banExpiresAt.setFullYear(banExpiresAt.getFullYear() + 2);
+        break;
+      case 'permanent':
+        // Set to a date far in the future
+        banExpiresAt = new Date(2100, 0, 1);
+        break;
+      default:
+        return next(errorHandler(400, "Invalid ban duration"));
+    }
+
+    await User.findByIdAndUpdate(userId, {
+      isBanned: true,
+      banExpiresAt,
+      banReason: reason || "Violation of terms of service"
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `User banned successfully until ${banExpiresAt.toLocaleString()}`,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const unbanUser = async (req, res, next) => {
+  try {
+    if (!req.user.isAdmin) {
+      return next(errorHandler(403, "You don't have permission to unban users"));
+    }
+
+    const { userId } = req.params;
+    
+    if (!userId) {
+      return next(errorHandler(400, "User ID is required"));
+    }
+
+    const userToUnban = await User.findById(userId);
+    if (!userToUnban) {
+      return next(errorHandler(404, "User not found"));
+    }
+
+    await User.findByIdAndUpdate(userId, {
+      isBanned: false,
+      banExpiresAt: null,
+      banReason: null
+    });
+    res.status(200).json({
+      success: true,
+      message: "User unbanned successfully",
+    });
+  } catch (err) {
+    next(err);
+  }
+};

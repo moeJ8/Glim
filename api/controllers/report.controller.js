@@ -110,15 +110,24 @@ export const getReports = async (req, res, next) => {
             const reportObj = report.toObject();
             
             if (report.targetType === 'post') {
-                const post = await Post.findById(report.targetId).select('title slug');
+                const post = await Post.findById(report.targetId)
+                    .select('title slug userId')
+                    .populate('userId', 'username profilePicture');
                 reportObj.targetContent = post;
+                if (post) {
+                    reportObj.contentOwner = post.userId;
+                }
             } else if (report.targetType === 'comment') {
                 // fixed view in context for the reports
                 const comment = await Comment.findById(report.targetId)
-                    .select('content parentId isReply postId')
-                    .populate('postId', 'title slug');
+                    .select('content parentId isReply postId userId')
+                    .populate('postId', 'title slug')
+                    .populate('userId', 'username profilePicture');
                 
                 reportObj.targetContent = comment;
+                if (comment) {
+                    reportObj.contentOwner = comment.userId;
+                }
             }
             
             return reportObj;

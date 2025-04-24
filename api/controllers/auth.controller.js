@@ -83,6 +83,34 @@ export const signin = async (req, res, next) => {
         if (!validPassword) {
            return next(errorHandler(400, "Invalid credentials"))
         }
+
+        // Check if user is banned
+        if (validUser.isBanned) {
+            const now = new Date();
+            
+            // If ban has expired, remove the ban
+            if (validUser.banExpiresAt && validUser.banExpiresAt < now) {
+                validUser.isBanned = false;
+                validUser.banExpiresAt = null;
+                validUser.banReason = null;
+                await validUser.save();
+            } else {
+                // Ban is still active
+                let banMessage = "Your account has been temporarily suspended.";
+                
+                if (validUser.banReason) {
+                    banMessage += ` Reason: ${validUser.banReason}`;
+                }
+                
+                if (validUser.banExpiresAt) {
+                    const expireDate = new Date(validUser.banExpiresAt).toLocaleString();
+                    banMessage += ` Your ban will expire on ${expireDate}.`;
+                }
+                
+                return next(errorHandler(403, banMessage));
+            }
+        }
+        
         const token = jwt.sign(
             {
                 id: validUser._id, 
