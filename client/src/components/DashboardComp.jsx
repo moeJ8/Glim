@@ -59,15 +59,29 @@ export default function DashboardComp() {
     }
     const fetchRequests = async () => {
       try {
+        // Fetch publisher requests
         const res = await fetch('/api/user/publisher-requests/get?status=pending', {
           headers: {
             Authorization: `Bearer ${currentUser.token}`,
           },
         });
         const data = await res.json();
+        
+        // Fetch story counts
+        const storyRes = await fetch('/api/story/counts');
+        const storyData = await storyRes.json();
+        
+        let totalCount = 0;
+        
         if (res.ok) {
-          setTotalRequests(data.totalRequests);
+          totalCount += data.totalRequests || 0;
         }
+        
+        if (storyRes.ok) {
+          totalCount += storyData.pendingStories || 0;
+        }
+        
+        setTotalRequests(totalCount);
       } catch (err) {
         console.log(err);
       }

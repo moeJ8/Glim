@@ -149,8 +149,8 @@ export default function Stories() {
     <div className="min-h-screen max-w-6xl mx-auto px-3 py-8">
       <div className="flex flex-col gap-6 mb-8">
         <div className="text-center">
-          <h1 className="text-3xl font-semibold">Stories</h1>
-          <p className="text-gray-300">Discover stories from our community</p>
+          <h1 className="text-3xl font-semibold">Narratives</h1>
+          <p className="text-gray-300">Discover narratives from our community</p>
         </div>
 
         <div className="flex flex-col gap-4 items-center justify-center">
@@ -198,12 +198,12 @@ export default function Stories() {
                 gradientDuoTone="purpleToPink" 
                 className="w-full sm:w-auto"
               >
-                Remove Filters
+                Clear Filters
               </Button>
               {currentUser && (currentUser.isAdmin || currentUser.isPublisher) && (
-                <Link to="/create-story" className="w-full sm:w-auto">
+                <Link to="/create-narrative" className="w-full sm:w-auto">
                   <Button gradientDuoTone="purpleToPink" className="w-full font-semibold">
-                    Share Your Story
+                    Share Your Narrative
                   </Button>
                 </Link>
               )}
@@ -213,8 +213,8 @@ export default function Stories() {
         {!loading && (
           <p className="text-gray-500 dark:text-gray-400 text-sm text-center">
             {stories.length === 0 
-              ? "No stories found" 
-              : `Showing ${stories.length} ${stories.length === 1 ? 'story' : 'stories'}`
+              ? "No narratives found" 
+              : `Showing ${stories.length} ${stories.length === 1 ? 'narrative' : 'narratives'}`
             }
           </p>
         )}

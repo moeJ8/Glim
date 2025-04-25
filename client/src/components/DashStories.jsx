@@ -129,7 +129,7 @@ export default function DashStories() {
       <div className="flex justify-center items-center min-h-[60vh]">
         <div className="text-center">
           <Spinner size="xl" className="mx-auto" />
-          <p className="mt-2 text-gray-500 dark:text-gray-400">Loading stories...</p>
+          <p className="mt-2 text-gray-500 dark:text-gray-400">Loading narratives...</p>
         </div>
       </div>
     );
@@ -148,21 +148,21 @@ export default function DashStories() {
   return (
     <div className="max-w-7xl mx-auto p-3">
       <h1 className="text-center text-3xl my-5 font-bold text-gray-800 dark:text-gray-100">
-        Manage Your Stories
+        Manage Your Narratives
       </h1>
       
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow-sm">
         <h2 className="text-xl font-semibold flex items-center">
           <span className="bg-gradient-to-r from-purple-600 to-pink-500 w-2 h-6 rounded mr-2 inline-block"></span>
-          Total Stories: {totalStories}
+          Total Narratives: {totalStories}
         </h2>
         
         <div className="flex flex-wrap gap-2 items-center">
           <div className="flex items-center">
             {(currentUser.isAdmin || currentUser.isPublisher) && (
-              <Link to="/create-story" className="ml-auto">
+              <Link to="/create-narrative" className="ml-auto">
                 <Button gradientDuoTone="purpleToPink" size="sm" className="mr-3">
-                  Create New Story
+                  Create New Narrative
                 </Button>
               </Link>
             )}
@@ -211,15 +211,15 @@ export default function DashStories() {
           <div className="mx-auto w-16 h-16 mb-4 flex items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/20">
             <FaBookOpen className="w-8 h-8 text-blue-500 dark:text-blue-400" />
           </div>
-          <h3 className="text-lg font-medium mb-1">No Stories Found</h3>
+          <h3 className="text-lg font-medium mb-1">No Narratives Found</h3>
           <p className="text-gray-500 dark:text-gray-400 mb-4">
             {filterStatus !== 'all' 
-              ? `You don't have any ${filterStatus} stories.` 
-              : "You haven't shared any stories yet."}
+              ? `You don't have any ${filterStatus} narratives.` 
+              : "You haven't shared any narratives yet."}
           </p>
           {(currentUser.isAdmin || currentUser.isPublisher) && (
-            <Link to="/create-story">
-              <Button gradientDuoTone="purpleToPink">Create Your First Story</Button>
+            <Link to="/create-narrative">
+              <Button gradientDuoTone="purpleToPink">Create Your First Narrative</Button>
             </Link>
           )}
         </div>
@@ -229,7 +229,9 @@ export default function DashStories() {
           {userStories.map((story) => (
             <Card key={story._id} className="mb-2 border-0 shadow-md hover:shadow-lg transition-shadow dark:bg-gray-800">
               <div className="flex justify-between items-start">
-                <h5 className="text-lg font-bold line-clamp-1 flex-1">{story.title}</h5>
+                <Link to={`/narrative/${story.slug}`} className="text-blue-600 hover:underline">
+                  <h5 className="text-lg font-bold line-clamp-1 flex-1">{story.title}</h5>
+                </Link>
                 <Badge 
                   color={getStatusBadgeStyle(story.status).color}
                   style={{background: getStatusBadgeStyle(story.status).background}}
@@ -259,13 +261,7 @@ export default function DashStories() {
               </div>
               
               <div className="flex items-center justify-end gap-2 mt-3">
-                <Link to={`/story/${story.slug}`}>
-                  <Button size="xs" color="info" className="font-medium bg-gradient-to-r from-blue-500 to-blue-600">
-                    <FaEye className="mr-2" />
-                    View
-                  </Button>
-                </Link>
-                <Link to={`/update-story/${story._id}`}>
+                <Link to={`/update-narrative/${story._id}`}>
                   <Button size="xs" color="warning" className="font-medium bg-gradient-to-r from-yellow-400 to-orange-500">
                     <FaEdit className="mr-2" />
                     Edit
@@ -308,7 +304,8 @@ export default function DashStories() {
               <Table.HeadCell className="py-3">Country</Table.HeadCell>
               <Table.HeadCell className="py-3">Status</Table.HeadCell>
               <Table.HeadCell className="py-3">Views</Table.HeadCell>
-              <Table.HeadCell className="py-3">Actions</Table.HeadCell>
+              <Table.HeadCell className="py-3">Delete</Table.HeadCell>
+              <Table.HeadCell className="py-3">Edit</Table.HeadCell>
             </Table.Head>
             <Table.Body className="divide-y">
               {userStories.map((story) => (
@@ -321,8 +318,10 @@ export default function DashStories() {
                       {moment(story.createdAt).fromNow()}
                     </span>
                   </Table.Cell>
-                  <Table.Cell className="line-clamp-1 max-w-[200px] py-3">
-                    {story.title}
+                  <Table.Cell className="max-w-[250px] truncate py-3">
+                    <Link to={`/narrative/${story.slug}`} className="text-blue-600 hover:underline font-medium">
+                      {story.title}
+                    </Link>
                   </Table.Cell>
                   <Table.Cell className="py-3">{story.category}</Table.Cell>
                   <Table.Cell className="py-3">{story.country}</Table.Cell>
@@ -339,40 +338,20 @@ export default function DashStories() {
                   </Table.Cell>
                   <Table.Cell className="py-3">{story.views}</Table.Cell>
                   <Table.Cell className="py-3">
-                    <div className="flex items-center gap-2">
-                      <Link to={`/story/${story.slug}`}>
-                        <Button 
-                          size="xs" 
-                          color="info"
-                          className="font-medium bg-gradient-to-r from-blue-500 to-blue-600"
-                        >
-                          <FaEye className="mr-2 mt-0.5" />
-                          View
-                        </Button>
-                      </Link>
-                      <Link to={`/update-story/${story._id}`}>
-                        <Button 
-                          size="xs" 
-                          color="warning"
-                          className="font-medium bg-gradient-to-r from-yellow-400 to-orange-500"
-                        >
-                          <FaEdit className="mr-2 mt-0.5" />
-                          Edit
-                        </Button>
-                      </Link>
-                      <Button
-                        size="xs"
-                        color="failure"
-                        className="font-medium bg-gradient-to-r from-red-500 to-pink-500"
-                        onClick={() => {
-                          setShowModal(true);
-                          setStoryIdToDelete(story._id);
-                        }}
-                      >
-                        <FaTrash className="mr-2 mt-0.5" />
-                        Delete
-                      </Button>
-                    </div>
+                    <span 
+                      onClick={() => {
+                        setShowModal(true);
+                        setStoryIdToDelete(story._id);
+                      }} 
+                      className="font-medium text-red-500 hover:underline cursor-pointer"
+                    >
+                      Delete
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell className="py-3">
+                    <Link to={`/update-narrative/${story._id}`} className="text-teal-500 hover:underline">
+                      <span>Edit</span>
+                    </Link>
                   </Table.Cell>
                 </Table.Row>
               ))}
@@ -407,7 +386,7 @@ export default function DashStories() {
           <div className="text-center">
             <HiOutlineExclamationCircle className="h-14 w-14 text-gray-400 dark:text-gray-200 mb-4 mx-auto" />
             <h3 className="mb-5 text-lg text-gray-500 dark:text-gray-400">
-              Are you sure you want to delete this story?
+              Are you sure you want to delete this narrative?
             </h3>
             <div className="flex justify-center gap-4">
               <Button 

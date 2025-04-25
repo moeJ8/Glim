@@ -22,8 +22,8 @@ export default function FrequentlyAskedQuestions() {
       answer: "Regular users can comment on posts, interact with content, and request help through stories (which publishers will help publish). Publishers have additional capabilities to create blog posts. Publishers help maintain content quality and assist regular users in sharing their stories with the community."
     },
     {
-      question: "How do I share my story if I'm not a publisher?",
-      answer: "If you're not a publisher but want to share your story or request help, you can reach out to an existing publisher who can help publish it for you. You'll need to provide them with your story details, and they'll format and publish it on your behalf. Your contact information will be included so that helpers can reach you directly."
+      question: "I'm not a publisher. How can I share my narrative?",
+      answer: "If you're not a publisher but want to share your narrative or request help, you can reach out to an existing publisher who can help publish it for you. You'll need to provide them with your narrative details, and they'll format and publish it on your behalf."
     },
     {
       question: "How can I become a publisher?",

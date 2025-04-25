@@ -42,7 +42,7 @@ export default function StoryCard({ story }) {
 
   return (
     <div className="group relative w-full border border-teal-500 hover:border-2 h-[480px] overflow-hidden rounded-lg transition-all shadow-md hover:shadow-lg">
-      <Link to={`/story/${story.slug}`}>
+      <Link to={`/narrative/${story.slug}`}>
         <div className="relative">
           <img 
             src={story.image} 
@@ -54,7 +54,7 @@ export default function StoryCard({ story }) {
         </div>
       </Link>
       <div className="p-4 flex flex-col gap-1">
-        <Link to={`/story/${story.slug}`} className="hover:text-teal-600 transition-colors">
+        <Link to={`/narrative/${story.slug}`} className="hover:text-teal-600 transition-colors">
           <h3 className="text-lg font-semibold line-clamp-2 mb-1">{story.title}</h3>
         </Link>
         
@@ -94,10 +94,10 @@ export default function StoryCard({ story }) {
         </div>
         
         <Link 
-          to={`/story/${story.slug}`} 
+          to={`/narrative/${story.slug}`} 
           className="z-10 absolute bottom-[-100px] group-hover:bottom-0 left-0 right-0 border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white transition-all duration-300 text-center py-2 rounded-md !rounded-tl-none m-2"
         >
-          Read Full Story
+          Read Full Narrative
         </Link>
       </div>
     </div>

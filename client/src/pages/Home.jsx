@@ -72,11 +72,11 @@ export default function Home() {
       {/* Recent Stories Section */}
       <div className="max-w-6xl mx-auto p-3 flex flex-col gap-8 py-7">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-semibold">Recent Stories</h2>
+          <h2 className="text-2xl font-semibold">Recent Narratives</h2>
           {currentUser && (currentUser.isAdmin || currentUser.isPublisher) && (
-            <Link to="/create-story">
-              <Button gradientDuoTone="purpleToPink" className="font-semibold">
-                Create Story
+            <Link to="/create-narrative">
+              <Button gradientDuoTone="purpleToPink" className="w-full sm:w-auto">
+                Create Narrative
               </Button>
             </Link>
           )}

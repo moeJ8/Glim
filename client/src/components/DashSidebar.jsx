@@ -145,17 +145,17 @@ export default function DashSidebar() {
           )}
           {/* All Stories tab (admin only) */}
           {currentUser.isAdmin && (
-            <Link to={`/dashboard?tab=allstories`}>
-              <Sidebar.Item active={tab === 'allstories'} icon={FaList} as='div'>
-                All Stories
+            <Link to={`/dashboard?tab=allnarratives`}>
+              <Sidebar.Item active={tab === 'allnarratives'} icon={FaList} as='div'>
+                All Narratives
               </Sidebar.Item>
             </Link>
           )}
           {/* Stories tab for admins and publishers */}
           {(currentUser.isAdmin || currentUser.isPublisher) && (
-            <Link to={`/dashboard?tab=stories`}>
-              <Sidebar.Item active={tab === 'stories'} icon={FaBookOpen} as='div'>
-                Stories
+            <Link to={`/dashboard?tab=narratives`}>
+              <Sidebar.Item active={tab === 'narratives'} icon={FaBookOpen} as='div'>
+                Narratives
               </Sidebar.Item>
             </Link>
           )}

@@ -7,7 +7,6 @@ import {
   Select,
   Spinner,
   TextInput,
-  Textarea,
   Alert,
 } from 'flowbite-react';
 import { app } from '../firebase';
@@ -21,6 +20,8 @@ import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { FaInfoCircle } from 'react-icons/fa';
 import CountrySelect from '../components/CountrySelect';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 export default function UpdateStory() {
   const { storyId } = useParams();
@@ -35,6 +36,7 @@ export default function UpdateStory() {
     contactUsername: '',
     image: '',
   });
+  
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [imageFileUploadProgress, setImageFileUploadProgress] = useState(null);
@@ -60,7 +62,7 @@ export default function UpdateStory() {
         
         // Only allow editing if the user is the author or an admin
         if (data.userId !== currentUser._id && !currentUser.isAdmin) {
-          navigate('/dashboard?tab=stories');
+          navigate('/dashboard?tab=narratives');
           return;
         }
         
@@ -191,9 +193,9 @@ export default function UpdateStory() {
         setShowNotification(false);
         // Redirect admin users to "All Stories" tab, regular users to "stories" tab
         if (currentUser.isAdmin) {
-          navigate('/dashboard?tab=allstories');
+          navigate('/dashboard?tab=allnarratives');
         } else {
-          navigate('/dashboard?tab=stories');
+          navigate('/dashboard?tab=narratives');
         }
       }, 2000);
       
@@ -227,6 +229,16 @@ export default function UpdateStory() {
     { value: 'telegram', label: 'Telegram' },
     { value: 'discord', label: 'Discord' },
   ];
+  
+  // Define modules with H1 and H2 buttons instead of dropdown
+  const modules = {
+    toolbar: [
+      [{ 'header': 1 }, { 'header': 2 }],
+      ['bold', 'italic', 'underline'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['link', 'image']
+    ]
+  };
 
   if (initialLoading) {
     return (
@@ -238,13 +250,13 @@ export default function UpdateStory() {
 
   return (
     <div className="p-3 max-w-3xl mx-auto min-h-screen">
-      <h1 className="text-center text-3xl my-7 font-semibold">Update Your Story</h1>
+      <h1 className="text-center text-3xl my-7 font-semibold">Update Your Narrative</h1>
       
       <div className="mb-6 p-4 bg-blue-50 dark:bg-gray-800 border-l-4 border-blue-500 rounded-md">
         <div className="flex items-start">
           <FaInfoCircle className="text-blue-500 mt-1 mr-3" />
           <div>
-            <h3 className="font-semibold text-blue-800 dark:text-blue-300">About Updating Your Story</h3>
+            <h3 className="font-semibold text-blue-800 dark:text-blue-300">About Updating Your Narrative</h3>
             <p className="text-sm text-gray-700 dark:text-gray-300">
               Make your changes to reach more people who can help. Updated stories will be reviewed again before being published.
             </p>
@@ -258,7 +270,7 @@ export default function UpdateStory() {
           <div className="md:col-span-2">
             <TextInput
               id="title"
-              placeholder="Story Title"
+              placeholder="Narrative Title"
               value={formData.title}
               onChange={handleChange}
               required
@@ -361,21 +373,21 @@ export default function UpdateStory() {
           <div className="relative w-full h-72 rounded-lg overflow-hidden">
             <img
               src={formData.image || previewUrl}
-              alt="Story preview"
+              alt="Narrative preview"
               className="w-full h-full object-cover"
             />
           </div>
         )}
         
-        {/* Story body */}
-        <Textarea
-          id="body"
-          placeholder="Share your story (details about your situation, what kind of help you need, etc.)"
+        {/* Narrative body */}
+        <ReactQuill 
+          theme="snow" 
           value={formData.body}
-          onChange={handleChange}
-          required
-          rows={8}
-          className="resize-none"
+          placeholder="Share your narrative (details about your situation, what kind of help you need, etc.)" 
+          className="h-72 mb-12" 
+          modules={modules}
+          required 
+          onChange={(value) => setFormData({...formData, body: value})}
         />
         
         {/* Submit button */}
@@ -392,13 +404,13 @@ export default function UpdateStory() {
               Updating...
             </>
           ) : (
-            'Update Story'
+            'Update Narrative'
           )}
         </Button>
         
         {showNotification && (
           <Alert color="success" className="mt-5">
-            Your story has been updated successfully!
+            Your narrative has been updated successfully!
           </Alert>
         )}
         

@@ -115,10 +115,10 @@ export default function StoryPage() {
     return (
       <div className="max-w-4xl mx-auto p-4 mt-8">
         <Alert color="info">
-          <p>Story not found</p>
+          <p>Narrative not found</p>
           <div className="mt-4">
             <Link to="/stories">
-              <Button color="purple">Back to Stories</Button>
+              <Button color="purple">Back to Narratives</Button>
             </Link>
           </div>
         </Alert>
@@ -163,12 +163,7 @@ export default function StoryPage() {
       </div>
       
       {/* Story content */}
-      <div className="prose dark:prose-invert max-w-none mb-10 text-gray-700 dark:text-gray-300">
-        {/* Split paragraphs and render them */}
-        {story.body.split('\n').map((paragraph, index) => (
-          paragraph ? <p key={index} className="mb-4 leading-relaxed">{paragraph}</p> : <br key={index} />
-        ))}
-      </div>
+      <div className="prose dark:prose-invert max-w-none mb-10 text-gray-700 dark:text-gray-300 post-content" dangerouslySetInnerHTML={{__html: story.body}}></div>
       
       {/* Contact information */}
       <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-gray-800 dark:to-purple-900 p-6 rounded-xl shadow-md mb-10 border-l-4 border-purple-500">
@@ -202,7 +197,7 @@ export default function StoryPage() {
       <div className="flex justify-center">
         <Link to="/stories" className="w-full sm:w-auto">
           <Button gradientDuoTone="purpleToPink" className="w-full px-6 py-2.5 shadow-md hover:shadow-lg transition-all duration-200">
-            Back to Stories
+            Back to Narratives
           </Button>
         </Link>
       </div>

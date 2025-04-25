@@ -45,7 +45,7 @@ export default function App() {
       <Route path="/sign-up" element={<SignUp/>}/>
       <Route path="/search" element={<Search/>}/>
       <Route path="/stories" element={<Stories/>}/>
-      <Route path="/story/:slug" element={<StoryPage/>}/>
+      <Route path="/narrative/:slug" element={<StoryPage/>}/>
       <Route path="/donate" element={<Donate/>}/>
       <Route path="/donate/:id" element={<DonateCase/>}/>
       <Route path="/donate/success" element={<DonateSuccess/>}/>
@@ -62,8 +62,8 @@ export default function App() {
         <Route path="/update-post/:postId" element={<UpdatePost/>}/>
         <Route path="/create-donation" element={<CreateDonation/>}/>
         <Route path="/donation-dashboard" element={<DonationDashboard/>}/>
-        <Route path="/create-story" element={<CreateStory/>}/>
-        <Route path="/update-story/:storyId" element={<UpdateStory/>}/>
+        <Route path="/create-narrative" element={<CreateStory/>}/>
+        <Route path="/update-narrative/:storyId" element={<UpdateStory/>}/>
       </Route>
       <Route path="/categories" element={<Categories/>}/>
       <Route path="/post/:postSlug" element={<PostPage/>}/>

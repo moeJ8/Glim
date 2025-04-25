@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Table, Modal, Spinner, Alert } from 'flowbite-react';
 import { HiOutlineExclamationCircle } from 'react-icons/hi';
-import { FaEye, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaCheck, FaTimes } from 'react-icons/fa';
 
 export default function DashPendingStories() {
   const [pendingStories, setPendingStories] = useState([]);
@@ -147,10 +147,9 @@ export default function DashPendingStories() {
                   </Table.Cell>
                   <Table.Cell>{story.category}</Table.Cell>
                   <Table.Cell>{story.country}</Table.Cell>
-                  <Table.Cell className="flex items-center gap-2">
-                    <Link to={`/story/${story.slug}`}>
-                      <Button size="sm" color="info" className="font-medium">
-                        <FaEye className="mr-2" />
+                  <Table.Cell className="flex items-center gap-4 flex-wrap">
+                    <Link to={`/narrative/${story.slug}`}>
+                      <Button size="xs" color="info">
                         View
                       </Button>
                     </Link>

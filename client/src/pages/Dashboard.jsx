@@ -43,10 +43,10 @@ useEffect(() => {
       {tab === 'requests' && <DashRequests/>}
       {/* Reports */}
       {tab === 'reports' && <DashReports/>}
-      {/* My Stories */}
-      {tab === 'stories' && <DashStories/>}
-      {/* All Stories (for admin) */}
-      {tab === 'allstories' && <DashAllStories/>}
+      {/* My Narratives */}
+      {tab === 'narratives' && <DashStories/>}
+      {/* All Narratives (for admin) */}
+      {tab === 'allnarratives' && <DashAllStories/>}
     </div>
   )
 }

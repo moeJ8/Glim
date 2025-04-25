@@ -6,7 +6,6 @@ import {
   Select,
   Spinner,
   TextInput,
-  Textarea,
   Alert,
 } from 'flowbite-react';
 import { app } from '../firebase';
@@ -18,8 +17,9 @@ import {
 } from 'firebase/storage';
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
-import { FaInfoCircle } from 'react-icons/fa';
 import CountrySelect from '../components/CountrySelect';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 export default function CreateStory() {
   const [formData, setFormData] = useState({
@@ -147,7 +147,7 @@ export default function CreateStory() {
       setShowNotification(true);
       setTimeout(() => {
         setShowNotification(false);
-        navigate('/dashboard?tab=stories');
+        navigate('/dashboard?tab=narratives');
       }, 2000);
       
     } catch (error) {
@@ -180,180 +180,185 @@ export default function CreateStory() {
     { value: 'telegram', label: 'Telegram' },
     { value: 'discord', label: 'Discord' },
   ];
+  
+  // Define modules with H1 and H2 buttons instead of dropdown
+  const modules = {
+    toolbar: [
+      [{ 'header': 1 }, { 'header': 2 }],
+      ['bold', 'italic', 'underline'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['link', 'image']
+    ]
+  };
 
   return (
-    <div className="p-3 max-w-3xl mx-auto min-h-screen">
-      <h1 className="text-center text-3xl my-7 font-semibold">Share Your Story</h1>
-      
-      <div className="mb-6 p-4 bg-blue-50 dark:bg-gray-800 border-l-4 border-blue-500 rounded-md">
-        <div className="flex items-start">
-          <FaInfoCircle className="text-blue-500 mt-1 mr-3" />
-          <div>
-            <h3 className="font-semibold text-blue-800 dark:text-blue-300">About Sharing Your Story</h3>
-            <p className="text-sm text-gray-700 dark:text-gray-300">
-              Share your story to reach people who can help. Be specific about your needs and provide contact information.
-              All stories are reviewed before being published.
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Title field */}
-          <div className="md:col-span-2">
-            <TextInput
-              id="title"
-              placeholder="Story Title"
-              value={formData.title}
-              onChange={handleChange}
-              required
-              className="text-lg"
-            />
-          </div>
-          
-          {/* Country and Category fields */}
-          <div>
-            <CountrySelect
-              value={formData.country}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div>
-            <Select
-              id="category"
-              value={formData.category}
-              onChange={handleChange}
-              required
-            >
-              {categoryOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-          </div>
-          
-          {/* Contact fields */}
-          <div>
-            <Select
-              id="contactPlatform"
-              value={formData.contactPlatform}
-              onChange={handleChange}
-              required
-            >
-              {platformOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-          </div>
-          
-          <div>
-            <TextInput
-              id="contactUsername"
-              placeholder={`Your ${formData.contactPlatform} contact`}
-              value={formData.contactUsername}
-              onChange={handleChange}
-              required
-            />
-          </div>
+    <div>
+      <h1 className="text-center text-3xl my-7 font-semibold">Share Your Narrative</h1>
+
+      <div className="p-3 max-w-3xl mx-auto min-h-screen">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
+          <h3 className="font-semibold text-blue-800 dark:text-blue-300">About Sharing Your Narrative</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+            Share your narrative to reach people who can help. Be specific about your needs and provide contact information.
+          </p>
         </div>
         
-        {/* Image upload section */}
-        <div className="flex gap-4 items-center justify-between border-4 border-teal-500 border-dotted p-3 rounded-lg">
-          <div className="flex-1">
-            <FileInput
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-            />
-            {imageFile && !formData.image && !previewUrl && (
-              <p className="text-xs mt-1 text-gray-500">Click &quot;Upload Image&quot; to preview and upload</p>
-            )}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Title field */}
+            <div className="md:col-span-2">
+              <TextInput
+                id="title"
+                placeholder="Narrative Title"
+                value={formData.title}
+                onChange={handleChange}
+                required
+                className="text-lg"
+              />
+            </div>
+            
+            {/* Country and Category fields */}
+            <div>
+              <CountrySelect
+                value={formData.country}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            
+            <div>
+              <Select
+                id="category"
+                value={formData.category}
+                onChange={handleChange}
+                required
+              >
+                {categoryOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            
+            {/* Contact fields */}
+            <div>
+              <Select
+                id="contactPlatform"
+                value={formData.contactPlatform}
+                onChange={handleChange}
+                required
+              >
+                {platformOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            
+            <div>
+              <TextInput
+                id="contactUsername"
+                placeholder={`Your ${formData.contactPlatform} contact`}
+                value={formData.contactUsername}
+                onChange={handleChange}
+                required
+              />
+            </div>
           </div>
+          
+          {/* Image upload section */}
+          <div className="flex gap-4 items-center justify-between border-4 border-teal-500 border-dotted p-3 rounded-lg">
+            <div className="flex-1">
+              <FileInput
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+              {imageFile && !formData.image && !previewUrl && (
+                <p className="text-xs mt-1 text-gray-500">Click &quot;Upload Image&quot; to preview and upload</p>
+              )}
+            </div>
+            <Button
+              type="button"
+              gradientDuoTone="purpleToBlue"
+              size="sm"
+              outline
+              onClick={uploadImage}
+              disabled={!imageFile || imageFileUploadProgress !== null}
+            >
+              {imageFileUploadProgress ? (
+                <div className="w-16 h-16">
+                  <CircularProgressbar
+                    value={imageFileUploadProgress || 0}
+                    text={`${imageFileUploadProgress}%`}
+                  />
+                </div>
+              ) : (
+                "Upload Image"
+              )}
+            </Button>
+          </div>
+          
+          {/* Image preview */}
+          {imageFileUploadError && (
+            <Alert color="failure">
+              {imageFileUploadError}
+            </Alert>
+          )}
+          
+          {(previewUrl || formData.image) && (
+            <div className="relative w-full h-72 rounded-lg overflow-hidden">
+              <img
+                src={formData.image || previewUrl}
+                alt="Narrative preview"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+          
+          {/* Narrative body */}
+          <ReactQuill 
+            theme="snow" 
+            placeholder="Share your narrative (details about your situation, what kind of help you need, etc.)" 
+            className="h-72 mb-12" 
+            modules={modules}
+            required 
+            onChange={(value) => setFormData({...formData, body: value})}
+          />
+          
+          {/* Submit button */}
           <Button
-            type="button"
-            gradientDuoTone="purpleToBlue"
-            size="sm"
-            outline
-            onClick={uploadImage}
-            disabled={!imageFile || imageFileUploadProgress !== null}
+            type="submit"
+            gradientDuoTone="purpleToPink"
+            className="w-full"
+            size="lg"
+            disabled={loading}
           >
-            {imageFileUploadProgress ? (
-              <div className="w-16 h-16">
-                <CircularProgressbar
-                  value={imageFileUploadProgress || 0}
-                  text={`${imageFileUploadProgress}%`}
-                />
-              </div>
+            {loading ? (
+              <>
+                <Spinner size="sm" className="mr-2" />
+                Publishing...
+              </>
             ) : (
-              "Upload Image"
+              'Publish Narrative'
             )}
           </Button>
-        </div>
-        
-        {/* Image preview */}
-        {imageFileUploadError && (
-          <Alert color="failure">
-            {imageFileUploadError}
-          </Alert>
-        )}
-        
-        {(previewUrl || formData.image) && (
-          <div className="relative w-full h-72 rounded-lg overflow-hidden">
-            <img
-              src={formData.image || previewUrl}
-              alt="Story preview"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
-        
-        {/* Story body */}
-        <Textarea
-          id="body"
-          placeholder="Share your story (details about your situation, what kind of help you need, etc.)"
-          value={formData.body}
-          onChange={handleChange}
-          required
-          rows={8}
-          className="resize-none"
-        />
-        
-        {/* Submit button */}
-        <Button
-          type="submit"
-          gradientDuoTone="purpleToPink"
-          className="w-full"
-          size="lg"
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <Spinner size="sm" className="mr-2" />
-              Publishing...
-            </>
-          ) : (
-            'Publish Story'
+          
+          {showNotification && (
+            <Alert color="success" className="mt-5">
+              Your narrative has been published successfully!
+            </Alert>
           )}
-        </Button>
-        
-        {showNotification && (
-          <Alert color="success" className="mt-5">
-            Your story has been published successfully!
-          </Alert>
-        )}
-        
-        {publishError && (
-          <Alert color="failure" className="mt-5">
-            {publishError}
-          </Alert>
-        )}
-      </form>
+          
+          {publishError && (
+            <Alert color="failure" className="mt-5">
+              {publishError}
+            </Alert>
+          )}
+        </form>
+      </div>
     </div>
   );
 } 

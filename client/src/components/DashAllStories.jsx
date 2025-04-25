@@ -125,20 +125,6 @@ export default function DashAllStories() {
     setSearchInput('');
   };
 
-  // Function to get status badge color
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'approved':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'rejected':
-        return 'failure';
-      default:
-        return 'gray';
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -159,7 +145,7 @@ export default function DashAllStories() {
 
   return (
     <div className="p-4 w-full">
-      <h1 className="text-2xl font-semibold mb-6">All Stories</h1>
+      <h1 className="text-2xl font-semibold mb-6">All Narratives</h1>
       
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         {/* Status filter */}
@@ -206,7 +192,7 @@ export default function DashAllStories() {
       
       {stories.length === 0 ? (
         <div className="text-center py-8">
-          <h2 className="text-xl font-semibold mb-2">No stories found</h2>
+          <h2 className="text-xl font-semibold mb-2">No narratives found</h2>
           <p className="text-gray-500 dark:text-gray-400">
             Try adjusting your filters or search term
           </p>
@@ -220,7 +206,6 @@ export default function DashAllStories() {
               <Table.HeadCell>Title</Table.HeadCell>
               <Table.HeadCell>Category</Table.HeadCell>
               <Table.HeadCell>Country</Table.HeadCell>
-              <Table.HeadCell>Status</Table.HeadCell>
               <Table.HeadCell>Views</Table.HeadCell>
               <Table.HeadCell>Delete</Table.HeadCell>
               <Table.HeadCell>Edit</Table.HeadCell>
@@ -235,20 +220,17 @@ export default function DashAllStories() {
                     {new Date(story.createdAt).toLocaleDateString()}
                   </Table.Cell>
                   <Table.Cell>
-                    {usernames[story.userId] || story.userId}
+                    <Link to={`/profile/${usernames[story.userId]}`} className="text-blue-500 hover:underline">
+                      {usernames[story.userId] || story.userId}
+                    </Link>
                   </Table.Cell>
-                  <Table.Cell className="line-clamp-1 max-w-[200px]">
-                    <Link to={`/story/${story.slug}`} className="text-blue-500 hover:underline font-medium">
+                  <Table.Cell className="max-w-[250px] truncate">
+                    <Link to={`/narrative/${story.slug}`} className="text-blue-600 hover:underline font-medium">
                       {story.title}
                     </Link>
                   </Table.Cell>
                   <Table.Cell>{story.category}</Table.Cell>
                   <Table.Cell>{story.country}</Table.Cell>
-                  <Table.Cell>
-                    <span className={`px-2 py-1 rounded-full text-xs text-white bg-${getStatusColor(story.status)}-500`}>
-                      {story.status}
-                    </span>
-                  </Table.Cell>
                   <Table.Cell>{story.views}</Table.Cell>
                   <Table.Cell>
                     <span 
@@ -259,7 +241,7 @@ export default function DashAllStories() {
                     </span>
                   </Table.Cell>
                   <Table.Cell>
-                    <Link to={`/update-story/${story._id}`} className="text-teal-500 hover:underline">
+                    <Link to={`/update-narrative/${story._id}`} className="text-teal-500 hover:underline">
                       <span>Edit</span>
                     </Link>
                   </Table.Cell>
@@ -294,7 +276,7 @@ export default function DashAllStories() {
           <div className="text-center">
             <HiOutlineExclamationCircle className="h-14 w-14 text-gray-400 dark:text-gray-200 mb-4 mx-auto" />
             <h3 className="mb-5 text-lg text-gray-500 dark:text-gray-400">
-              Are you sure you want to delete this story?
+              Are you sure you want to delete this narrative?
             </h3>
             <div className="flex justify-center gap-4">
               <Button color="failure" onClick={handleDeleteStory}>

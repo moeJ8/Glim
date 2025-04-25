@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Button, Table, Modal, Spinner, Alert, Badge } from "flowbite-react";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
-import { FaEye, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaCheck, FaTimes } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { decrementPendingRequests } from "../redux/request/requestSlice";
+import { updateSuccess } from "../redux/user/userSlice";
 
 export default function DashRequests() {
   const { currentUser } = useSelector((state) => state.user);
@@ -164,6 +165,13 @@ export default function DashRequests() {
         setPendingPublisherCount(prev => prev - 1);
         dispatch(decrementPendingRequests());
         setShowModal(false);
+        
+        // Refresh user data to get updated permissions
+        const userRes = await fetch(`/api/user/${currentUser._id}`);
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          dispatch(updateSuccess(userData));
+        }
       } else {
         console.log(data.message);
       }
@@ -202,6 +210,13 @@ export default function DashRequests() {
         setPendingStories(pendingStories.filter(story => story._id !== storyToAction._id));
         setPendingStoriesCount(prev => prev - 1);
         setShowModal(false);
+        
+        // Refresh user data to ensure permissions are up to date
+        const userRes = await fetch(`/api/user/${currentUser._id}`);
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          dispatch(updateSuccess(userData));
+        }
       } else {
         console.error(data.message);
       }
@@ -269,21 +284,23 @@ export default function DashRequests() {
                 <Table.Cell>{request.userId.email}</Table.Cell>
                 <Table.Cell className="flex flex-wrap gap-2">
                   <Button
+                  outline
                     size="sm"
                     color="success"
                     className="font-medium bg-gradient-to-r from-green-500 to-teal-500"
                     onClick={() => handlePublisherAction(request, "approved")}
                   >
-                    <FaCheck className="mr-2" />
+                    <FaCheck className="mr-2 mt-1" />
                     Approve
                   </Button>
                   <Button
+                  outline
                     size="sm"
                     color="failure"
                     className="font-medium bg-gradient-to-r from-red-500 to-pink-500"
                     onClick={() => handlePublisherAction(request, "rejected")}
                   >
-                    <FaTimes className="mr-2" />
+                    <FaTimes className="mr-2 mt-1" />
                     Reject
                   </Button>
                 </Table.Cell>
@@ -370,32 +387,33 @@ export default function DashRequests() {
                 <Table.Cell>{story.category}</Table.Cell>
                 <Table.Cell>{story.country}</Table.Cell>
                 <Table.Cell className="flex items-center gap-2">
-                  <Link to={`/story/${story.slug}`}>
-                    <Button 
-                      size="sm" 
-                      color="info" 
-                      className="font-medium bg-gradient-to-r from-blue-500 to-blue-600"
-                    >
-                      <FaEye className="mr-2" />
-                      View
-                    </Button>
-                  </Link>
+                  <div className="flex items-center text-sm space-x-2">
+                    {story.status === 'approved' && (
+                      <Link to={`/narrative/${story.slug}`}>
+                        <Button size="xs" color="teal" className="px-2 py-1">
+                          View 
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
                   <Button
+                  outline
                     size="sm"
                     color="success"
                     className="font-medium bg-gradient-to-r from-green-500 to-teal-500"
                     onClick={() => openStoryActionModal(story, 'approve')}
                   >
-                    <FaCheck className="mr-2" />
+                    <FaCheck className="mr-2 mt-1" />
                     Approve
                   </Button>
                   <Button
+                  outline
                     size="sm"
                     color="failure"
                     className="font-medium bg-gradient-to-r from-red-500 to-pink-500"
                     onClick={() => openStoryActionModal(story, 'reject')}
                   >
-                    <FaTimes className="mr-2" />
+                    <FaTimes className="mr-2 mt-1" />
                     Reject
                   </Button>
                 </Table.Cell>
@@ -541,7 +559,7 @@ export default function DashRequests() {
               type="button"
             >
               <div className="flex items-center gap-2">
-                <span>Story Approvals</span>
+                <span>Narrative Approvals</span>
                 {pendingStoriesCount > 0 && (
                   <Badge color="failure" className="ml-1">
                     {pendingStoriesCount}

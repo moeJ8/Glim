@@ -316,7 +316,7 @@ export default function Header() {
                     <Navbar.Link active={path === "/stories"} as={'div'}>
                         <Link to="/stories">
                             <p className="dark:text-teal-400 text-indigo-800">
-                                Stories
+                                Narratives
                             </p>
                         </Link>
                     </Navbar.Link>

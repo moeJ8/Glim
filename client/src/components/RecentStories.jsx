@@ -51,7 +51,7 @@ export default function RecentStories() {
         ))}
       </div>
       <Link to="/stories" className="text-lg text-teal-500 hover:underline text-center">
-        View All Stories
+        View All Narratives
       </Link>
     </div>
   );

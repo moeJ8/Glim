@@ -19,6 +19,16 @@ export default function CreatePost() {
   const { currentUser } = useSelector(state => state.user);
   const navigate = useNavigate();
 
+  // Define modules with H1 and H2 buttons
+  const modules = {
+    toolbar: [
+      [{ 'header': 1 }, { 'header': 2 }],
+      ['bold', 'italic', 'underline'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['link', 'image']
+    ]
+  };
+
   const handleUploadImage = async () => {
     try{
       if(!file){
@@ -132,7 +142,7 @@ export default function CreatePost() {
           className="w-full h-72 object-cover"
           />
         )}
-        <ReactQuill theme="snow" placeholder="Write your post here" className="h-72 mb-12" required onChange={(value) => setFormData({...formData, content: value})}/>
+        <ReactQuill theme="snow" placeholder="Write your post here" className="h-72 mb-12" required onChange={(value) => setFormData({...formData, content: value})} modules={modules}/>
         <Button type="submit" gradientDuoTone="purpleToPink">Publish</Button>
         {publishError && (
           <Alert color="failure" className="mt-5">
