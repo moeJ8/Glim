@@ -3,6 +3,7 @@ import {HiOutlineExclamationCircle} from "react-icons/hi"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import {FaCheck, FaTimes} from "react-icons/fa"
+import { Link } from "react-router-dom"
 
 export default function DashUsers() {
 
@@ -225,9 +226,9 @@ export default function DashUsers() {
                 
               </Table.Cell>
               <Table.Cell>
-               
+                <Link to={`/profile/${user.username}`} className="text-blue-500 hover:underline font-medium">
                   {user.username}
-                
+                </Link>
               </Table.Cell>
               <Table.Cell>
                 {user.email}

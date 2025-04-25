@@ -1,5 +1,6 @@
 import { Sidebar } from "flowbite-react";
-import { HiUser, HiArrowSmRight, HiDocumentText, HiOutlineUserGroup, HiAnnotation, HiChartPie, HiInboxIn, HiCash, HiExclamation } from "react-icons/hi";
+import { HiUser, HiArrowSmRight, HiDocumentText, HiOutlineUserGroup, HiAnnotation, HiChartPie, HiInboxIn, HiExclamation } from "react-icons/hi";
+import { FaBookOpen, FaList } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { signoutSuccess } from "../redux/user/userSlice";
@@ -14,6 +15,8 @@ export default function DashSidebar() {
   const {pendingRequests} = useSelector((state) => state.request);
   const {pendingReports} = useSelector((state) => state.report);
   const [tab, setTab] = useState('');
+  const [pendingStories, setPendingStories] = useState(0);
+  const [totalPendingRequests, setTotalPendingRequests] = useState(0);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -71,6 +74,32 @@ export default function DashSidebar() {
     }
   }, [currentUser, dispatch]);
 
+  useEffect(() => {
+    // Fetch pending stories count for admin
+    const fetchPendingStories = async () => {
+      try {
+        const res = await fetch('/api/story/counts');
+        const data = await res.json();
+        
+        if (res.ok) {
+          const newPendingStories = data.pendingStories;
+          setPendingStories(newPendingStories);
+          // Calculate total pending requests
+          setTotalPendingRequests(pendingRequests + newPendingStories);
+        }
+      } catch (error) {
+        console.log(error.message);
+      }
+    };
+    
+    if (currentUser && currentUser.isAdmin) {
+      fetchPendingStories();
+      // Set up polling every 30 seconds
+      const interval = setInterval(fetchPendingStories, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [currentUser, pendingRequests]);
+
   const handleSignOut = async () => {
     try{
       const res = await fetch('api/user/signout',{
@@ -114,6 +143,22 @@ export default function DashSidebar() {
               </Sidebar.Item>
             </Link>
           )}
+          {/* All Stories tab (admin only) */}
+          {currentUser.isAdmin && (
+            <Link to={`/dashboard?tab=allstories`}>
+              <Sidebar.Item active={tab === 'allstories'} icon={FaList} as='div'>
+                All Stories
+              </Sidebar.Item>
+            </Link>
+          )}
+          {/* Stories tab for admins and publishers */}
+          {(currentUser.isAdmin || currentUser.isPublisher) && (
+            <Link to={`/dashboard?tab=stories`}>
+              <Sidebar.Item active={tab === 'stories'} icon={FaBookOpen} as='div'>
+                Stories
+              </Sidebar.Item>
+            </Link>
+          )}
           {/* Comments tab for admin */}
           {currentUser.isAdmin && (
             <>
@@ -127,35 +172,12 @@ export default function DashSidebar() {
                     Comments
                 </Sidebar.Item>
               </Link>
-              {/* Donation management links for admin */}
-              <Link to="/donation-dashboard">
-                <Sidebar.Item icon={HiCash} as='div'>
-                  Donations
-                </Sidebar.Item>
-              </Link>
-              <Link to="/create-donation">
-                <Sidebar.Item icon={HiDocumentText} as='div'>
-                  Create Donation
-                </Sidebar.Item>
-              </Link>
-            </>
-          )}
-          {/* Comments tab for publisher */}
-          {currentUser.isPublisher && !currentUser.isAdmin && (
-            <Link to={`/dashboard?tab=comments`}>
-              <Sidebar.Item active = {tab === 'comments'} icon={HiAnnotation} as='div'>
-                  Comments
-              </Sidebar.Item>
-            </Link>
-          )}
-          {currentUser.isAdmin && (
-            <>
               <Link to={`/dashboard?tab=requests`}>
                 <Sidebar.Item active={tab === 'requests'} icon={HiInboxIn} as='div'>
                   Requests
-                  {pendingRequests > 0 && (
+                  {(pendingRequests > 0 || pendingStories > 0) && (
                     <span className="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
-                      {pendingRequests}
+                      {totalPendingRequests}
                     </span>
                   )}
                 </Sidebar.Item>
@@ -171,6 +193,14 @@ export default function DashSidebar() {
                 </Sidebar.Item>
               </Link>
             </>
+          )}
+          {/* Comments tab for publisher */}
+          {currentUser.isPublisher && !currentUser.isAdmin && (
+            <Link to={`/dashboard?tab=comments`}>
+              <Sidebar.Item active = {tab === 'comments'} icon={HiAnnotation} as='div'>
+                  Comments
+              </Sidebar.Item>
+            </Link>
           )}
           
           <Sidebar.Item icon={HiArrowSmRight} className='cursor-pointer' onClick={handleSignOut} as='div'>

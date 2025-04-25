@@ -8,6 +8,8 @@ import DashComments from "../components/DashComments";
 import DashboardComp from "../components/DashboardComp";
 import DashRequests from "../components/DashRequests";
 import DashReports from "../components/DashReports";
+import DashStories from "../components/DashStories";
+import DashAllStories from "../components/DashAllStories";
 
 export default function Dashboard() {
 const location = useLocation();
@@ -33,14 +35,18 @@ useEffect(() => {
       {tab === 'posts' && <DashPosts/>}
       {/* Users */}
       {tab === 'users' && <DashUsers/>}
-      {/* <DashComments /> */}
+      {/* Comments */}
       {tab === 'comments' && <DashComments/>}
-      {/* <DashboardComp /> */}
+      {/* Dashboard */}
       {tab === 'dashboard' && <DashboardComp/>}
-      {/* Publisher Requests */}
+      {/* Requests - now includes both publisher and story requests */}
       {tab === 'requests' && <DashRequests/>}
       {/* Reports */}
       {tab === 'reports' && <DashReports/>}
+      {/* My Stories */}
+      {tab === 'stories' && <DashStories/>}
+      {/* All Stories (for admin) */}
+      {tab === 'allstories' && <DashAllStories/>}
     </div>
   )
 }

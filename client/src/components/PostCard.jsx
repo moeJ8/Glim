@@ -5,7 +5,10 @@ export default function PostCard({post}) {
   return (
     <div className="group relative w-full border border-teal-500 hover:border-2 h-[380px] overflow-hidden rounded-lg transition-all">
       <Link to={`/post/${post.slug}`}>
-        <img src={post.image} loading="lazy" alt="Post Cover" className="h-[260px] w-full object-cover group-hover:h-[200px] transition-all duration-300 z-20"/>
+        <div className="relative">
+          <img src={post.image} loading="lazy" alt="Post Cover" className="h-[260px] w-full object-cover group-hover:h-[200px] transition-all duration-300 z-20"/>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
       </Link>
       <div className="p-3 flex flex-col gap-2">
         <p className="text-lg font-semibold line-clamp-2">{post.title}</p>

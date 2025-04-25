@@ -8,6 +8,7 @@ import commentRoutes from './routes/comment.route.js';
 import donationRoutes from './routes/donation.route.js';
 import notificationRoutes from './routes/notification.route.js';
 import reportRoutes from './routes/report.route.js';
+import storyRoutes from './routes/story.route.js';
 import cookieParser from 'cookie-parser';
 import http from 'http';
 import { Server } from 'socket.io';
@@ -101,6 +102,7 @@ app.use('/api/comment', commentRoutes);
 app.use('/api/donation', donationRoutes);
 app.use('/api/notification', notificationRoutes);
 app.use('/api/report', reportRoutes);
+app.use('/api/story', storyRoutes);
 
 app.use(express.static(path.join(__dirname, 'client', 'dist')));
 app.get('*', (req, res) => {

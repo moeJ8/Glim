@@ -15,6 +15,10 @@ import UpdatePost from './pages/UpdatePost'
 import PostPage from './pages/PostPage'
 import ScrollToTop from './components/ScrollToTop'
 import Search from './pages/Search'
+import Stories from './pages/Stories'
+import StoryPage from './pages/StoryPage'
+import CreateStory from './pages/CreateStory'
+import UpdateStory from './pages/UpdateStory'
 import Donate from './pages/Donate'
 import DonateCase from './pages/DonateCase'
 import DonateSuccess from './pages/DonateSuccess'
@@ -40,6 +44,8 @@ export default function App() {
       <Route path="/sign-in" element={<SignIn/>}/>
       <Route path="/sign-up" element={<SignUp/>}/>
       <Route path="/search" element={<Search/>}/>
+      <Route path="/stories" element={<Stories/>}/>
+      <Route path="/story/:slug" element={<StoryPage/>}/>
       <Route path="/donate" element={<Donate/>}/>
       <Route path="/donate/:id" element={<DonateCase/>}/>
       <Route path="/donate/success" element={<DonateSuccess/>}/>
@@ -47,15 +53,17 @@ export default function App() {
       <Route path="/users/:userId/verify/:token" element={<EmailVerification/>}/>
       <Route path="/request-password-reset" element={<RequestPasswordReset/>}/>
       <Route path="/reset-password/:userId/:token" element={<ResetPassword/>}/>
-      <Route element ={<PrivateRoute/>} >
+      <Route element={<PrivateRoute/>} >
         <Route path="/dashboard" element={<Dashboard/>}/>
         <Route path="/notifications" element={<Notifications/>}/>
       </Route>
-      <Route element ={<OnlyAdminPrivateRoute/>} >
+      <Route element={<OnlyAdminPrivateRoute/>} >
         <Route path="/create-post" element={<CreatePost/>}/>
         <Route path="/update-post/:postId" element={<UpdatePost/>}/>
         <Route path="/create-donation" element={<CreateDonation/>}/>
         <Route path="/donation-dashboard" element={<DonationDashboard/>}/>
+        <Route path="/create-story" element={<CreateStory/>}/>
+        <Route path="/update-story/:storyId" element={<UpdateStory/>}/>
       </Route>
       <Route path="/categories" element={<Categories/>}/>
       <Route path="/post/:postSlug" element={<PostPage/>}/>

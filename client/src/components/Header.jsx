@@ -313,10 +313,10 @@ export default function Header() {
                             Categories
                         </Link>
                     </Navbar.Link>
-                    <Navbar.Link active={path === "/donate"} as={'div'}>
-                        <Link to="/donate">
+                    <Navbar.Link active={path === "/stories"} as={'div'}>
+                        <Link to="/stories">
                             <p className="dark:text-teal-400 text-indigo-800">
-                                Donate Now
+                                Stories
                             </p>
                         </Link>
                     </Navbar.Link>
