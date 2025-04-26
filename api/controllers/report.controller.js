@@ -89,7 +89,17 @@ export const createReport = async (req, res, next) => {
 
 export const getReports = async (req, res, next) => {
     try {
-        const { status, page = 1, limit = 10 } = req.query;
+        const { status, page = 1, limit = 10, count } = req.query;
+        if (count === 'true') {
+            const totalReports = await Report.countDocuments({});
+            const pendingReports = await Report.countDocuments({ status: 'pending' });
+            
+            return res.status(200).json({
+                success: true,
+                totalReports,
+                pendingReports
+            });
+        }
         
         const query = {};
         if (status) {

@@ -281,11 +281,25 @@ export const getStoryCounts = async (req, res, next) => {
         const pendingStories = await Story.countDocuments({ status: "pending" });
         const rejectedStories = await Story.countDocuments({ status: "rejected" });
         
+        const now = new Date();
+        const oneMonthAgo = new Date(
+            now.getFullYear(),
+            now.getMonth() - 1,
+            now.getDate()
+        );
+        
+        // Count only approved stories for last month
+        const lastMonthStories = await Story.countDocuments({
+            status: "approved",
+            createdAt: { $gte: oneMonthAgo }
+        });
+        
         res.status(200).json({
             totalStories,
             approvedStories,
             pendingStories,
-            rejectedStories
+            rejectedStories,
+            lastMonthStories
         });
     } catch (error) {
         next(error);

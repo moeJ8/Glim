@@ -1,6 +1,6 @@
 import { Button, Table } from "flowbite-react"
 import { useEffect, useState } from "react"
-import { HiAnnotation, HiArrowNarrowUp, HiDocumentText, HiOutlineUserGroup, HiInboxIn } from "react-icons/hi"
+import { HiAnnotation, HiArrowNarrowUp, HiDocumentText, HiOutlineUserGroup, HiInboxIn, HiBookOpen, HiExclamation } from "react-icons/hi"
 import { useSelector } from "react-redux"
 import { Link } from "react-router-dom"
 export default function DashboardComp() {
@@ -11,9 +11,12 @@ export default function DashboardComp() {
   const [totalPosts, setTotalPosts] = useState(0)
   const [totalComments, setTotalComments] = useState(0)
   const [totalRequests, setTotalRequests] = useState(0)
+  const [approvedStories, setApprovedStories] = useState(0)
+  const [pendingReports, setPendingReports] = useState(0)
   const [lastMonthUsers, setLastMonthUsers] = useState(0)
   const [lastMonthPosts, setLastMonthPosts] = useState(0)
   const [lastMonthComments, setLastMonthComments] = useState(0)
+  const [lastMonthStories, setLastMonthStories] = useState(0)
   const {currentUser} = useSelector(state => state.user)
 
 
@@ -86,12 +89,45 @@ export default function DashboardComp() {
         console.log(err);
       }
     };
+
+    const fetchStories = async () => {
+      try {
+        const res = await fetch('/api/story/counts');
+        const data = await res.json();
+        
+        if (res.ok) {
+          setApprovedStories(data.approvedStories || 0);
+          setLastMonthStories(data.lastMonthStories || 0);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    const fetchReports = async () => {
+      try {
+        const res = await fetch('/api/report?count=true', {
+          headers: {
+            Authorization: `Bearer ${currentUser.token}`,
+          },
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          setPendingReports(data.pendingReports || 0);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
     
     if (currentUser.isAdmin) {
       fetchUsers();
       fetchPosts();
       fetchComments();
       fetchRequests();
+      fetchStories();
+      fetchReports();
     }
   },[currentUser])
 
@@ -139,6 +175,24 @@ export default function DashboardComp() {
         <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
           <div className="flex justify-between">
             <div>
+              <h3 className="text-gray-500 text-md uppercase">Approved Narratives</h3>
+              <p className="text-2xl">{approvedStories}</p>
+            </div>
+              <HiBookOpen className="bg-amber-600 text-white rounded-full text-5xl p-3 shadow-lg"/>
+          </div>
+          <div className="flex gap-2 text-sm">
+              <span className="text-green-500 flex items-center">
+                <HiArrowNarrowUp />
+                {lastMonthStories}
+              </span>
+              <div className="text-gray-500">
+                Last Month
+              </div>
+          </div>
+        </div>
+        <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
+          <div className="flex justify-between">
+            <div>
               <h3 className="text-gray-500 text-md uppercase">Total Comments</h3>
               <p className="text-2xl">{totalComments}</p>
             </div>
@@ -164,6 +218,22 @@ export default function DashboardComp() {
           </div>
           <div className="flex justify-end">
             <Link to="/dashboard?tab=requests">
+              <Button outline gradientDuoTone="purpleToPink" size="sm">
+                View All
+              </Button>
+            </Link>
+          </div>
+        </div>
+        <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
+          <div className="flex justify-between">
+            <div>
+              <h3 className="text-gray-500 text-md uppercase">Pending Reports</h3>
+              <p className="text-2xl">{pendingReports}</p>
+            </div>
+              <HiExclamation className="bg-red-600 text-white rounded-full text-5xl p-3 shadow-lg"/>
+          </div>
+          <div className="flex justify-end">
+            <Link to="/dashboard?tab=reports">
               <Button outline gradientDuoTone="purpleToPink" size="sm">
                 View All
               </Button>

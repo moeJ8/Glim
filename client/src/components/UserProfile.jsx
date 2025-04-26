@@ -296,13 +296,15 @@ export default function UserProfile() {
           
           {/* Follow stats */}
           <div className="flex gap-6 mt-2 mb-3">
-            <button 
-              onClick={fetchFollowers}
-              className="text-gray-600 dark:text-gray-400 hover:underline"
-              disabled={loadingFollowers}
-            >
-              <span className="font-bold text-gray-800 dark:text-gray-200">{followersCount}</span> Followers
-            </button>
+            {(user.isAdmin || user.isPublisher) && (
+              <button 
+                onClick={fetchFollowers}
+                className="text-gray-600 dark:text-gray-400 hover:underline"
+                disabled={loadingFollowers}
+              >
+                <span className="font-bold text-gray-800 dark:text-gray-200">{followersCount}</span> Followers
+              </button>
+            )}
             <button 
               onClick={fetchFollowing}
               className="text-gray-600 dark:text-gray-400 hover:underline"
