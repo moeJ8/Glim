@@ -31,6 +31,8 @@ import EmailVerification from './pages/EmailVerification'
 import RequestPasswordReset from './pages/RequestPasswordReset'
 import ResetPassword from './pages/ResetPassword'
 import NotFound from './pages/NotFound'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import TermsConditions from './pages/TermsConditions'
 
 
 export default function App() {
@@ -54,6 +56,8 @@ export default function App() {
       <Route path="/users/:userId/verify/:token" element={<EmailVerification/>}/>
       <Route path="/request-password-reset" element={<RequestPasswordReset/>}/>
       <Route path="/reset-password/:userId/:token" element={<ResetPassword/>}/>
+      <Route path="/privacy-policy" element={<PrivacyPolicy/>}/>
+      <Route path="/terms-conditions" element={<TermsConditions/>}/>
       <Route element={<PrivateRoute/>} >
         <Route path="/dashboard" element={<Dashboard/>}/>
         <Route path="/notifications" element={<Notifications/>}/>

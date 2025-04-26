@@ -4,6 +4,7 @@ import { FaEnvelope } from 'react-icons/fa'
 import Logo from './Logo';
 import { useState } from 'react';
 import CustomModal from './CustomModal';
+import { Link } from 'react-router-dom';
 
 export default function FooterCom() {
   const [showPrivacy, setShowPrivacy] = useState(false);
@@ -14,6 +15,19 @@ export default function FooterCom() {
       <h3 className="text-xl font-semibold">Privacy Policy for Glim</h3>
       
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Last Updated: {new Date().toLocaleDateString()}</p>
+      
+      <div className="mb-6 bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
+        <p className="text-blue-700 dark:text-blue-300 font-medium">
+          You can also view this policy on a dedicated page: 
+          <Link 
+            to="/privacy-policy" 
+            className="ml-2 text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+            onClick={() => setShowPrivacy(false)}
+          >
+            Privacy Policy Page
+          </Link>
+        </p>
+      </div>
       
       <p>At Glim, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy outlines our practices concerning the collection, use, and safeguarding of your data when you use our platform.</p>
       
@@ -74,6 +88,19 @@ export default function FooterCom() {
       <h3 className="text-xl font-semibold">Terms & Conditions for Glim</h3>
       
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Last Updated: {new Date().toLocaleDateString()}</p>
+      
+      <div className="mb-6 bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
+        <p className="text-blue-700 dark:text-blue-300 font-medium">
+          You can also view these terms on a dedicated page: 
+          <Link 
+            to="/terms-conditions" 
+            className="ml-2 text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+            onClick={() => setShowTerms(false)}
+          >
+            Terms & Conditions Page
+          </Link>
+        </p>
+      </div>
       
       <p>By accessing or using Glim, you agree to be bound by these Terms and Conditions. Please read them carefully before using our platform.</p>
       
@@ -138,14 +165,14 @@ export default function FooterCom() {
                 <h2 className='text-gray-700 dark:text-gray-300 font-bold mb-4'>ABOUT</h2>
                 <ul className='flex flex-col items-center space-y-2 text-gray-600 dark:text-gray-300'>
                   <li>
-                    <a href='glim.blog' target='_blank' rel='noopener noreferrer' className="font-medium">
+                    <Link to='/' className="font-medium">
                       Glim
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a href='/about' target='_blank' rel='noopener noreferrer' className="font-medium">
+                    <Link to='/about' className="font-medium">
                       About
-                    </a>
+                    </Link>
                   </li>
                 </ul>
               </div>
