@@ -13,7 +13,19 @@ import DashAllStories from "../components/DashAllStories";
 
 export default function Dashboard() {
 const location = useLocation();
-const [tab, setTab] = useState('')
+const [tab, setTab] = useState('');
+const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+// Handle window resize to detect mobile state
+useEffect(() => {
+  const handleResize = () => {
+    setIsMobile(window.innerWidth < 768);
+  };
+  
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
+
 useEffect(() => {
   const urlParams = new URLSearchParams(location.search);
   const tabFromUrl = urlParams.get('tab');
@@ -24,7 +36,7 @@ useEffect(() => {
 }, [location.search])
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
+    <div className={`min-h-screen flex flex-col md:flex-row ${isMobile ? 'pb-16' : ''}`}>
       <div className="md:w-56">
         {/* Sidebar */}
         <DashSidebar />

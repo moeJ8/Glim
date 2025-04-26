@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Button, Table, Modal, Spinner, Alert, TextInput, Badge } from 'flowbite-react';
 import { HiOutlineExclamationCircle } from 'react-icons/hi';
 import { HiOutlineSearch } from 'react-icons/hi';
-import { FaEdit, FaTrash } from 'react-icons/fa';
 
 export default function DashAllStories() {
   const [stories, setStories] = useState([]);
@@ -203,13 +202,13 @@ export default function DashAllStories() {
                   to={`/update-narrative/${story._id}`} 
                   className="flex-1 bg-teal-500 hover:bg-teal-600 text-white text-center py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center"
                 >
-                  <FaEdit className="mr-1" /> Edit
+                  Edit
                 </Link>
                 <button
                   onClick={() => handleDeleteClick(story._id)}
                   className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-3 rounded text-sm font-medium transition-colors flex items-center justify-center"
                 >
-                  <FaTrash className="mr-1" /> Delete
+                  Delete
                 </button>
               </div>
             </div>

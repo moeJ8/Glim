@@ -1,9 +1,10 @@
-import { Table, Modal, Button, TextInput, Label, Select, Spinner, Alert } from "flowbite-react"
+import { Table, Button, TextInput, Label, Select, Spinner, Alert } from "flowbite-react"
 import {HiOutlineExclamationCircle, HiOutlineSearch} from "react-icons/hi"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import {FaCheck, FaTimes} from "react-icons/fa"
 import { Link } from "react-router-dom"
+import CustomModal from './CustomModal'
 
 export default function DashUsers() {
 
@@ -20,17 +21,16 @@ export default function DashUsers() {
   const [error, setError] = useState(null);
   const [successIcons, setSuccessIcons] = useState({});
   const [failureIcons, setFailureIcons] = useState({});
-  // New state variables for search and filtering
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [verificationFilter, setVerificationFilter] = useState('all');
 
   useEffect(() => {
     const fetchUsers = async () => {
       try{
           setLoading(true);
-          // Build URL with filters
           let url = `/api/user/getusers`;
           const queryParams = [];
           
@@ -47,6 +47,11 @@ export default function DashUsers() {
           // Add status filter if not 'all'
           if (statusFilter !== 'all') {
             queryParams.push(`status=${statusFilter}`);
+          }
+          
+          // Add verification filter if not 'all'
+          if (verificationFilter !== 'all') {
+            queryParams.push(`verified=${verificationFilter}`);
           }
           
           // Add query parameters to URL
@@ -77,7 +82,7 @@ export default function DashUsers() {
     if (currentUser.isAdmin) {
       fetchUsers();
     }
-  }, [currentUser.isAdmin, searchTerm, roleFilter, statusFilter]);
+  }, [currentUser.isAdmin, searchTerm, roleFilter, statusFilter, verificationFilter]);
 
   const handleShowMore = async () => {
     const startIndex = users.length;
@@ -97,6 +102,11 @@ export default function DashUsers() {
       // Add status filter if not 'all'
       if (statusFilter !== 'all') {
         url += `&status=${statusFilter}`;
+      }
+      
+      // Add verification filter if not 'all'
+      if (verificationFilter !== 'all') {
+        url += `&verified=${verificationFilter}`;
       }
       
       const res = await fetch(url);
@@ -184,10 +194,15 @@ export default function DashUsers() {
         return;
       }
 
-      // Update using the data from the API
+      // Update user's ban status directly in the UI since the API doesn't return the updated user
       setUsers(users.map(user => 
         user._id === userToBan._id 
-          ? { ...user, ...data.user }
+          ? { 
+              ...user, 
+              isBanned: true, 
+              banReason: banReason || "Violation of terms of service",
+              banExpiresAt: calculateBanExpiry(banDuration)
+            } 
           : user
       ));
       
@@ -200,6 +215,58 @@ export default function DashUsers() {
       setError(err.message || 'Something went wrong');
       setLoading(false);
     }
+  };
+
+  // Helper function to calculate ban expiry date based on duration
+  const calculateBanExpiry = (duration) => {
+    let expiryDate = new Date();
+    
+    switch (duration) {
+      case '30m':
+        expiryDate.setMinutes(expiryDate.getMinutes() + 30);
+        break;
+      case '1h':
+        expiryDate.setHours(expiryDate.getHours() + 1);
+        break;
+      case '12h':
+        expiryDate.setHours(expiryDate.getHours() + 12);
+        break;
+      case '1d':
+        expiryDate.setDate(expiryDate.getDate() + 1);
+        break;
+      case '3d':
+        expiryDate.setDate(expiryDate.getDate() + 3);
+        break;
+      case '1w':
+        expiryDate.setDate(expiryDate.getDate() + 7);
+        break;
+      case '2w':
+        expiryDate.setDate(expiryDate.getDate() + 14);
+        break;
+      case '1m':
+        expiryDate.setMonth(expiryDate.getMonth() + 1);
+        break;
+      case '3m':
+        expiryDate.setMonth(expiryDate.getMonth() + 3);
+        break;
+      case '6m':
+        expiryDate.setMonth(expiryDate.getMonth() + 6);
+        break;
+      case '1y':
+        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+        break;
+      case '2y':
+        expiryDate.setFullYear(expiryDate.getFullYear() + 2);
+        break;
+      case 'permanent':
+        // Set to a date far in the future
+        expiryDate = new Date(2100, 0, 1);
+        break;
+      default:
+        expiryDate.setDate(expiryDate.getDate() + 1); // Default to 1 day
+    }
+    
+    return expiryDate.toISOString();
   };
 
   const handleUnbanUser = async (userId) => {
@@ -274,12 +341,18 @@ export default function DashUsers() {
     setStatusFilter(e.target.value);
   };
 
+  // Handle verification filter change
+  const handleVerificationFilterChange = (e) => {
+    setVerificationFilter(e.target.value);
+  };
+
   // Handle removing all filters
   const handleRemoveFilters = () => {
     setSearchTerm('');
     setSearchInput('');
     setRoleFilter('all');
     setStatusFilter('all');
+    setVerificationFilter('all');
   };
   
   // Render mobile cards
@@ -287,20 +360,20 @@ export default function DashUsers() {
     return (
       <div className="grid grid-cols-1 gap-4 md:hidden">
         {users.map((user) => (
-          <div key={user._id} className="bg-gray-800 rounded-lg overflow-hidden">
+          <div key={user._id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
             {/* User info */}
-            <div className="p-4 border-b border-gray-700">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-3">
                 <img 
                   src={user.profilePicture} 
                   alt={user.username}
-                  className="w-10 h-10 rounded-full object-cover"
+                  className="w-10 h-10 rounded-full object-cover bg-gray-100 dark:bg-gray-700"
                 />
                 <div>
-                  <Link to={`/profile/${user.username}`} className="text-blue-400 font-medium">
+                  <Link to={`/profile/${user.username}`} className="text-blue-600 dark:text-blue-400 font-medium">
                     {user.username}
                   </Link>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     Joined: {new Date(user.createdAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -309,50 +382,67 @@ export default function DashUsers() {
             
             {/* Email */}
             <div className="px-4 pt-3">
-              <p className="text-xs text-gray-400 mb-1">Email:</p>
-              <p className="text-sm text-gray-200 bg-gray-700 p-2 rounded">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Email:</p>
+              <p className="text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 p-2 rounded">
                 {user.email}
               </p>
             </div>
             
             {/* Status badges */}
-            <div className="grid grid-cols-3 gap-3 p-4">
-              <div className="bg-gray-700 rounded p-2 flex flex-col items-center">
-                <p className="text-xs text-gray-400 mb-1">Publisher</p>
+            <div className="grid grid-cols-4 gap-3 p-4">
+              <div className="bg-gray-100 dark:bg-gray-700 rounded p-2 flex flex-col items-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Publisher</p>
                 <span className={`text-xs px-2 py-1 rounded-full ${
-                  user.isPublisher ? "bg-green-500 text-white" : "bg-gray-600 text-gray-300"
+                  user.isPublisher ? "bg-green-500 text-white" : "bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-300"
                 }`}>
                   {user.isPublisher ? "Yes" : "No"}
                 </span>
               </div>
               
-              <div className="bg-gray-700 rounded p-2 flex flex-col items-center">
-                <p className="text-xs text-gray-400 mb-1">Admin</p>
+              <div className="bg-gray-100 dark:bg-gray-700 rounded p-2 flex flex-col items-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Admin</p>
                 <span className={`text-xs px-2 py-1 rounded-full ${
-                  user.isAdmin ? "bg-purple-500 text-white" : "bg-gray-600 text-gray-300"
+                  user.isAdmin ? "bg-purple-500 text-white" : "bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-300"
                 }`}>
                   {user.isAdmin ? "Yes" : "No"}
                 </span>
               </div>
               
-              <div className="bg-gray-700 rounded p-2 flex flex-col items-center">
-                <p className="text-xs text-gray-400 mb-1">Status</p>
+              <div className="bg-gray-100 dark:bg-gray-700 rounded p-2 flex flex-col items-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</p>
                 <span className={`text-xs px-2 py-1 rounded-full ${
                   user.isBanned ? "bg-red-500 text-white" : "bg-green-500 text-white"
                 }`}>
                   {user.isBanned ? "Banned" : "Active"}
                 </span>
               </div>
+              
+              <div className="bg-gray-100 dark:bg-gray-700 rounded p-2 flex flex-col items-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Verified</p>
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  user.verified ? "bg-green-500 text-white" : "bg-red-500 text-white"
+                }`}>
+                  {user.verified ? "Yes" : "No"}
+                </span>
+              </div>
             </div>
             
             {/* Action buttons */}
-            <div className="grid grid-cols-3 gap-2 p-4">
+            <div className="grid grid-cols-3 gap-2 p-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
               <Button
                 color={user.isPublisher ? "blue" : "purple"}
                 size="xs"
                 onClick={() => handleTogglePublisher(user._id, user.isPublisher)}
                 disabled={user.isAdmin}
-                className="flex items-center justify-center h-9"
+                className={`flex items-center justify-center h-9 ${
+                  user.isPublisher 
+                    ? "bg-blue-500 hover:bg-blue-600" 
+                    : "bg-purple-500 hover:bg-purple-600"
+                }`}
+                style={user.isPublisher 
+                  ? { backgroundColor: "#3b82f6", borderColor: "#3b82f6" }
+                  : { backgroundColor: "#8b5cf6", borderColor: "#8b5cf6" }
+                }
               >
                 {user.isPublisher ? "Revoke Publisher" : "Assign Publisher"}
               </Button>
@@ -365,7 +455,8 @@ export default function DashUsers() {
                       size="xs"
                       onClick={() => handleUnbanUser(user._id)}
                       disabled={loading}
-                      className="flex items-center justify-center h-9"
+                      className="flex items-center justify-center h-9 bg-cyan-500 hover:bg-cyan-600"
+                      style={{ backgroundColor: "#06b6d4", borderColor: "#06b6d4" }}
                     >
                       Unban User
                     </Button>
@@ -378,7 +469,8 @@ export default function DashUsers() {
                         setShowBanModal(true);
                       }}
                       disabled={loading}
-                      className="flex items-center justify-center h-9"
+                      className="flex items-center justify-center h-9 bg-pink-500 hover:bg-pink-600"
+                      style={{ backgroundColor: "#ec4899", borderColor: "#ec4899" }}
                     >
                       Ban User
                     </Button>
@@ -393,7 +485,8 @@ export default function DashUsers() {
                   setShowModal(true);
                   setUserIdToDelete(user._id);
                 }}
-                className="flex items-center justify-center h-9"
+                className="flex items-center justify-center h-9 bg-red-500 hover:bg-red-600"
+                style={{ backgroundColor: "#ef4444", borderColor: "#ef4444" }}
               >
                 Delete User
               </Button>
@@ -406,6 +499,8 @@ export default function DashUsers() {
             <Button 
               color="purple"
               onClick={handleShowMore}
+              className="bg-purple-600 hover:bg-purple-700"
+              style={{ backgroundColor: "#9333ea", borderColor: "#9333ea" }}
             >
               Show More
             </Button>
@@ -424,7 +519,7 @@ export default function DashUsers() {
       {currentUser.isAdmin && (
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           {/* Role filter */}
-          <div className="md:w-1/4">
+          <div className="md:w-1/5">
             <Select
               value={roleFilter}
               onChange={handleRoleFilterChange}
@@ -437,7 +532,7 @@ export default function DashUsers() {
           </div>
           
           {/* Status filter */}
-          <div className="md:w-1/4">
+          <div className="md:w-1/5">
             <Select
               value={statusFilter}
               onChange={handleStatusFilterChange}
@@ -448,8 +543,20 @@ export default function DashUsers() {
             </Select>
           </div>
           
+          {/* Verification filter */}
+          <div className="md:w-1/5">
+            <Select
+              value={verificationFilter}
+              onChange={handleVerificationFilterChange}
+            >
+              <option value="all">All Verification</option>
+              <option value="true">Verified</option>
+              <option value="false">Not Verified</option>
+            </Select>
+          </div>
+          
           {/* Search input */}
-          <div className="md:w-2/4 flex gap-2">
+          <div className="md:w-2/5 flex gap-2">
             <div className="flex-grow">
               <TextInput
                 type="text"
@@ -471,7 +578,7 @@ export default function DashUsers() {
               outline
               gradientDuoTone="pinkToOrange"
               onClick={handleRemoveFilters}
-              disabled={roleFilter === 'all' && statusFilter === 'all' && !searchTerm}
+              disabled={roleFilter === 'all' && statusFilter === 'all' && verificationFilter === 'all' && !searchTerm}
             >
               Reset
             </Button>
@@ -500,6 +607,7 @@ export default function DashUsers() {
                 <Table.HeadCell>User Image</Table.HeadCell>
                 <Table.HeadCell>Username</Table.HeadCell>
                 <Table.HeadCell>Email</Table.HeadCell>
+                <Table.HeadCell>Verified</Table.HeadCell>
                 <Table.HeadCell>Publisher</Table.HeadCell>
                 <Table.HeadCell>Admin</Table.HeadCell>
                 <Table.HeadCell>Ban Status</Table.HeadCell>
@@ -525,6 +633,9 @@ export default function DashUsers() {
                       {user.email}
                     </Table.Cell>
                     <Table.Cell>
+                      {user.verified ? (<FaCheck className="text-green-500"/>) : (<FaTimes className="text-red-500"/>)}
+                    </Table.Cell>
+                    <Table.Cell>
                           <Button gradientDuoTone="purpleToBlue" outline
                             size="xs"
                             onClick={() => handleTogglePublisher(user._id, user.isPublisher)}
@@ -537,7 +648,7 @@ export default function DashUsers() {
                           {failureIcons[user._id] &&(
                            <FaTimes className="text-green-500 mt-3 mx-auto" />
                            )}
-                        </Table.Cell>
+                    </Table.Cell>
                     <Table.Cell>
                       {user.isAdmin ? (<FaCheck className="text-green-500"/>) : (<FaTimes className="text-red-500"/>)}
                     </Table.Cell>
@@ -637,97 +748,107 @@ export default function DashUsers() {
       ):(
         <p>You have no users yet</p>
       )}
-      <Modal show={showModal} onClose={()=> setShowModal(false)} popup size ='md'>
-        <Modal.Header/>
-        <Modal.Body>
-          <div className="text-center">
-            <HiOutlineExclamationCircle className="h-14 w-14 text-red-500 dark:text-red-500 mb-4 mx-auto" />
-            <h3 className="mb-5 text-lg text-gray-500 dark:text-gray-400">Are you sure you want to delete this user?</h3>
-            <div className="flex justify-center gap-4">
-              <Button color="failure" onClick={()=> handleDeleteUser()}>Yes, I&apos;m sure</Button>
-              <Button color="gray" onClick={()=> setShowModal(false)}>No, cancel</Button>
-            </div>
+      
+      {/* Delete User Modal */}
+      <CustomModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Delete User"
+        maxWidth="md"
+        footer={
+          <div className="flex justify-center gap-4 w-full">
+            <Button color="failure" onClick={() => handleDeleteUser()}>
+              Yes, I&apos;m sure
+            </Button>
+            <Button color="gray" onClick={() => setShowModal(false)}>
+              No, cancel
+            </Button>
           </div>
-        </Modal.Body>
-      </Modal>
-      <Modal
-        show={showBanModal}
-        onClose={() => setShowBanModal(false)}
-        popup
-        size="md"
+        }
       >
-        <Modal.Header>
-          <div className="text-xl font-bold">Ban User</div>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="space-y-4">
-            {userToBan && (
-              <div className="text-center py-2">
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  {userToBan.username}
-                </span>
-                <p className="text-sm text-gray-500">{userToBan.email}</p>
-              </div>
-            )}
-            
-            <div className="mb-2">
-              <Label htmlFor="banDuration" value="Ban Duration" />
-              <Select
-                id="banDuration"
-                value={banDuration}
-                onChange={(e) => setBanDuration(e.target.value)}
-                required
-              >
-                <option value="30m">30 minutes</option>
-                <option value="1h">1 hour</option>
-                <option value="12h">12 hours</option>
-                <option value="1d">1 day</option>
-                <option value="3d">3 days</option>
-                <option value="1w">1 week</option>
-                <option value="2w">2 weeks</option>
-                <option value="1m">1 month</option>
-                <option value="3m">3 months</option>
-                <option value="6m">6 months</option>
-                <option value="1y">1 year</option>
-                <option value="2y">2 years</option>
-                <option value="permanent">Permanent</option>
-              </Select>
-            </div>
-            
-            <div className="mb-2">
-              <Label htmlFor="banReason" value="Ban Reason" />
-              <TextInput
-                id="banReason"
-                placeholder="Why is this user being banned?"
-                value={banReason}
-                onChange={(e) => setBanReason(e.target.value)}
-              />
-            </div>
-            
-            {error && (
-              <div className="text-sm text-red-600 dark:text-red-500">
-                {error}
-              </div>
-            )}
-            
-            <div className="flex justify-center gap-4">
-              <Button
-                color="failure"
-                onClick={handleBanUser}
-                isProcessing={loading}
-              >
-                Ban User
-              </Button>
-              <Button
-                color="gray"
-                onClick={() => setShowBanModal(false)}
-              >
-                Cancel
-              </Button>
-            </div>
+        <div className="text-center">
+          <HiOutlineExclamationCircle className="h-14 w-14 text-red-500 dark:text-red-500 mb-4 mx-auto" />
+          <h3 className="mb-5 text-lg text-gray-500 dark:text-gray-400">
+            Are you sure you want to delete this user?
+          </h3>
+        </div>
+      </CustomModal>
+
+      {/* Ban User Modal */}
+      <CustomModal
+        isOpen={showBanModal}
+        onClose={() => setShowBanModal(false)}
+        title="Ban User"
+        maxWidth="md"
+        footer={
+          <div className="flex justify-center gap-4 w-full">
+            <Button
+              color="failure"
+              onClick={handleBanUser}
+              isProcessing={loading}
+            >
+              Ban User
+            </Button>
+            <Button
+              color="gray"
+              onClick={() => setShowBanModal(false)}
+            >
+              Cancel
+            </Button>
           </div>
-        </Modal.Body>
-      </Modal>
+        }
+      >
+        <div className="space-y-4">
+          {userToBan && (
+            <div className="text-center py-2">
+              <span className="font-semibold text-gray-900 dark:text-white">
+                {userToBan.username}
+              </span>
+              <p className="text-sm text-gray-500">{userToBan.email}</p>
+            </div>
+          )}
+          
+          <div className="mb-2">
+            <Label htmlFor="banDuration" value="Ban Duration" />
+            <Select
+              id="banDuration"
+              value={banDuration}
+              onChange={(e) => setBanDuration(e.target.value)}
+              required
+            >
+              <option value="30m">30 minutes</option>
+              <option value="1h">1 hour</option>
+              <option value="12h">12 hours</option>
+              <option value="1d">1 day</option>
+              <option value="3d">3 days</option>
+              <option value="1w">1 week</option>
+              <option value="2w">2 weeks</option>
+              <option value="1m">1 month</option>
+              <option value="3m">3 months</option>
+              <option value="6m">6 months</option>
+              <option value="1y">1 year</option>
+              <option value="2y">2 years</option>
+              <option value="permanent">Permanent</option>
+            </Select>
+          </div>
+          
+          <div className="mb-2">
+            <Label htmlFor="banReason" value="Ban Reason" />
+            <TextInput
+              id="banReason"
+              placeholder="Why is this user being banned?"
+              value={banReason}
+              onChange={(e) => setBanReason(e.target.value)}
+            />
+          </div>
+          
+          {error && (
+            <div className="text-sm text-red-600 dark:text-red-500">
+              {error}
+            </div>
+          )}
+        </div>
+      </CustomModal>
     </div>
   )
 }

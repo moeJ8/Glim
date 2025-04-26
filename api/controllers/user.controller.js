@@ -128,6 +128,7 @@ export const getUsers = async (req, res, next) => {
     const searchTerm = req.query.searchTerm || '';
     const roleFilter = req.query.role || 'all';
     const statusFilter = req.query.status || 'all';
+    const verifiedFilter = req.query.verified || 'all';
 
     // Build filter object
     const filter = {};
@@ -156,6 +157,13 @@ export const getUsers = async (req, res, next) => {
       filter.isBanned = false;
     } else if (statusFilter === 'banned') {
       filter.isBanned = true;
+    }
+    
+    // Add verification filter
+    if (verifiedFilter === 'true') {
+      filter.verified = true;
+    } else if (verifiedFilter === 'false') {
+      filter.verified = false;
     }
 
     const users = await User.find(filter)

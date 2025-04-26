@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Button, Table, Modal, Spinner, Alert, Badge, Card } from 'flowbite-react';
-import { HiOutlineExclamationCircle, HiFilter } from 'react-icons/hi';
-import { FaEdit, FaTrash, FaEye, FaBookOpen } from 'react-icons/fa';
+import { HiOutlineExclamationCircle, HiFilter, HiPlus } from 'react-icons/hi';
+import { FaEdit, FaTrash, FaBookOpen } from 'react-icons/fa';
 import moment from 'moment';
 
 export default function DashStories() {
@@ -148,64 +148,67 @@ export default function DashStories() {
   return (
     <div className="max-w-7xl mx-auto p-3">
       <h1 className="text-center text-3xl my-5 font-bold text-gray-800 dark:text-gray-100">
-        Manage Your Narratives
+        My Narratives
       </h1>
       
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-        <h2 className="text-xl font-semibold flex items-center">
-          <span className="bg-gradient-to-r from-purple-600 to-pink-500 w-2 h-6 rounded mr-2 inline-block"></span>
-          Total Narratives: {totalStories}
-        </h2>
+      {/* Top section with story count and create button */}
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex flex-wrap justify-between items-center gap-3 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow-sm">
+          <h2 className="text-xl font-semibold flex items-center">
+            <span className="bg-gradient-to-r from-purple-600 to-pink-500 w-2 h-6 rounded mr-2 inline-block"></span>
+            Total Narratives: {totalStories}
+          </h2>
+          
+          {(currentUser.isAdmin || currentUser.isPublisher) && (
+            <Link to="/create-narrative">
+              <Button gradientDuoTone="purpleToPink" size="sm" className="flex items-center gap-1">
+                <HiPlus className="h-4 w-4 mt-0.5 mr-1" />
+                <span>Create New Narrative</span>
+              </Button>
+            </Link>
+          )}
+        </div>
         
-        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-          <div className="flex items-center">
-            {(currentUser.isAdmin || currentUser.isPublisher) && (
-              <Link to="/create-narrative" className="sm:ml-auto">
-                <Button gradientDuoTone="purpleToPink" size="sm" className="sm:mr-3">
-                  Create New Narrative
-                </Button>
-              </Link>
-            )}
+        {/* Filters section */}
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
+          <div className="flex items-center mb-2">
+            <HiFilter className="mr-2 text-purple-600 dark:text-purple-400" />
+            <h3 className="text-gray-700 dark:text-gray-300 font-medium">Filter by Status</h3>
           </div>
           
-          <div className="flex items-center">
-            <span className="text-sm text-gray-600 dark:text-gray-400 mr-1 flex items-center">
-              <HiFilter className="mr-1" /> Filter:
-            </span>
-            <div className="grid grid-cols-4 gap-1 w-full sm:flex sm:gap-2 sm:w-auto">
-              <Button 
-                size="xs"
-                color={filterStatus === 'all' ? 'purple' : 'gray'}
-                onClick={() => setFilterStatus('all')}
-                className={filterStatus === 'all' ? 'bg-gradient-to-r from-purple-500 to-indigo-500 border-0' : ''}
-              >
-                All
-              </Button>
-              <Button 
-                size="xs"
-                color={filterStatus === 'approved' ? 'success' : 'gray'}
-                onClick={() => setFilterStatus('approved')}
-                className={filterStatus === 'approved' ? 'bg-gradient-to-r from-green-500 to-teal-500 border-0' : ''}
-              >
-                Approved
-              </Button>
-              <Button 
-                size="xs"
-                color={filterStatus === 'pending' ? 'warning' : 'gray'}
-                onClick={() => setFilterStatus('pending')}
-                className={filterStatus === 'pending' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 border-0' : ''}
-              >
-                Pending
-              </Button>
-              <Button 
-                size="xs"
-                color={filterStatus === 'rejected' ? 'failure' : 'gray'}
-                onClick={() => setFilterStatus('rejected')}
-                className={filterStatus === 'rejected' ? 'bg-gradient-to-r from-red-500 to-pink-500 border-0' : ''}
-              >
-                Rejected
-              </Button>
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <Button 
+              size="sm"
+              color={filterStatus === 'all' ? 'purple' : 'gray'}
+              onClick={() => setFilterStatus('all')}
+              className={`${filterStatus === 'all' ? 'bg-gradient-to-r from-purple-500 to-indigo-500 border-0' : ''} w-full`}
+            >
+              All Narratives
+            </Button>
+            <Button 
+              size="sm"
+              color={filterStatus === 'approved' ? 'success' : 'gray'}
+              onClick={() => setFilterStatus('approved')}
+              className={`${filterStatus === 'approved' ? 'bg-gradient-to-r from-green-500 to-teal-500 border-0' : ''} w-full`}
+            >
+              Approved
+            </Button>
+            <Button 
+              size="sm"
+              color={filterStatus === 'pending' ? 'warning' : 'gray'}
+              onClick={() => setFilterStatus('pending')}
+              className={`${filterStatus === 'pending' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 border-0' : ''} w-full`}
+            >
+              Pending
+            </Button>
+            <Button 
+              size="sm"
+              color={filterStatus === 'rejected' ? 'failure' : 'gray'}
+              onClick={() => setFilterStatus('rejected')}
+              className={`${filterStatus === 'rejected' ? 'bg-gradient-to-r from-red-500 to-pink-500 border-0' : ''} w-full`}
+            >
+              Rejected
+            </Button>
           </div>
         </div>
       </div>
