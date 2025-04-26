@@ -53,7 +53,7 @@ export default function Home() {
                   ))
                 }
               </div>
-              <Link to={'/categories'} className="text-lg text-teal-500 hover:underline text-center">
+              <Link to={'/posts'} className="text-lg text-teal-500 hover:underline text-center">
                 View All Posts
               </Link>
             </div>

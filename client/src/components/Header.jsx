@@ -281,6 +281,11 @@ export default function Header() {
                             <Link to='/notifications'>
                                 <Dropdown.Item>Notifications</Dropdown.Item>
                             </Link>
+                            {currentUser && (currentUser.isAdmin || currentUser.isPublisher) && (
+                                <Link to='/create-post'>
+                                    <Dropdown.Item>Create Post</Dropdown.Item>
+                                </Link>
+                            )}
                             <Dropdown.Divider />
                             <Dropdown.Item onClick={handleSignOut}>Sign out</Dropdown.Item>
                         </Dropdown>
@@ -308,9 +313,9 @@ export default function Header() {
                         </Link>
                     </Navbar.Link>
 
-                    <Navbar.Link active={path === "/categories"} as={'div'}>
-                        <Link to="/categories">
-                            Categories
+                    <Navbar.Link active={path === "/posts"} as={'div'}>
+                        <Link to="/posts">
+                            Posts
                         </Link>
                     </Navbar.Link>
                     <Navbar.Link active={path === "/stories"} as={'div'}>

@@ -84,21 +84,10 @@ export default function PostPage() {
     useEffect(() => {
         const checkFollowStatus = async () => {
             if (!post?.userId || !currentUser) {
-                console.log("Missing data for follow check:", { 
-                    hasPostUserId: !!post?.userId,
-                    hasCurrentUser: !!currentUser
-                });
+                setIsFollowing(false);
                 return;
             }
             
-            console.log("Follow check data:", {
-                postAuthorId: post.userId._id,
-                authorFollowers: post.userId.followers,
-                currentUserId: currentUser._id,
-                isAdmin: post.userId.isAdmin,
-                isPublisher: post.userId.isPublisher,
-                isSameUser: post.userId._id === currentUser._id
-            });
             // Check if user's followers array includes currentUser id
             if (post.userId.followers && post.userId.followers.includes(currentUser._id)) {
                 setIsFollowing(true);
@@ -127,7 +116,6 @@ export default function PostPage() {
 
     const handleFollow = async () => {
         if (!currentUser) {
-            // Redirect to sign in if not logged in
             window.location.href = "/sign-in";
             return;
         }

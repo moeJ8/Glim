@@ -68,17 +68,17 @@ export default function FrequentlyAskedQuestions() {
             >
               <button
                 onClick={() => toggleQuestion(index)}
-                className="flex justify-between items-center w-full px-6 py-5 text-left transition-colors duration-200"
+                className="flex justify-between items-center w-full px-4 sm:px-6 py-5 text-left transition-colors duration-200"
                 aria-expanded={activeIndex === index}
               >
-                <h3 className={`font-semibold text-lg ${
+                <h3 className={`font-semibold text-base sm:text-lg flex-grow pr-3 ${
                   activeIndex === index 
                     ? 'text-teal-700 dark:text-teal-300' 
                     : 'text-gray-800 dark:text-gray-100'
                 }`}>
                   {item.question}
                 </h3>
-                <span className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors duration-300 ${
+                <span className={`flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full transition-colors duration-300 ${
                   activeIndex === index 
                     ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400' 
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
@@ -92,7 +92,7 @@ export default function FrequentlyAskedQuestions() {
                   activeIndex === index ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
                 }`}
               >
-                <div className="px-6 py-5 border-t border-gray-100 dark:border-gray-800 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">
+                <div className="px-4 sm:px-6 py-5 border-t border-gray-100 dark:border-gray-800 text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-900">
                   {item.answer}
                 </div>
               </div>

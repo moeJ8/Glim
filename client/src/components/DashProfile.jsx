@@ -51,15 +51,13 @@ export default function DashProfile() {
           type: 'success', 
           message: 'Your email has been verified successfully!' 
         });
-        
-        // Keep the tab parameter but remove the verified parameter
+
         if (tab) {
           navigate(`${location.pathname}?tab=${tab}`, { replace: true });
         } else {
           navigate(location.pathname, { replace: true });
         }
-        
-        // Check with server for the latest user data, including verification status
+
         const fetchUpdatedUser = async () => {
           try {
             const res = await fetch(`/api/user/${currentUser._id}`, {
@@ -67,9 +65,7 @@ export default function DashProfile() {
             });
             const data = await res.json();
             if (res.ok) {
-              // Update Redux with complete user data including followers/following
               dispatch(updateSuccess(data));
-              // Update local state with follower/following counts
               setFollowersCount(data.followers?.length || 0);
               setFollowingCount(data.following?.length || 0);
             }
@@ -82,14 +78,10 @@ export default function DashProfile() {
       }
     }, [location, navigate, dispatch, currentUser._id, currentUser]);
 
-    // Get follower and following counts when component mounts
     useEffect(() => {
       if (currentUser) {
-        // Set follower and following counts from currentUser
         setFollowersCount(currentUser.followers?.length || 0);
         setFollowingCount(currentUser.following?.length || 0);
-        
-        // Fetch latest user data including followers/following
         const fetchCompleteUserData = async () => {
           try {
             const res = await fetch(`/api/user/${currentUser._id}`, {
@@ -98,13 +90,7 @@ export default function DashProfile() {
             const data = await res.json();
             
             if (res.ok) {
-              console.log("User data received:", data);
-              console.log("Followers:", data.followers);
-              console.log("Following:", data.following);
-              
-              // Update Redux with complete user data
               dispatch(updateSuccess(data));
-              // Update local state with follower/following counts
               setFollowersCount(data.followers?.length || 0);
               setFollowingCount(data.following?.length || 0);
             }

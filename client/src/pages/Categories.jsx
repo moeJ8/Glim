@@ -28,7 +28,7 @@ export default function Categories() {
         // If no sort parameter in URL, set it to views
         if (!sortFromUrl) {
             urlParams.set("sort", "views");
-            navigate(`/categories?${urlParams.toString()}`);
+            navigate(`/posts?${urlParams.toString()}`);
             return;
         }
 
@@ -68,21 +68,21 @@ export default function Categories() {
             // Update URL immediately for search term
             const urlParams = new URLSearchParams(location.search);
             urlParams.set("searchTerm", e.target.value);
-            navigate(`/categories?${urlParams.toString()}`);
+            navigate(`/posts?${urlParams.toString()}`);
         }
         if (e.target.id === "sort") {
             const order = e.target.value || "views";
             setSidebarData({ ...SidebarData, sort: order });
             const urlParams = new URLSearchParams(location.search);
             urlParams.set("sort", order);
-            navigate(`/categories?${urlParams.toString()}`);
+            navigate(`/posts?${urlParams.toString()}`);
         }
         if (e.target.id === "category") {
             const category = e.target.value || "uncategorized";
             setSidebarData({ ...SidebarData, category: category });
             const urlParams = new URLSearchParams(location.search);
             urlParams.set("category", category);
-            navigate(`/categories?${urlParams.toString()}`);
+            navigate(`/posts?${urlParams.toString()}`);
         }
     };
 
@@ -109,7 +109,7 @@ export default function Categories() {
             sort: "views",
             category: "uncategorized",
         });
-        navigate("/categories");
+        navigate("/posts");
     };
 
     return (
@@ -117,7 +117,7 @@ export default function Categories() {
             <div className="flex flex-col gap-6 mb-8">
                 <div className="text-center">
                     <h1 className="text-3xl font-semibold">All Posts Categories</h1>
-                    <p className="text-gray-300">Explore our posts</p>
+                    <p className="text-gray-400">Explore our posts</p>
                 </div>
 
                 <div className="flex flex-col gap-4 items-center justify-center">

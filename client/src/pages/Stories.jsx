@@ -70,7 +70,6 @@ export default function Stories() {
     const fetchStories = async () => {
       setLoading(true);
       try {
-        console.log("Query params:", urlParams.toString()); // Debug log
         const res = await fetch(`/api/story/get?limit=9&${urlParams.toString()}`);
         if (!res.ok) {
           setLoading(false);
@@ -107,10 +106,6 @@ export default function Stories() {
     } else {
       urlParams.delete(id);
     }
-    
-    // Logging for debugging
-    console.log(`Setting ${id} to '${value}'`);
-    console.log("New URL params:", urlParams.toString());
     
     navigate(`/stories?${urlParams.toString()}`);
   };
@@ -150,7 +145,7 @@ export default function Stories() {
       <div className="flex flex-col gap-6 mb-8">
         <div className="text-center">
           <h1 className="text-3xl font-semibold">Narratives</h1>
-          <p className="text-gray-300">Discover narratives from our community</p>
+          <p className="text-gray-400">Discover narratives from our community</p>
         </div>
 
         <div className="flex flex-col gap-4 items-center justify-center">
@@ -219,6 +214,24 @@ export default function Stories() {
           </p>
         )}
       </div>
+
+      {/* Help section for regular users */}
+      {currentUser && !currentUser.isAdmin && !currentUser.isPublisher && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6 text-center max-w-2xl mx-auto">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
+            Need Help Sharing Your Narrative?
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+            Narratives are the way to ask for help from the community. Don&apos;t hesitate to ask the publishers to share your narrative.
+          </p>
+          <a 
+            href="mailto:glimapp2@gmail.com" 
+            className="inline-flex items-center justify-center px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-blue-500 to-teal-500 rounded-lg hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-sm hover:shadow-md transition-all duration-200"
+          >
+            Email Us Now
+          </a>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {loading ? (

@@ -87,7 +87,7 @@ export default function NotFound() {
             Return Home
           </Button>
         </Link>
-        <Link to="/categories" className="w-full sm:w-auto">
+        <Link to="/posts" className="w-full sm:w-auto">
           <Button gradientDuoTone="purpleToPink" size="lg" className="px-6 w-full">
             <FaCompass className="mr-2 mt-1" />
             Explore Posts

@@ -70,7 +70,7 @@ export default function App() {
         <Route path="/create-narrative" element={<CreateStory/>}/>
         <Route path="/update-narrative/:storyId" element={<UpdateStory/>}/>
       </Route>
-      <Route path="/categories" element={<Categories/>}/>
+      <Route path="/posts" element={<Categories/>}/>
       <Route path="/post/:postSlug" element={<PostPage/>}/>
       <Route path='/edit-donation/:id' element={<EditDonation />} />
       

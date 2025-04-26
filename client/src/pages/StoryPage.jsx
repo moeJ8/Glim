@@ -89,10 +89,11 @@ export default function StoryPage() {
     switch (platform.toLowerCase()) {
       case 'facebook':
         return `https://facebook.com/${username}`;
-      case 'whatsapp':
+      case 'whatsapp': {
         // Remove any non-digit characters for WhatsApp
         const cleanNumber = username.replace(/\D/g, '');
         return `https://wa.me/${cleanNumber}`;
+      }
       case 'telegram':
         return `https://t.me/${username}`;
       case 'discord':
@@ -154,18 +155,22 @@ export default function StoryPage() {
             <span>{formatDate(story.createdAt)}</span>
           </div>
           
-          <div className="flex items-center gap-2 bg-purple-100 dark:bg-purple-900 px-3 py-1 rounded-full text-purple-700 dark:text-purple-300">
-            <FaTag className="text-purple-500" />
-            <span>{story.category}</span>
-          </div>
+          {story.category && (
+            <div className="flex items-center gap-2 bg-purple-100 dark:bg-purple-900 px-3 py-1 rounded-full text-purple-700 dark:text-purple-300">
+              <FaTag className="text-purple-500" />
+              <span>{story.category}</span>
+            </div>
+          )}
           
-          <div className="flex items-center gap-2 bg-blue-100 dark:bg-blue-900 px-3 py-1 rounded-full text-blue-700 dark:text-blue-300">
-            <FaMapMarkerAlt className="text-blue-500" />
-            <span>{story.country}</span>
-          </div>
+          {story.country && (
+            <div className="flex items-center gap-2 bg-blue-100 dark:bg-blue-900 px-3 py-1 rounded-full text-blue-700 dark:text-blue-300">
+              <FaMapMarkerAlt className="text-blue-500" />
+              <span>{story.country}</span>
+            </div>
+          )}
           
           {/* Status badge - only visible to admins */}
-          {currentUser && currentUser.isAdmin && (
+          {currentUser && currentUser.isAdmin && story.status && (
             <div className="flex items-center gap-2">
               <Badge color={getStatusBadgeColor(story.status)} size="sm" className="px-3 py-1">
                 Status: {story.status.charAt(0).toUpperCase() + story.status.slice(1)}
@@ -176,47 +181,53 @@ export default function StoryPage() {
       </div>
       
       {/* Story image */}
-      <div className="mb-10 overflow-hidden rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
-        <div className="relative">
-          <img
-            src={story.image}
-            alt={story.title}
-            className="w-full h-auto max-h-[500px] object-cover hover:scale-105 transition-transform duration-700 ease-in-out"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+      {story.image && (
+        <div className="mb-10 overflow-hidden rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
+          <div className="relative">
+            <img
+              src={story.image}
+              alt={story.title}
+              className="w-full h-auto max-h-[500px] object-cover hover:scale-105 transition-transform duration-700 ease-in-out"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+          </div>
         </div>
-      </div>
+      )}
       
       {/* Story content */}
-      <div className="prose dark:prose-invert max-w-none mb-10 text-gray-700 dark:text-gray-300 post-content" dangerouslySetInnerHTML={{__html: story.body}}></div>
+      {story.body && (
+        <div className="prose dark:prose-invert max-w-none mb-10 text-gray-700 dark:text-gray-300 post-content" dangerouslySetInnerHTML={{__html: story.body}}></div>
+      )}
       
       {/* Contact information */}
-      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-gray-800 dark:to-purple-900 p-6 rounded-xl shadow-md mb-10 border-l-4 border-purple-500">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Contact Information</h2>
-        
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white dark:bg-gray-900 rounded-full shadow-md">
-              {getContactIcon(story.contactPlatform)}
-            </div>
-            <div>
-              <span className="font-medium block text-gray-700 dark:text-gray-300">
-                {story.contactPlatform.charAt(0).toUpperCase() + story.contactPlatform.slice(1)}
-              </span>
-              <span className="text-gray-600 dark:text-gray-400">{story.contactUsername}</span>
-            </div>
-          </div>
+      {story.contactPlatform && story.contactUsername ? (
+        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-gray-800 dark:to-purple-900 p-6 rounded-xl shadow-md mb-10 border-l-4 border-purple-500">
+          <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Contact Information</h2>
           
-          <a
-            href={getContactLink(story.contactPlatform, story.contactUsername)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-purple-300 dark:focus:ring-purple-800 shadow-md hover:shadow-lg transition-all duration-200"
-          >
-            Contact via {story.contactPlatform.charAt(0).toUpperCase() + story.contactPlatform.slice(1)}
-          </a>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white dark:bg-gray-900 rounded-full shadow-md">
+                {getContactIcon(story.contactPlatform)}
+              </div>
+              <div>
+                <span className="font-medium block text-gray-700 dark:text-gray-300">
+                  {story.contactPlatform.charAt(0).toUpperCase() + story.contactPlatform.slice(1)}
+                </span>
+                <span className="text-gray-600 dark:text-gray-400">{story.contactUsername}</span>
+              </div>
+            </div>
+            
+            <a
+              href={getContactLink(story.contactPlatform, story.contactUsername)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-purple-300 dark:focus:ring-purple-800 shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              Contact via {story.contactPlatform.charAt(0).toUpperCase() + story.contactPlatform.slice(1)}
+            </a>
+          </div>
         </div>
-      </div>
+      ) : null}
       
       {/* Back to stories button */}
       <div className="flex justify-center">
