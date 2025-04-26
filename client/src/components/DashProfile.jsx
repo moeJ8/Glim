@@ -1,4 +1,4 @@
-import { Alert, Button, Modal, TextInput } from "flowbite-react"
+import { Alert, Button, Modal, TextInput, Label } from "flowbite-react"
 import { useSelector } from "react-redux"
 import { useState, useRef, useEffect } from "react"
 import {getStorage, ref, uploadBytesResumable, getDownloadURL} from 'firebase/storage'
@@ -8,7 +8,7 @@ import 'react-circular-progressbar/dist/styles.css';
 import {updateStart, updateSuccess, updateFailure, deleteUserStart, deleteUserSuccess, deleteUserFailure, signoutSuccess} from "../redux/user/userSlice"
 import { useDispatch } from "react-redux"
 import {HiOutlineExclamationCircle} from "react-icons/hi"
-import {FaEye, FaCheckCircle, FaTimesCircle} from "react-icons/fa"
+import {FaEye, FaCheckCircle, FaTimesCircle, FaCalendarAlt} from "react-icons/fa"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import UserPosts from "./UserPosts"
 import UserListModal from "./UserListModal"
@@ -184,14 +184,34 @@ export default function DashProfile() {
       e.preventDefault();
       setUpdateUserError(null);
       setUpdateUserSuccess(null);
+      
       if(Object.keys(formData).length === 0) {
         setUpdateUserError('No changes made')
         return;
       }
+      
       if(imageFileUploading){
         setUpdateUserError('Please wait for image to upload');
-        return
+        return;
       }
+      
+      // Date of birth validation - user must be at least 13 years old
+      if (formData.dateOfBirth) {
+        const birthDate = new Date(formData.dateOfBirth);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        
+        if (age < 13) {
+          setUpdateUserError('You must be at least 13 years old to use this platform');
+          return;
+        }
+      }
+      
       try{
         dispatch(updateStart());
         const res = await fetch(`api/user/update/${currentUser._id}`,{
@@ -421,6 +441,25 @@ export default function DashProfile() {
         )}
 
         <TextInput type="password" id="password" placeholder="Password" onChange={handleChange}/>
+        
+        {/* Date of Birth field */}
+        <div className="space-y-1">
+          <div className="flex items-center">
+            <Label htmlFor="dateOfBirth" className="mb-1 block font-medium">Date of Birth</Label>
+            <span className="text-xs text-gray-500 ml-2">(must be 13 years or older)</span>
+          </div>
+          <div className="relative">
+            <TextInput
+              type="date"
+              id="dateOfBirth"
+              className="w-full"
+              onChange={handleChange}
+              defaultValue={currentUser.dateOfBirth ? new Date(currentUser.dateOfBirth).toISOString().split('T')[0] : ''}
+              icon={FaCalendarAlt}
+              max={new Date(new Date().setFullYear(new Date().getFullYear() - 13)).toISOString().split('T')[0]}
+            />
+          </div>
+        </div>
 
         <Button type="submit" gradientDuoTone="purpleToBlue" outline disabled={loading || imageFileUploading} className="mt-2">
             {loading ? 'Updating...' : 'Update'}

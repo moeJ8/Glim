@@ -57,6 +57,22 @@ export const updateUser = async (req, res, next) => {
       }
     }
 
+    // Validate date of birth if provided
+    if (req.body.dateOfBirth) {
+      const birthDate = new Date(req.body.dateOfBirth);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      if (age < 13) {
+        return next(errorHandler(400, "You must be at least 13 years old to use this platform"));
+      }
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       req.params.userId,
       {
@@ -65,6 +81,7 @@ export const updateUser = async (req, res, next) => {
           email: req.body.email,
           profilePicture: req.body.profilePicture,
           password: req.body.password,
+          dateOfBirth: req.body.dateOfBirth,
         },
       },
       { new: true }
@@ -108,34 +125,67 @@ export const getUsers = async (req, res, next) => {
     const startIndex = parseInt(req.query.startIndex) || 0;
     const limit = parseInt(req.query.limit) || 9;
     const sortDirection = req.query.sort === "asc" ? 1 : -1;
+    const searchTerm = req.query.searchTerm || '';
+    const roleFilter = req.query.role || 'all';
+    const statusFilter = req.query.status || 'all';
 
-    const users = await User.find()
-    .sort({ createdAt: sortDirection })
-    .skip(startIndex)
-    .limit(limit);
+    // Build filter object
+    const filter = {};
+
+    // Add search term filter
+    if (searchTerm) {
+      filter.$or = [
+        { username: { $regex: searchTerm, $options: 'i' } },
+        { email: { $regex: searchTerm, $options: 'i' } }
+      ];
+    }
+
+    // Add role filter
+    if (roleFilter === 'admin') {
+      filter.isAdmin = true;
+    } else if (roleFilter === 'publisher') {
+      filter.isPublisher = true;
+      filter.isAdmin = { $ne: true }; // Not admin
+    } else if (roleFilter === 'user') {
+      filter.isPublisher = false;
+      filter.isAdmin = false;
+    }
+
+    // Add status filter
+    if (statusFilter === 'active') {
+      filter.isBanned = false;
+    } else if (statusFilter === 'banned') {
+      filter.isBanned = true;
+    }
+
+    const users = await User.find(filter)
+      .sort({ createdAt: sortDirection })
+      .skip(startIndex)
+      .limit(limit);
 
     const usersWithoutPassword = users.map((user) => {
       const { password, ...rest } = user._doc;
       return rest;
     });
 
-    const totalUsers = await User.countDocuments();
+    const totalUsers = await User.countDocuments(filter);
     const now = new Date();
     const oneMonthAgo = new Date(
       now.getFullYear(),
       now.getMonth() - 1,
       now.getDate()
-  );
+    );
 
-  const lastMonthUsers = await User.countDocuments({
-    createdAt: { $gte: oneMonthAgo },
-  });
+    const lastMonthUsers = await User.countDocuments({
+      ...filter,
+      createdAt: { $gte: oneMonthAgo },
+    });
 
-  res.status(200).json({
-    users: usersWithoutPassword,
-    totalUsers,
-    lastMonthUsers,
-  })
+    res.status(200).json({
+      users: usersWithoutPassword,
+      totalUsers,
+      lastMonthUsers,
+    });
 
   } catch(err) {
     next(err);

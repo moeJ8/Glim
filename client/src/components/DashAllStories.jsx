@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button, Table, Modal, Spinner, Alert, Select, TextInput, Badge } from 'flowbite-react';
+import { Button, Table, Modal, Spinner, Alert, TextInput, Badge } from 'flowbite-react';
 import { HiOutlineExclamationCircle } from 'react-icons/hi';
 import { HiOutlineSearch } from 'react-icons/hi';
 import { FaEdit, FaTrash } from 'react-icons/fa';
@@ -13,7 +13,6 @@ export default function DashAllStories() {
   const [showModal, setShowModal] = useState(false);
   const [storyIdToDelete, setStoryIdToDelete] = useState(null);
   const [usernames, setUsernames] = useState({});
-  const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -31,11 +30,9 @@ export default function DashAllStories() {
     const fetchStories = async () => {
       try {
         setLoading(true);
-        // Fetch stories with optional status filter
-        const statusParam = selectedStatus !== 'all' ? `&status=${selectedStatus}` : '';
         const searchParam = searchTerm ? `&searchTerm=${searchTerm}` : '';
         
-        const res = await fetch(`/api/story/get?limit=20${statusParam}${searchParam}`);
+        const res = await fetch(`/api/story/get?limit=20${searchParam}`);
         const data = await res.json();
         
         if (res.ok) {
@@ -70,15 +67,14 @@ export default function DashAllStories() {
     };
     
     fetchStories();
-  }, [selectedStatus, searchTerm]);
+  }, [searchTerm]);
 
   const handleShowMore = async () => {
     const startIndex = stories.length;
     try {
-      const statusParam = selectedStatus !== 'all' ? `&status=${selectedStatus}` : '';
       const searchParam = searchTerm ? `&searchTerm=${searchTerm}` : '';
       
-      const res = await fetch(`/api/story/get?startIndex=${startIndex}&limit=20${statusParam}${searchParam}`);
+      const res = await fetch(`/api/story/get?startIndex=${startIndex}&limit=20${searchParam}`);
       const data = await res.json();
       
       if (res.ok) {
@@ -118,10 +114,6 @@ export default function DashAllStories() {
     }
   };
 
-  const handleStatusChange = (e) => {
-    setSelectedStatus(e.target.value);
-  };
-
   const handleSearchInputChange = (e) => {
     setSearchInput(e.target.value);
   };
@@ -131,7 +123,6 @@ export default function DashAllStories() {
   };
 
   const handleRemoveFilters = () => {
-    setSelectedStatus('all');
     setSearchTerm('');
     setSearchInput('');
   };
@@ -230,8 +221,11 @@ export default function DashAllStories() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Spinner size="xl" />
+      <div className="flex justify-center items-center min-h-[40vh] w-full">
+        <div className="text-center">
+          <Spinner size="xl" className="mx-auto" />
+          <p className="mt-2 text-gray-500 dark:text-gray-400">Loading narratives...</p>
+        </div>
       </div>
     );
   }
@@ -251,21 +245,8 @@ export default function DashAllStories() {
       <h1 className="text-2xl font-semibold mb-6 text-center">All Narratives</h1>
       
       <div className="flex flex-col md:flex-row gap-4 mb-6">
-        {/* Status filter */}
-        <div className="md:w-1/4">
-          <Select
-            value={selectedStatus}
-            onChange={handleStatusChange}
-          >
-            <option value="all">All Statuses</option>
-            <option value="approved">Approved</option>
-            <option value="pending">Pending</option>
-            <option value="rejected">Rejected</option>
-          </Select>
-        </div>
-        
         {/* Search input */}
-        <div className="md:w-3/4 flex gap-2">
+        <div className="w-full flex gap-2">
           <div className="flex-grow">
             <TextInput
               type="text"

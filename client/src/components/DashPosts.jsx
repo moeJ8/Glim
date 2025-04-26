@@ -1,17 +1,31 @@
-import { Table, Modal, Button } from "flowbite-react"
-import {HiOutlineExclamationCircle} from "react-icons/hi"
+import { Table, Modal, Button, Select, TextInput, Spinner, Alert } from "flowbite-react"
+import { HiOutlineExclamationCircle, HiOutlineSearch } from "react-icons/hi"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { Link } from "react-router-dom"
 
 export default function DashPosts() {
-
   const {currentUser} = useSelector((state) => state.user);
   const [userPosts, setUserPosts] = useState([]);
   const [showMore, setShowMore] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [postIdToDelete, setPostIdToDelete] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -22,16 +36,32 @@ export default function DashPosts() {
             ? `/api/post/getposts` 
             : `/api/post/getposts?userId=${currentUser._id}`;
             
-          const res = await fetch(url);
+          // Add category and search filters if they exist
+          const categoryParam = selectedCategory !== 'all' ? `&category=${selectedCategory}` : '';
+          const searchParam = searchTerm ? `&searchTerm=${searchTerm}` : '';
+          const fullUrl = `${url}${url.includes('?') ? '&' : '?'}limit=9${categoryParam}${searchParam}`;
+          
+          const res = await fetch(fullUrl);
           const data = await res.json();
           
           if(res.ok){
             setUserPosts(data.posts);
             if(data.posts.length < 9){
               setShowMore(false);
+            } else {
+              setShowMore(true);
             }
+            
+            // Extract unique categories for the filter
+            if (data.posts.length > 0) {
+              const uniqueCategories = [...new Set(data.posts.map(post => post.category))];
+              setCategories(uniqueCategories);
+            }
+          } else {
+            setError(data.message);
           }
       } catch(err){
+        setError('Failed to fetch posts');
         console.log(err);
       } finally {
         setLoading(false);
@@ -40,7 +70,7 @@ export default function DashPosts() {
     if (currentUser.isAdmin || currentUser.isPublisher) {
       fetchPosts();
     }
-  }, [currentUser._id, currentUser.isAdmin, currentUser.isPublisher]);
+  }, [currentUser._id, currentUser.isAdmin, currentUser.isPublisher, selectedCategory, searchTerm]);
   
   const handleShowMore = async () => {
     const startIndex = userPosts.length;
@@ -49,7 +79,11 @@ export default function DashPosts() {
         ? `/api/post/getposts?startIndex=${startIndex}` 
         : `/api/post/getposts?userId=${currentUser._id}&startIndex=${startIndex}`;
         
-      const res = await fetch(url);
+      const categoryParam = selectedCategory !== 'all' ? `&category=${selectedCategory}` : '';
+      const searchParam = searchTerm ? `&searchTerm=${searchTerm}` : '';
+      const fullUrl = `${url}${categoryParam}${searchParam}`;
+      
+      const res = await fetch(fullUrl);
       const data = await res.json();
       
       if(res.ok){
@@ -57,6 +91,8 @@ export default function DashPosts() {
         if(data.posts.length < 9){
           setShowMore(false);
         }
+      } else {
+        console.error(data.message);
       }
     } catch(err){
       console.log(err);
@@ -81,6 +117,24 @@ export default function DashPosts() {
       console.log(err);
     }
   }
+  
+  const handleCategoryChange = (e) => {
+    setSelectedCategory(e.target.value);
+  };
+
+  const handleSearchInputChange = (e) => {
+    setSearchInput(e.target.value);
+  };
+
+  const handleSearchSubmit = () => {
+    setSearchTerm(searchInput);
+  };
+
+  const handleRemoveFilters = () => {
+    setSelectedCategory('all');
+    setSearchTerm('');
+    setSearchInput('');
+  };
   
   // Render posts as cards for mobile
   const renderPostCards = () => {
@@ -166,11 +220,21 @@ export default function DashPosts() {
   
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[40vh]">
+      <div className="flex justify-center items-center min-h-[40vh] w-full">
         <div className="text-center">
-          <span className="loading loading-spinner text-primary"></span>
+          <Spinner size="xl" className="mx-auto" />
           <p className="mt-2 text-gray-500 dark:text-gray-400">Loading posts...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 max-w-4xl mx-auto">
+        <Alert color="failure">
+          <span>{error}</span>
+        </Alert>
       </div>
     );
   }
@@ -181,103 +245,166 @@ export default function DashPosts() {
         Manage Posts
       </h1>
       
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        {/* Category filter */}
+        <div className="md:w-1/4">
+          <Select
+            value={selectedCategory}
+            onChange={handleCategoryChange}
+          >
+            <option value="all">All Categories</option>
+            {categories.map(category => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </Select>
+        </div>
+        
+        {/* Search input */}
+        <div className="md:w-3/4 flex gap-2">
+          <div className="flex-grow">
+            <TextInput
+              type="text"
+              placeholder="Search by title or content..."
+              value={searchInput}
+              onChange={handleSearchInputChange}
+              icon={HiOutlineSearch}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
+            />
+          </div>
+          <Button 
+            outline
+            gradientDuoTone="purpleToBlue"
+            onClick={handleSearchSubmit}
+          >
+            Search
+          </Button>
+          <Button 
+            outline
+            gradientDuoTone="pinkToOrange"
+            onClick={handleRemoveFilters}
+          >
+            Reset
+          </Button>
+        </div>
+      </div>
+      
       {(currentUser.isAdmin || currentUser.isPublisher) && userPosts.length > 0 ? (
         <>
-          {/* Table view for desktop */}
-          <div className="hidden md:block">
-            <Table hoverable className="shadow-md">
-              <Table.Head>
-                <Table.HeadCell>Date Updated</Table.HeadCell>
-                <Table.HeadCell>Post Image</Table.HeadCell>
-                <Table.HeadCell>Post Title</Table.HeadCell>
-                <Table.HeadCell>Post Category</Table.HeadCell>
-                <Table.HeadCell>Views</Table.HeadCell>
-                {currentUser.isAdmin && <Table.HeadCell>Author</Table.HeadCell>}
-                <Table.HeadCell>Delete</Table.HeadCell>
-                <Table.HeadCell>
-                  <span>Edit</span>
-                </Table.HeadCell>
-              </Table.Head>
-              {userPosts.map((post) =>(
-                <Table.Body key={post._id} className="divide-y">
-                  <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
-                    <Table.Cell>
-                      {new Date(post.updatedAt).toLocaleDateString()}
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Link to = {`/post/${post.slug}`}>
-                      <img src= {post.image} alt="post" className="w-20 h-10 object-cover bg-gray-500" />
-                      </Link>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Link to={`/post/${post.slug}`} className="font-medium text-gray-900 dark:text-white">
-                        {post.title}
-                      </Link>
-                    </Table.Cell>
-                    <Table.Cell>
-                      {post.category}
-                    </Table.Cell>
-                    <Table.Cell>
-                      {post.views || 0}
-                    </Table.Cell>
-                    {currentUser.isAdmin && (
+          {isMobile ? (
+            // Mobile card view
+            renderPostCards()
+          ) : (
+            // Table view for desktop
+            <div className="hidden md:block">
+              <Table hoverable className="shadow-md">
+                <Table.Head>
+                  <Table.HeadCell>Date Updated</Table.HeadCell>
+                  <Table.HeadCell>Post Image</Table.HeadCell>
+                  <Table.HeadCell>Post Title</Table.HeadCell>
+                  <Table.HeadCell>Post Category</Table.HeadCell>
+                  <Table.HeadCell>Views</Table.HeadCell>
+                  {currentUser.isAdmin && <Table.HeadCell>Author</Table.HeadCell>}
+                  <Table.HeadCell>Delete</Table.HeadCell>
+                  <Table.HeadCell>
+                    <span>Edit</span>
+                  </Table.HeadCell>
+                </Table.Head>
+                {userPosts.map((post) =>(
+                  <Table.Body key={post._id} className="divide-y">
+                    <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
                       <Table.Cell>
-                        {post.userId && typeof post.userId === 'object' ? post.userId.username : 'Unknown'}
+                        {new Date(post.updatedAt).toLocaleDateString()}
                       </Table.Cell>
-                    )}
-                    <Table.Cell>
-                      <span onClick={() => {
-                        setShowModal(true)
-                        setPostIdToDelete(post._id)
-                      } } className="font-medium text-red-500 hover:underline cursor-pointer">
-                        Delete
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Link to={`/update-post/${post._id}`} className="text-teal-500 hover:underline">
-                      <span>Edit</span>
-                      </Link>
-                    </Table.Cell>
-                  </Table.Row>
-                </Table.Body>
-              ))}
-            </Table>
-            {showMore && (
-              <button onClick={handleShowMore} className="w-full text-teal-500 self-center text-sm py-7">
-                Show More
-              </button>
-            )}
-          </div>
-          
-          {/* Card view for mobile */}
-          {renderPostCards()}
+                      <Table.Cell>
+                        <Link to = {`/post/${post.slug}`}>
+                        <img src= {post.image} alt="post" className="w-20 h-10 object-cover bg-gray-500" />
+                        </Link>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Link to={`/post/${post.slug}`} className="font-medium text-gray-900 dark:text-white">
+                          {post.title}
+                        </Link>
+                      </Table.Cell>
+                      <Table.Cell>
+                        {post.category}
+                      </Table.Cell>
+                      <Table.Cell>
+                        {post.views || 0}
+                      </Table.Cell>
+                      {currentUser.isAdmin && (
+                        <Table.Cell>
+                          {post.userId && typeof post.userId === 'object' ? post.userId.username : 'Unknown'}
+                        </Table.Cell>
+                      )}
+                      <Table.Cell>
+                        <span onClick={() => {
+                          setShowModal(true)
+                          setPostIdToDelete(post._id)
+                        }} className="font-medium text-red-500 hover:underline cursor-pointer">
+                          Delete
+                        </span>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Link to={`/update-post/${post._id}`} className="text-teal-500 hover:underline">
+                        <span>Edit</span>
+                        </Link>
+                      </Table.Cell>
+                    </Table.Row>
+                  </Table.Body>
+                ))}
+              </Table>
+              {showMore && (
+                <button onClick={handleShowMore} className="w-full text-teal-500 self-center text-sm py-7">
+                  Show More
+                </button>
+              )}
+            </div>
+          )}
         </>
       ) : (
-        <div className="bg-gray-50 dark:bg-gray-800 p-4 sm:p-8 rounded-lg shadow-sm text-center">
-          <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 mb-3 sm:mb-4 flex items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/20">
-            <HiOutlineExclamationCircle className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 dark:text-blue-400" />
-          </div>
-          <h3 className="text-base sm:text-lg font-medium mb-1">No Posts Yet</h3>
-          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">
-            You haven&apos;t created any posts yet.
+        <div className="text-center py-8">
+          <h2 className="text-xl font-semibold mb-2">No posts found</h2>
+          <p className="text-gray-500 dark:text-gray-400">
+            {selectedCategory !== 'all' || searchTerm 
+              ? 'Try adjusting your filters or search term'
+              : "You haven't created any posts yet"}
           </p>
+          <div className="mt-4">
+            <Link to="/create-post">
+              <Button gradientDuoTone="purpleToPink">
+                Create your first post
+              </Button>
+            </Link>
+          </div>
         </div>
       )}
       
-      <Modal show={showModal} onClose={()=> setShowModal(false)} popup size ='md'>
-        <Modal.Header/>
+      {/* Delete Modal */}
+      <Modal
+        show={showModal}
+        onClose={() => setShowModal(false)}
+        popup
+        size="md"
+      >
+        <Modal.Header />
         <Modal.Body>
           <div className="text-center">
-            <HiOutlineExclamationCircle className="h-14 w-14 text-red-500 dark:text-red-500 mb-4 mx-auto" />
-            <h3 className="mb-5 text-lg text-gray-500 dark:text-gray-400">Are you sure you want to delete this post?</h3>
+            <HiOutlineExclamationCircle className="h-14 w-14 text-gray-400 dark:text-gray-200 mb-4 mx-auto" />
+            <h3 className="mb-5 text-lg text-gray-500 dark:text-gray-400">
+              Are you sure you want to delete this post?
+            </h3>
             <div className="flex justify-center gap-4">
-              <Button color="failure" onClick={()=> handleDeletePost()}>Yes, I&apos;m sure</Button>
-              <Button color="gray" onClick={()=> setShowModal(false)}>No, cancel</Button>
+              <Button color="failure" onClick={handleDeletePost}>
+                Yes, delete it
+              </Button>
+              <Button color="gray" onClick={() => setShowModal(false)}>
+                Cancel
+              </Button>
             </div>
           </div>
         </Modal.Body>
       </Modal>
     </div>
-  )
+  );
 }
 

@@ -1,5 +1,5 @@
-import { Table, Modal, Button, TextInput, Label, Select } from "flowbite-react"
-import {HiOutlineExclamationCircle} from "react-icons/hi"
+import { Table, Modal, Button, TextInput, Label, Select, Spinner, Alert } from "flowbite-react"
+import {HiOutlineExclamationCircle, HiOutlineSearch} from "react-icons/hi"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import {FaCheck, FaTimes} from "react-icons/fa"
@@ -20,40 +20,96 @@ export default function DashUsers() {
   const [error, setError] = useState(null);
   const [successIcons, setSuccessIcons] = useState({});
   const [failureIcons, setFailureIcons] = useState({});
+  // New state variables for search and filtering
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     const fetchUsers = async () => {
       try{
-          const res = await fetch(`/api/user/getusers`)
-          const data = await res.json()
-          if(res.ok){
-            setUsers(data.users)
-            if(data.users.length < 9){
-              setShowMore(false)
-            }
+          setLoading(true);
+          // Build URL with filters
+          let url = `/api/user/getusers`;
+          const queryParams = [];
+          
+          // Add search parameter if present
+          if (searchTerm) {
+            queryParams.push(`searchTerm=${encodeURIComponent(searchTerm)}`);
           }
-
-      }catch(err){
-        console.log(err)
+          
+          // Add role filter if not 'all'
+          if (roleFilter !== 'all') {
+            queryParams.push(`role=${roleFilter}`);
+          }
+          
+          // Add status filter if not 'all'
+          if (statusFilter !== 'all') {
+            queryParams.push(`status=${statusFilter}`);
+          }
+          
+          // Add query parameters to URL
+          if (queryParams.length > 0) {
+            url += `?${queryParams.join('&')}`;
+          }
+          
+          const res = await fetch(url);
+          const data = await res.json();
+          
+          if(res.ok){
+            setUsers(data.users);
+            if(data.users.length < 9){
+              setShowMore(false);
+            } else {
+              setShowMore(true);
+            }
+          } else {
+            setError(data.message || "Failed to fetch users");
+          }
+      } catch(err){
+        console.log(err);
+        setError("An error occurred while fetching users");
+      } finally {
+        setLoading(false);
       }
     };
     if (currentUser.isAdmin) {
       fetchUsers();
     }
-  }, [currentUser._id])
+  }, [currentUser.isAdmin, searchTerm, roleFilter, statusFilter]);
+
   const handleShowMore = async () => {
     const startIndex = users.length;
     try{
-      const res = await fetch(`/api/user/getusers?startIndex=${startIndex}`)
-      const data = await res.json()
+      let url = `/api/user/getusers?startIndex=${startIndex}`;
+      
+      // Add search parameter if present
+      if (searchTerm) {
+        url += `&searchTerm=${encodeURIComponent(searchTerm)}`;
+      }
+      
+      // Add role filter if not 'all'
+      if (roleFilter !== 'all') {
+        url += `&role=${roleFilter}`;
+      }
+      
+      // Add status filter if not 'all'
+      if (statusFilter !== 'all') {
+        url += `&status=${statusFilter}`;
+      }
+      
+      const res = await fetch(url);
+      const data = await res.json();
+      
       if(res.ok){
         setUsers((prev) => [...prev, ...data.users]);
         if(data.users.length < 9){
-          setShowMore(false)
+          setShowMore(false);
         }
       }
     } catch(err){
-      console.log(err)
+      console.log(err);
     }
   }
 
@@ -71,7 +127,7 @@ export default function DashUsers() {
             console.log(data.error);
         }
       }catch(err){
-        console.log(err.message)
+        console.log(err.message);
       }
   };
 
@@ -196,6 +252,34 @@ export default function DashUsers() {
     });
     
     return { dateStr, timeStr };
+  };
+  
+  // Handle search input change
+  const handleSearchInputChange = (e) => {
+    setSearchInput(e.target.value);
+  };
+
+  // Handle search submission
+  const handleSearchSubmit = () => {
+    setSearchTerm(searchInput);
+  };
+
+  // Handle role filter change
+  const handleRoleFilterChange = (e) => {
+    setRoleFilter(e.target.value);
+  };
+
+  // Handle status filter change
+  const handleStatusFilterChange = (e) => {
+    setStatusFilter(e.target.value);
+  };
+
+  // Handle removing all filters
+  const handleRemoveFilters = () => {
+    setSearchTerm('');
+    setSearchInput('');
+    setRoleFilter('all');
+    setStatusFilter('all');
   };
   
   // Render mobile cards
@@ -333,11 +417,80 @@ export default function DashUsers() {
  
   return (
     <div className="table-auto overflow-x-scroll md:mx-auto p-3 scrollbar scrollbar-track-slate-100 scrollbar-thumb-slate-300 dark:scrollbar-track-slate-700 dark:scrollbar-thumb-slate-500">
-      <h1 className="text-center text-2xl my-4 font-bold text-gray-800 dark:text-white">
+      <h1 className="text-center text-2xl sm:text-3xl my-4 sm:my-5 font-bold text-gray-800 dark:text-gray-100">
         Manage Users
       </h1>
       
-      {currentUser.isAdmin && users.length > 0 ? (
+      {currentUser.isAdmin && (
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          {/* Role filter */}
+          <div className="md:w-1/4">
+            <Select
+              value={roleFilter}
+              onChange={handleRoleFilterChange}
+            >
+              <option value="all">All Roles</option>
+              <option value="admin">Admin</option>
+              <option value="publisher">Publisher</option>
+              <option value="user">Regular User</option>
+            </Select>
+          </div>
+          
+          {/* Status filter */}
+          <div className="md:w-1/4">
+            <Select
+              value={statusFilter}
+              onChange={handleStatusFilterChange}
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="banned">Banned</option>
+            </Select>
+          </div>
+          
+          {/* Search input */}
+          <div className="md:w-2/4 flex gap-2">
+            <div className="flex-grow">
+              <TextInput
+                type="text"
+                placeholder="Search by username or email..."
+                value={searchInput}
+                onChange={handleSearchInputChange}
+                icon={HiOutlineSearch}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
+              />
+            </div>
+            <Button 
+              outline
+              gradientDuoTone="purpleToBlue"
+              onClick={handleSearchSubmit}
+            >
+              Search
+            </Button>
+            <Button 
+              outline
+              gradientDuoTone="pinkToOrange"
+              onClick={handleRemoveFilters}
+              disabled={roleFilter === 'all' && statusFilter === 'all' && !searchTerm}
+            >
+              Reset
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {loading ? (
+        <div className="flex justify-center items-center min-h-[40vh]">
+          <div className="text-center">
+            <Spinner size="xl" className="mx-auto" />
+            <p className="mt-2 text-gray-500 dark:text-gray-400">Loading users...</p>
+          </div>
+        </div>
+      ) : error ? (
+        <Alert color="failure" className="mb-4">
+          {error}
+        </Alert>
+      ) : users.length > 0 ? (
         <>
           {/* Desktop view */}
           <div className="hidden md:block">

@@ -126,7 +126,7 @@ export default function DashStories() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
+      <div className="flex justify-center items-center min-h-[40vh] w-full">
         <div className="text-center">
           <Spinner size="xl" className="mx-auto" />
           <p className="mt-2 text-gray-500 dark:text-gray-400">Loading narratives...</p>

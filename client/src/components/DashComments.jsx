@@ -1,4 +1,4 @@
-import { Table, Modal, Button } from "flowbite-react"
+import { Table, Modal, Button, Spinner } from "flowbite-react"
 import {HiOutlineExclamationCircle} from "react-icons/hi"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
@@ -185,9 +185,9 @@ export default function DashComments() {
   
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[40vh]">
+      <div className="flex justify-center items-center min-h-[40vh] w-full">
         <div className="text-center">
-          <span className="loading loading-spinner text-primary"></span>
+          <Spinner size="xl" className="mx-auto" />
           <p className="mt-2 text-gray-500 dark:text-gray-400">Loading comments...</p>
         </div>
       </div>
