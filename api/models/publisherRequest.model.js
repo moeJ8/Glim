@@ -6,6 +6,10 @@ const PublisherRequestSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  reason: {
+    type: String,
+    required: true,
+  },
   status: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],

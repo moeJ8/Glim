@@ -4,12 +4,14 @@ import { Button, Spinner, Alert, Badge } from 'flowbite-react';
 import { FaCalendarDays } from 'react-icons/fa6';
 import { FaFacebook, FaWhatsapp, FaTelegram, FaDiscord, FaTag, FaMapMarkerAlt } from 'react-icons/fa';
 import { MdEmail } from 'react-icons/md';
+import { useSelector } from 'react-redux';
 
 export default function StoryPage() {
   const { slug } = useParams();
   const [story, setStory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { currentUser } = useSelector((state) => state.user);
   
   useEffect(() => {
     const fetchStory = async () => {
@@ -63,6 +65,20 @@ export default function StoryPage() {
         return <MdEmail size={24} className="text-red-500" />;
       default:
         return null;
+    }
+  };
+  
+  // Get status badge color
+  const getStatusBadgeColor = (status) => {
+    switch (status) {
+      case 'approved':
+        return 'success';
+      case 'pending':
+        return 'warning';
+      case 'rejected':
+        return 'failure';
+      default:
+        return 'info';
     }
   };
   
@@ -147,6 +163,15 @@ export default function StoryPage() {
             <FaMapMarkerAlt className="text-blue-500" />
             <span>{story.country}</span>
           </div>
+          
+          {/* Status badge - only visible to admins */}
+          {currentUser && currentUser.isAdmin && (
+            <div className="flex items-center gap-2">
+              <Badge color={getStatusBadgeColor(story.status)} size="sm" className="px-3 py-1">
+                Status: {story.status.charAt(0).toUpperCase() + story.status.slice(1)}
+              </Badge>
+            </div>
+          )}
         </div>
       </div>
       

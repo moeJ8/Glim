@@ -197,142 +197,289 @@ export default function DashUsers() {
     
     return { dateStr, timeStr };
   };
+  
+  // Render mobile cards
+  const renderMobileCards = () => {
+    return (
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {users.map((user) => (
+          <div key={user._id} className="bg-gray-800 rounded-lg overflow-hidden">
+            {/* User info */}
+            <div className="p-4 border-b border-gray-700">
+              <div className="flex items-center gap-3">
+                <img 
+                  src={user.profilePicture} 
+                  alt={user.username}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+                <div>
+                  <Link to={`/profile/${user.username}`} className="text-blue-400 font-medium">
+                    {user.username}
+                  </Link>
+                  <p className="text-xs text-gray-400">
+                    Joined: {new Date(user.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Email */}
+            <div className="px-4 pt-3">
+              <p className="text-xs text-gray-400 mb-1">Email:</p>
+              <p className="text-sm text-gray-200 bg-gray-700 p-2 rounded">
+                {user.email}
+              </p>
+            </div>
+            
+            {/* Status badges */}
+            <div className="grid grid-cols-3 gap-3 p-4">
+              <div className="bg-gray-700 rounded p-2 flex flex-col items-center">
+                <p className="text-xs text-gray-400 mb-1">Publisher</p>
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  user.isPublisher ? "bg-green-500 text-white" : "bg-gray-600 text-gray-300"
+                }`}>
+                  {user.isPublisher ? "Yes" : "No"}
+                </span>
+              </div>
+              
+              <div className="bg-gray-700 rounded p-2 flex flex-col items-center">
+                <p className="text-xs text-gray-400 mb-1">Admin</p>
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  user.isAdmin ? "bg-purple-500 text-white" : "bg-gray-600 text-gray-300"
+                }`}>
+                  {user.isAdmin ? "Yes" : "No"}
+                </span>
+              </div>
+              
+              <div className="bg-gray-700 rounded p-2 flex flex-col items-center">
+                <p className="text-xs text-gray-400 mb-1">Status</p>
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  user.isBanned ? "bg-red-500 text-white" : "bg-green-500 text-white"
+                }`}>
+                  {user.isBanned ? "Banned" : "Active"}
+                </span>
+              </div>
+            </div>
+            
+            {/* Action buttons */}
+            <div className="grid grid-cols-3 gap-2 p-4">
+              <Button
+                color={user.isPublisher ? "blue" : "purple"}
+                size="xs"
+                onClick={() => handleTogglePublisher(user._id, user.isPublisher)}
+                disabled={user.isAdmin}
+                className="flex items-center justify-center h-9"
+              >
+                {user.isPublisher ? "Revoke Publisher" : "Assign Publisher"}
+              </Button>
+              
+              {!user.isAdmin && (
+                <>
+                  {user.isBanned ? (
+                    <Button
+                      color="info"
+                      size="xs"
+                      onClick={() => handleUnbanUser(user._id)}
+                      disabled={loading}
+                      className="flex items-center justify-center h-9"
+                    >
+                      Unban User
+                    </Button>
+                  ) : (
+                    <Button
+                      color="pink"
+                      size="xs"
+                      onClick={() => {
+                        setUserToBan(user);
+                        setShowBanModal(true);
+                      }}
+                      disabled={loading}
+                      className="flex items-center justify-center h-9"
+                    >
+                      Ban User
+                    </Button>
+                  )}
+                </>
+              )}
+              
+              <Button
+                color="failure"
+                size="xs"
+                onClick={() => {
+                  setShowModal(true);
+                  setUserIdToDelete(user._id);
+                }}
+                className="flex items-center justify-center h-9"
+              >
+                Delete User
+              </Button>
+            </div>
+          </div>
+        ))}
+        
+        {showMore && (
+          <div className="flex justify-center mt-4">
+            <Button 
+              color="purple"
+              onClick={handleShowMore}
+            >
+              Show More
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  };
  
   return (
     <div className="table-auto overflow-x-scroll md:mx-auto p-3 scrollbar scrollbar-track-slate-100 scrollbar-thumb-slate-300 dark:scrollbar-track-slate-700 dark:scrollbar-thumb-slate-500">
+      <h1 className="text-center text-2xl my-4 font-bold text-gray-800 dark:text-white">
+        Manage Users
+      </h1>
       
       {currentUser.isAdmin && users.length > 0 ? (
         <>
-        <Table hoverable className="shadow-md">
-        <Table.Head>
-          <Table.HeadCell>Date Created</Table.HeadCell>
-          <Table.HeadCell>User Image</Table.HeadCell>
-          <Table.HeadCell>Username</Table.HeadCell>
-          <Table.HeadCell>Email</Table.HeadCell>
-          <Table.HeadCell>Publisher</Table.HeadCell>
-          <Table.HeadCell>Admin</Table.HeadCell>
-          <Table.HeadCell>Ban Status</Table.HeadCell>
-          <Table.HeadCell>Actions</Table.HeadCell>
-        </Table.Head>
-        {users.map((user) =>(
-          <Table.Body key={user._id} className="divide-y">
-            <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
-              <Table.Cell>
-                {new Date(user.createdAt).toLocaleDateString()}
-              </Table.Cell>
-              <Table.Cell>
-                
-                <img src= {user.profilePicture} alt={user.username} className="w-10 h-10 object-cover bg-gray-500 rounded-full" />
-                
-              </Table.Cell>
-              <Table.Cell>
-                <Link to={`/profile/${user.username}`} className="text-blue-500 hover:underline font-medium">
-                  {user.username}
-                </Link>
-              </Table.Cell>
-              <Table.Cell>
-                {user.email}
-              </Table.Cell>
-              <Table.Cell>
-                    <Button gradientDuoTone="purpleToBlue" outline
-                      size="xs"
-                      onClick={() => handleTogglePublisher(user._id, user.isPublisher)}
-                    >
-                      {user.isPublisher ? "Revoke" : "Assign"}
-                    </Button>
-                    {successIcons[user._id] && (
-                    <FaCheck className="text-green-500 mt-3 mx-auto" />
-                    )}
-                    {failureIcons[user._id] &&(
-                     <FaTimes className="text-green-500 mt-3 mx-auto" />
-                     )}
-                  </Table.Cell>
-              <Table.Cell>
-                {user.isAdmin ? (<FaCheck className="text-green-500"/>) : (<FaTimes className="text-red-500"/>)}
-              </Table.Cell>
-              <Table.Cell>
-                {user.isBanned ? (
-                  <div className="relative group">
-                    <span className="w-fit px-2 py-0.5 bg-red-100 text-red-800 rounded-md text-xs font-medium mb-1 cursor-help">
-                      Banned
-                    </span>
-                    {/* Tooltip content */}
-                    <div className="absolute left-0 top-full mt-1 z-10 invisible group-hover:visible bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 text-xs border border-gray-200 dark:border-gray-700 min-w-[180px]">
-                      <div className="font-medium">
-                        Until: {formatBanTime(user.banExpiresAt).dateStr}
-                      </div>
-                      <div>
-                        {formatBanTime(user.banExpiresAt).timeStr}
-                      </div>
-                      {user.banReason && (
-                        <div className="mt-1 border-t border-gray-200 dark:border-gray-700 pt-1">
-                          <span className="font-medium">Reason:</span> {user.banReason}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <span className="w-fit px-2 py-0.5 bg-green-100 text-green-800 rounded-md text-xs font-medium">
-                    Active
-                  </span>
-                )}
-              </Table.Cell>
-              <Table.Cell>
-                <div className="flex gap-2">
-                  {!user.isAdmin && (
-                    <>
+          {/* Desktop view */}
+          <div className="hidden md:block">
+            <Table hoverable className="shadow-md">
+              <Table.Head>
+                <Table.HeadCell>Date Created</Table.HeadCell>
+                <Table.HeadCell>User Image</Table.HeadCell>
+                <Table.HeadCell>Username</Table.HeadCell>
+                <Table.HeadCell>Email</Table.HeadCell>
+                <Table.HeadCell>Publisher</Table.HeadCell>
+                <Table.HeadCell>Admin</Table.HeadCell>
+                <Table.HeadCell>Ban Status</Table.HeadCell>
+                <Table.HeadCell>Actions</Table.HeadCell>
+              </Table.Head>
+              {users.map((user) =>(
+                <Table.Body key={user._id} className="divide-y">
+                  <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
+                    <Table.Cell>
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </Table.Cell>
+                    <Table.Cell>
+                      
+                      <img src= {user.profilePicture} alt={user.username} className="w-10 h-10 object-cover bg-gray-500 rounded-full" />
+                      
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Link to={`/profile/${user.username}`} className="text-blue-500 hover:underline font-medium">
+                        {user.username}
+                      </Link>
+                    </Table.Cell>
+                    <Table.Cell>
+                      {user.email}
+                    </Table.Cell>
+                    <Table.Cell>
+                          <Button gradientDuoTone="purpleToBlue" outline
+                            size="xs"
+                            onClick={() => handleTogglePublisher(user._id, user.isPublisher)}
+                          >
+                            {user.isPublisher ? "Revoke" : "Assign"}
+                          </Button>
+                          {successIcons[user._id] && (
+                          <FaCheck className="text-green-500 mt-3 mx-auto" />
+                          )}
+                          {failureIcons[user._id] &&(
+                           <FaTimes className="text-green-500 mt-3 mx-auto" />
+                           )}
+                        </Table.Cell>
+                    <Table.Cell>
+                      {user.isAdmin ? (<FaCheck className="text-green-500"/>) : (<FaTimes className="text-red-500"/>)}
+                    </Table.Cell>
+                    <Table.Cell>
                       {user.isBanned ? (
-                        <Button
-                          size="xs"
-                          gradientDuoTone="cyanToBlue"
-                          outline
-                          onClick={() => handleUnbanUser(user._id)}
-                          disabled={loading}
-                        >
-                          Unban
-                        </Button>
+                        <div className="relative group">
+                          <span className="w-fit px-2 py-0.5 bg-red-100 text-red-800 rounded-md text-xs font-medium mb-1 cursor-help">
+                            Banned
+                          </span>
+                          {/* Tooltip content */}
+                          <div className="absolute left-0 top-full mt-1 z-10 invisible group-hover:visible bg-white dark:bg-gray-800 shadow-lg rounded-md p-2 text-xs border border-gray-200 dark:border-gray-700 min-w-[180px]">
+                            <div className="font-medium">
+                              Until: {formatBanTime(user.banExpiresAt).dateStr}
+                            </div>
+                            <div>
+                              {formatBanTime(user.banExpiresAt).timeStr}
+                            </div>
+                            {user.banReason && (
+                              <div className="mt-1 border-t border-gray-200 dark:border-gray-700 pt-1">
+                                <span className="font-medium">Reason:</span> {user.banReason}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       ) : (
+                        <span className="w-fit px-2 py-0.5 bg-green-100 text-green-800 rounded-md text-xs font-medium">
+                          Active
+                        </span>
+                      )}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="flex gap-2">
+                        {!user.isAdmin && (
+                          <>
+                            {user.isBanned ? (
+                              <Button
+                                size="xs"
+                                gradientDuoTone="cyanToBlue"
+                                outline
+                                onClick={() => handleUnbanUser(user._id)}
+                                disabled={loading}
+                              >
+                                Unban
+                              </Button>
+                            ) : (
+                              <Button
+                                size="xs"
+                                gradientDuoTone="pinkToOrange"
+                                outline
+                                onClick={() => {
+                                  setUserToBan(user);
+                                  setShowBanModal(true);
+                                }}
+                                disabled={loading}
+                              >
+                                Ban
+                              </Button>
+                            )}
+                          </>
+                        )}
                         <Button
                           size="xs"
-                          gradientDuoTone="pinkToOrange"
+                          color="failure"
                           outline
                           onClick={() => {
-                            setUserToBan(user);
-                            setShowBanModal(true);
+                            setShowModal(true);
+                            setUserIdToDelete(user._id);
                           }}
-                          disabled={loading}
                         >
-                          Ban
+                          Delete
                         </Button>
-                      )}
-                    </>
-                  )}
-                  <Button
-                    size="xs"
-                    color="failure"
-                    outline
-                    onClick={() => {
-                      setShowModal(true);
-                      setUserIdToDelete(user._id);
-                    }}
+                      </div>
+                    </Table.Cell>
+                    
+                  </Table.Row>
+                </Table.Body>
+              ))}
+             
+            </Table>
+            {
+              showMore && (
+                <div className="flex justify-center mt-5">
+                  <Button 
+                    color="purple" 
+                    onClick={handleShowMore}
                   >
-                    Delete
+                    Show More
                   </Button>
                 </div>
-              </Table.Cell>
-              
-            </Table.Row>
-          </Table.Body>
-        ))}
-       
-        </Table>
-        {
-          showMore && (
-            <button onClick={handleShowMore} className="w-full text-teal-500 self-center text-sm py-7">
-              Show More
-            </button>
-          )
-        }
+              )
+            }
+          </div>
+          
+          {/* Mobile view */}
+          {renderMobileCards()}
         </>
       ):(
         <p>You have no users yet</p>

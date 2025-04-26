@@ -195,13 +195,18 @@ export const updateUserRole = async (req, res, next) => {
 }
 
 export const requestPublisher = async (req, res, next) => {
-  const { userId } = req.body;
+  const { userId, reason } = req.body;
+  
+  if (!reason || reason.trim() === '') {
+    return res.status(400).json({ message: "Please provide a reason for your publisher request." });
+  }
+  
   try {
     const existingRequest = await PublisherRequest.findOne({ userId, status: "pending" });
     if (existingRequest) {
       return res.status(400).json({ message: "You already have a pending request." });
     }
-    await PublisherRequest.create({ userId });
+    await PublisherRequest.create({ userId, reason });
     res.status(200).json({ message: "Request sent successfully." });
   }catch(err) {
     next(err);

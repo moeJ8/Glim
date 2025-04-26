@@ -157,52 +157,56 @@ export default function DashStories() {
           Total Narratives: {totalStories}
         </h2>
         
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
           <div className="flex items-center">
             {(currentUser.isAdmin || currentUser.isPublisher) && (
-              <Link to="/create-narrative" className="ml-auto">
-                <Button gradientDuoTone="purpleToPink" size="sm" className="mr-3">
+              <Link to="/create-narrative" className="sm:ml-auto">
+                <Button gradientDuoTone="purpleToPink" size="sm" className="sm:mr-3">
                   Create New Narrative
                 </Button>
               </Link>
             )}
           </div>
           
-          <span className="text-sm text-gray-600 dark:text-gray-400 mr-1 flex items-center">
-            <HiFilter className="mr-1" /> Filter:
-          </span>
-          <Button 
-            size="sm" 
-            color={filterStatus === 'all' ? 'purple' : 'gray'}
-            onClick={() => setFilterStatus('all')}
-            className={filterStatus === 'all' ? 'bg-gradient-to-r from-purple-500 to-indigo-500 border-0' : ''}
-          >
-            All
-          </Button>
-          <Button 
-            size="sm" 
-            color={filterStatus === 'approved' ? 'success' : 'gray'}
-            onClick={() => setFilterStatus('approved')}
-            className={filterStatus === 'approved' ? 'bg-gradient-to-r from-green-500 to-teal-500 border-0' : ''}
-          >
-            Approved
-          </Button>
-          <Button 
-            size="sm" 
-            color={filterStatus === 'pending' ? 'warning' : 'gray'}
-            onClick={() => setFilterStatus('pending')}
-            className={filterStatus === 'pending' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 border-0' : ''}
-          >
-            Pending
-          </Button>
-          <Button 
-            size="sm" 
-            color={filterStatus === 'rejected' ? 'failure' : 'gray'}
-            onClick={() => setFilterStatus('rejected')}
-            className={filterStatus === 'rejected' ? 'bg-gradient-to-r from-red-500 to-pink-500 border-0' : ''}
-          >
-            Rejected
-          </Button>
+          <div className="flex items-center">
+            <span className="text-sm text-gray-600 dark:text-gray-400 mr-1 flex items-center">
+              <HiFilter className="mr-1" /> Filter:
+            </span>
+            <div className="grid grid-cols-4 gap-1 w-full sm:flex sm:gap-2 sm:w-auto">
+              <Button 
+                size="xs"
+                color={filterStatus === 'all' ? 'purple' : 'gray'}
+                onClick={() => setFilterStatus('all')}
+                className={filterStatus === 'all' ? 'bg-gradient-to-r from-purple-500 to-indigo-500 border-0' : ''}
+              >
+                All
+              </Button>
+              <Button 
+                size="xs"
+                color={filterStatus === 'approved' ? 'success' : 'gray'}
+                onClick={() => setFilterStatus('approved')}
+                className={filterStatus === 'approved' ? 'bg-gradient-to-r from-green-500 to-teal-500 border-0' : ''}
+              >
+                Approved
+              </Button>
+              <Button 
+                size="xs"
+                color={filterStatus === 'pending' ? 'warning' : 'gray'}
+                onClick={() => setFilterStatus('pending')}
+                className={filterStatus === 'pending' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 border-0' : ''}
+              >
+                Pending
+              </Button>
+              <Button 
+                size="xs"
+                color={filterStatus === 'rejected' ? 'failure' : 'gray'}
+                onClick={() => setFilterStatus('rejected')}
+                className={filterStatus === 'rejected' ? 'bg-gradient-to-r from-red-500 to-pink-500 border-0' : ''}
+              >
+                Rejected
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
       
