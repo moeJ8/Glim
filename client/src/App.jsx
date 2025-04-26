@@ -30,6 +30,7 @@ import Notifications from './pages/Notifications'
 import EmailVerification from './pages/EmailVerification'
 import RequestPasswordReset from './pages/RequestPasswordReset'
 import ResetPassword from './pages/ResetPassword'
+import NotFound from './pages/NotFound'
 
 
 export default function App() {
@@ -68,6 +69,9 @@ export default function App() {
       <Route path="/categories" element={<Categories/>}/>
       <Route path="/post/:postSlug" element={<PostPage/>}/>
       <Route path='/edit-donation/:id' element={<EditDonation />} />
+      
+      {/* Catch-all route for 404 Not Found page */}
+      <Route path="*" element={<NotFound />} />
   
       </Routes>
       <Footer/>
