@@ -17,7 +17,12 @@ export const verifyToken = (req, res, next) => {
     if(!token) return next(errorHandler(401, "You are not authorized"));
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if(err) return next(errorHandler(403, "Unauthorized"));
+        if(err) {
+            if(err.name === 'TokenExpiredError') {
+                return next(errorHandler(401, "Session expired. Please sign in again."));
+            }
+            return next(errorHandler(403, "Unauthorized"));
+        }
         req.user = user;
         next();
     });

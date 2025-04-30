@@ -54,15 +54,22 @@ io.use((socket, next) => {
             return next(new Error('Authentication error: Token not provided'));
         }
         
-        const verified = jwt.verify(token, process.env.JWT_SECRET);
-        if (!verified) {
-            console.log('Socket connection rejected: Invalid token');
-            return next(new Error('Authentication error: Invalid token'));
-        }
-        
-        console.log('Socket authenticated for user:', verified.id);
-        socket.userId = verified.id;
-        next();
+        jwt.verify(token, process.env.JWT_SECRET, (err, verified) => {
+            if (err) {
+                if (err.name === 'TokenExpiredError') {
+                    console.log('Socket connection rejected: Token expired');
+                    socket.emit('token_expired'); // Emit event before error
+                    return next(new Error('Authentication error: Session expired'));
+                }
+                
+                console.log('Socket connection rejected: Invalid token');
+                return next(new Error('Authentication error: Invalid token'));
+            }
+            
+            console.log('Socket authenticated for user:', verified.id);
+            socket.userId = verified.id;
+            next();
+        });
     } catch (error) {
         console.log('Socket authentication error:', error.message);
         next(new Error('Authentication error: ' + error.message));

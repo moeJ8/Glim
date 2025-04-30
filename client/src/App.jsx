@@ -34,11 +34,15 @@ import ResetPassword from './pages/ResetPassword'
 import NotFound from './pages/NotFound'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsConditions from './pages/TermsConditions'
+import SessionExpiredNotification from './components/SessionExpiredNotification'
 
 
 export default function App() {
   return (
     <div>
+      {/* Session Expired Notification */}
+      <SessionExpiredNotification />
+      
       <BrowserRouter>
       <ScrollToTop/>
       <Header/>

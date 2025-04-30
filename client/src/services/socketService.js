@@ -1,4 +1,6 @@
 import { io } from 'socket.io-client';
+import { store } from '../redux/store';
+import { signoutSuccess } from '../redux/user/userSlice';
 
 let socket = null;
 const API_URL = '/'; // Adjust if needed to match server setup
@@ -28,13 +30,33 @@ export const initSocket = () => {
 
     socket.on('connect_error', (err) => {
         console.error('Socket connection error:', err.message);
+        
+        // Check if error is authentication-related
+        if (err.message && err.message.includes('Authentication error')) {
+            // Set flag in localStorage
+            localStorage.setItem('sessionExpired', 'true');
+            
+            store.dispatch(signoutSuccess());
+            document.cookie = 'access_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+            window.location.href = '/sign-in';
+        }
     });
     
     socket.on('disconnect', (reason) => {
-        // Disconnect log removed
         if (reason === 'io server disconnect') {
             socket.connect();
         }
+    });
+    
+    // Listen for token expired event
+    socket.on('token_expired', () => {
+        // Set flag in localStorage
+        localStorage.setItem('sessionExpired', 'true');
+        
+        store.dispatch(signoutSuccess());
+        disconnectSocket();
+        document.cookie = 'access_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        window.location.href = '/sign-in';
     });
 
     return socket;

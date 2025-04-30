@@ -84,11 +84,9 @@ export const signin = async (req, res, next) => {
            return next(errorHandler(400, "Invalid credentials"))
         }
 
-        // Check if user is banned
         if (validUser.isBanned) {
             const now = new Date();
-            
-            // If ban has expired, remove the ban
+
             if (validUser.banExpiresAt && validUser.banExpiresAt < now) {
                 validUser.isBanned = false;
                 validUser.banExpiresAt = null;
@@ -96,8 +94,7 @@ export const signin = async (req, res, next) => {
                 await validUser.save();
             } else {
                 // Ban is still active
-                let banMessage = "Your account has been temporarily suspended.";
-                
+                let banMessage = "Your account has been temporarily suspended.";  
                 if (validUser.banReason) {
                     banMessage += ` Reason: ${validUser.banReason}`;
                 }
@@ -123,7 +120,6 @@ export const signin = async (req, res, next) => {
 
         const { password: pass, ...rest} = validUser._doc;
         
-        // Check if email is verified and send verification if needed
         let verificationMessage = null;
         if (!validUser.verified) {
             let verificationToken = await Token.findOne({userId: validUser._id});
@@ -133,10 +129,8 @@ export const signin = async (req, res, next) => {
                     token: crypto.randomBytes(32).toString("hex")
                 }).save();
                 
-                // Create verification URL
                 const url = `${process.env.BASE_URL}/users/${validUser._id}/verify/${verificationToken.token}`;
                 
-                // Send verification email
                 await sendEmail(
                     validUser.email,
                     "Verify Your Email",
@@ -190,8 +184,8 @@ export const google = async (req, res, next) => {
                 email,
                 password: hashedPassword,
                 profilePicture: googlePhotoUrl,
-                dateOfBirth: defaultDateOfBirth, // Add default dateOfBirth
-                verified: true, // Auto-verify Google users since their email is verified by Google
+                dateOfBirth: defaultDateOfBirth,
+                verified: true,
             });
             await newUser.save();
             const token = jwt.sign(

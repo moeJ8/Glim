@@ -7,7 +7,7 @@ import { Provider } from 'react-redux'
 import { PersistGate } from 'redux-persist/integration/react'
 import ThemeProvider from './components/ThemeProvider.jsx'
 import AuthMiddleware from './components/AuthMiddleware.jsx'
-
+import './services/tokenService' // Import token service to initialize it
 
 createRoot(document.getElementById('root')).render(
   <PersistGate persistor={persistor}>
