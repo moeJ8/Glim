@@ -224,6 +224,10 @@ export const updateUserRole = async (req, res, next) => {
     user.isPublisher = isPublisher;
     await user.save();
     
+    // Get the admin ID and target user ID for comparison
+    const adminId = req.user.id;
+    const targetUserId = userId.toString();
+    
     // Generate a new token with updated role
     const token = jwt.sign(
       {
@@ -235,8 +239,11 @@ export const updateUserRole = async (req, res, next) => {
       { expiresIn: "1d" }
     );
     
-    // Set the new token in a cookie
-    res.cookie("access_token", token, { httpOnly: true });
+    // ONLY set the token cookie if the admin is updating their OWN role
+    // This prevents overwriting the admin's token when updating someone else
+    if (targetUserId === adminId) {
+      res.cookie("access_token", token, { httpOnly: true });
+    }
     
     res.status(200).json({ 
       message: "User updated successfully.",
@@ -312,13 +319,17 @@ export const updatePublisherRequest = async (req, res, next) => {
     request.status = status;
     await request.save();
 
-  
+    // Get the user ID strings for comparison
+    const requestUserId = request.userId.toString();
+    const adminId = req.user.id;
+
     if (status === 'approved') {
       const updatedUser = await User.findByIdAndUpdate(
         request.userId, 
         { isPublisher: true },
         { new: true }
       );
+      
       if (updatedUser) {
         const token = jwt.sign(
           {
@@ -330,8 +341,12 @@ export const updatePublisherRequest = async (req, res, next) => {
           { expiresIn: "1d" }
         );
         
-        // Set the new token in a cookie
-        res.cookie("access_token", token, { httpOnly: true });
+        // ONLY update the token cookie if the admin is approving their OWN request
+        // This prevents overwriting the admin's token when they approve someone else's request
+        if (requestUserId === adminId) {
+          res.cookie("access_token", token, { httpOnly: true });
+        }
+        // Otherwise, don't touch the admin's token
       }
     }
 
@@ -343,11 +358,9 @@ export const updatePublisherRequest = async (req, res, next) => {
 
 export const getUserByUsername = async (req, res, next) => {
   try {
-    // Find user and populate followers/following
     const user = await User.findOne({ username: req.params.username });
     if (!user) return next(errorHandler(404, "User not found"));
 
-    // Don't send password in response
     const { password, ...rest } = user._doc;
     res.status(200).json(rest);
   } catch (err) {
