@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { Button, Label, Textarea, Alert } from 'flowbite-react';
+import { useState, useEffect } from 'react';
+import { Button, Label, Textarea } from 'flowbite-react';
 import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
 import { HiExclamationCircle, HiBell } from 'react-icons/hi';
 import CustomModal from './CustomModal';
+import CustomAlert from './CustomAlert';
 
 export default function ReportModal({ show, onClose, targetId, targetType }) {
     const [reason, setReason] = useState('');
@@ -11,6 +12,17 @@ export default function ReportModal({ show, onClose, targetId, targetType }) {
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
     const { currentUser } = useSelector(state => state.user);
+    
+    // Clear error message after 3 seconds
+    useEffect(() => {
+        if (error) {
+            const timer = setTimeout(() => {
+                setError(null);
+            }, 3000);
+            
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -95,21 +107,23 @@ export default function ReportModal({ show, onClose, targetId, targetType }) {
         >
             <div className="space-y-6">
                 {success ? (
-                    <Alert color="success" className="border-l-4 border-green-500">
-                        <div className="flex flex-col">
-                            <h3 className="font-medium mb-1">Report Submitted</h3>
-                            <p>Thank you for helping to keep our community safe.</p>
-                            <p className="text-sm mt-2">Admins have been notified and you&apos;ll receive a notification when your report is reviewed.</p>
-                        </div>
-                    </Alert>
+                    <CustomAlert 
+                        message={
+                            <div className="flex flex-col">
+                                <h3 className="font-medium mb-1">Report Submitted</h3>
+                                <p>Thank you for helping to keep our community safe.</p>
+                                <p className="text-sm mt-2">Admins have been notified and you&apos;ll receive a notification when your report is reviewed.</p>
+                            </div>
+                        }
+                        type="success"
+                    />
                 ) : (
-                    <form id="reportForm" onSubmit={handleSubmit} className="space-y-4">
+                    <form id="reportForm" onSubmit={handleSubmit} className="space-y-4" noValidate>
                         <div>
                             <Label htmlFor="reason" value="Reason for reporting" className="text-gray-700 dark:text-gray-300 mb-2" />
                             <Textarea
                                 id="reason"
                                 placeholder="Please explain why you are reporting this content..."
-                                required
                                 rows={4}
                                 value={reason}
                                 onChange={(e) => setReason(e.target.value)}
@@ -124,9 +138,7 @@ export default function ReportModal({ show, onClose, targetId, targetType }) {
                             </div>
                         </div>
                         {error && (
-                            <Alert color="failure" className="border-l-4 border-red-500">
-                                {error}
-                            </Alert>
+                            <CustomAlert message={error} type="error" />
                         )}
                     </form>
                 )}

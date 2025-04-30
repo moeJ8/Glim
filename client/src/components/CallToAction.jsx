@@ -1,8 +1,8 @@
-import { Button, Alert, Textarea, Label } from "flowbite-react";
+import { Button, Textarea, Label } from "flowbite-react";
 import { useSelector } from "react-redux";
-import { useState } from "react";
-import { HiInformationCircle, HiExclamation } from "react-icons/hi";
+import { useState, useEffect } from "react";
 import CustomModal from "./CustomModal";
+import CustomAlert from "./CustomAlert";
 
 export default function CallToAction() {
   const {currentUser} = useSelector((state) => state.user);
@@ -13,8 +13,38 @@ export default function CallToAction() {
   const [publisherReason, setPublisherReason] = useState("");
   const [submitLoading, setSubmitLoading] = useState(false);
   const [validationError, setValidationError] = useState("");
+  const [successToast, setSuccessToast] = useState({ show: false, message: "" });
+  
+  // Clear validation error after 3 seconds
+  useEffect(() => {
+    if (validationError) {
+      const timer = setTimeout(() => {
+        setValidationError(null);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [validationError]);
+  
+  // Auto-hide success toast after 5 seconds
+  useEffect(() => {
+    if (successToast.show) {
+      const timer = setTimeout(() => {
+        setSuccessToast({ show: false, message: "" });
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [successToast.show]);
 
   const displayAlert = (message, type = "info") => {
+    // If it's a success message, show toast at bottom instead
+    if (type === "success") {
+      setSuccessToast({ show: true, message });
+      return;
+    }
+    
+    // For warnings and info, use the top alert
     setAlertMessage(message);
     setAlertType(type);
     setShowAlert(true);
@@ -119,17 +149,29 @@ export default function CallToAction() {
   return (
     <>
       <div className="relative border border-teal-500 rounded-tl-3xl rounded-br-3xl overflow-hidden">
+        {/* Top warning/info alerts */}
         {showAlert && (
           <div className="absolute top-4 left-0 right-0 mx-auto w-full max-w-md z-50">
-            <Alert
-              color={alertType}
-              onDismiss={() => setShowAlert(false)}
-              icon={HiInformationCircle}
-            >
-              <span className="font-medium">{alertMessage}</span>
-            </Alert>
+            <CustomAlert
+              message={<span className="font-medium">{alertMessage}</span>}
+              type={alertType === "warning" ? "warning" : "info"}
+            />
           </div>
         )}
+        
+        {/* Bottom success toast */}
+        {successToast.show && (
+          <div className="fixed bottom-4 left-0 right-0 mx-auto w-[90%] sm:w-[85%] md:w-[70%] lg:w-[60%] max-w-md z-50 animate-fade-in-up">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-green-500">
+              <CustomAlert
+                message={<span className="font-medium">{successToast.message}</span>}
+                type="success"
+                className="shadow-md border-l-8 m-0 animate-none rounded-r-lg"
+              />
+            </div>
+          </div>
+        )}
+        
         <div 
           className="absolute inset-0 bg-[url('https://womenfitnessmag.com/wp-content/uploads/2022/08/How-To-Reconnect-With-Your-.jpg')] bg-cover bg-center"
           style={{ filter: 'brightness(0.7)' }}
@@ -165,14 +207,7 @@ export default function CallToAction() {
           </p>
           
           {validationError && (
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
-              <div className="flex items-center">
-                <HiExclamation className="h-5 w-5 text-yellow-600 mr-2" />
-                <p className="text-yellow-700 font-medium">
-                  {validationError}
-                </p>
-              </div>
-            </div>
+            <CustomAlert message={validationError} type="warning" />
           )}
           
           <div>
@@ -185,7 +220,6 @@ export default function CallToAction() {
               rows={5}
               value={publisherReason}
               onChange={(e) => setPublisherReason(e.target.value)}
-              required
               className={`w-full ${validationError ? 'border-yellow-400 focus:border-yellow-500 focus:ring-yellow-500' : ''}`}
             />
           </div>

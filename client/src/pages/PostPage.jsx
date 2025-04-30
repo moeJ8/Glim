@@ -1,6 +1,6 @@
 import { Button, Spinner } from "flowbite-react";
 import { useEffect, useState } from "react"
-import { Link, useParams } from "react-router-dom"
+import { Link, useParams, Navigate } from "react-router-dom"
 import CallToAction from "../components/CallToAction";
 import CommentSection from "../components/CommentSection";
 import PostCard from "../components/PostCard";
@@ -19,6 +19,7 @@ export default function PostPage() {
     const [isFollowing, setIsFollowing] = useState(false);
     const [followLoading, setFollowLoading] = useState(false);
     const [showReportModal, setShowReportModal] = useState(false);
+    const [notFound, setNotFound] = useState(false);
     
 
     useEffect(() => {
@@ -33,6 +34,13 @@ export default function PostPage() {
                     return;
                 }
                 if(res.ok){
+                    // Check if no posts were found with this slug
+                    if (!data.posts || data.posts.length === 0) {
+                        setNotFound(true);
+                        setLoading(false);
+                        return;
+                    }
+                    
                     const postData = data.posts[0];
                     setPost(postData);
                     
@@ -186,12 +194,13 @@ export default function PostPage() {
             </div>
         );
     }
+    
+    if (notFound) {
+        return <Navigate to="/not-found" replace />;
+    }
+    
     if (error) {
-        return (
-            <div className="flex justify-center items-center min-h-screen text-red-500">
-                <p>Something went wrong. Please try again later.</p>
-            </div>
-        );
+        return <Navigate to="/not-found" replace />;
     }
   return <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen"><h1 className="text-3xl mt-10 p-3 text-center font-serif max-w-2xl mx-auto lg:text-4xl">{post && post.title}</h1>
   <Link to={`/search?category=${post && post.category}`} className="self-center mt-5">

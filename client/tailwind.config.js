@@ -15,10 +15,20 @@ export default {
         'pulse-slow': {
           '0%, 100%': { opacity: 1 },
           '50%': { opacity: 0.8 },
+        },
+        'fade-in-down': {
+          '0%': { opacity: 0, transform: 'translateY(-10px)' },
+          '100%': { opacity: 1, transform: 'translateY(0)' },
+        },
+        'fade-in-up': {
+          '0%': { opacity: 0, transform: 'translateY(10px)' },
+          '100%': { opacity: 1, transform: 'translateY(0)' },
         }
       },
       animation: {
         'pulse-slow': 'pulse-slow 3s ease-in-out infinite',
+        'fade-in-down': 'fade-in-down 0.3s ease-out',
+        'fade-in-up': 'fade-in-up 0.3s ease-out',
       }
     },
   },

@@ -1,12 +1,13 @@
-import { Alert, Button, Textarea } from "flowbite-react"
+import { Button, Textarea } from "flowbite-react"
 import { useSelector } from "react-redux"
 import { Link, useNavigate } from "react-router-dom"
 import { useEffect, useState, useRef } from "react"
 import PropTypes from 'prop-types';
 import Comment from "../components/Comment";
-import { Modal } from "flowbite-react";
 import {HiOutlineExclamationCircle} from 'react-icons/hi';
 import MentionSuggestions from "./MentionSuggestions";
+import CustomModal from "./CustomModal";
+import CustomAlert from "./CustomAlert";
 
 export default function CommentSection({postId}) {
     const {currentUser} = useSelector(state => state.user)
@@ -24,6 +25,17 @@ export default function CommentSection({postId}) {
     });
     
     const navigate = useNavigate()
+    
+    // Clear error message after 3 seconds
+    useEffect(() => {
+      if (commentError) {
+        const timer = setTimeout(() => {
+          setCommentError(null);
+        }, 3000);
+        
+        return () => clearTimeout(timer);
+      }
+    }, [commentError]);
 
     const handleSubmit = async (e) => {
     e.preventDefault();
@@ -213,10 +225,11 @@ return (
                         Submit
                     </Button>
                 </div>
-                {commentError &&(
-                  <Alert color='failure' className="mt-5">
-                    {commentError}
-                  </Alert>)}
+                {commentError && (
+                  <div className="mt-5">
+                    <CustomAlert message={commentError} type="error" />
+                  </div>
+                )}
               
             </form>
         )}
@@ -245,19 +258,27 @@ return (
           </>
 
         )}
-        <Modal show={showModal} onClose={()=> setShowModal(false)} popup size ='md'>
-        <Modal.Header/>
-        <Modal.Body>
+        <CustomModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          title="Delete Comment"
+          maxWidth="md"
+          footer={
+            <div className="flex justify-center gap-4 w-full">
+              <Button color="gray" onClick={() => setShowModal(false)}>
+                No, cancel
+              </Button>
+              <Button color="failure" onClick={() => handleDelete(commentToDelete)}>
+                Yes, I&apos;m sure
+              </Button>
+            </div>
+          }
+        >
           <div className="text-center">
             <HiOutlineExclamationCircle className="h-14 w-14 text-red-500 dark:text-red-500 mb-4 mx-auto" />
             <h3 className="mb-5 text-lg text-gray-500 dark:text-gray-400">Are you sure you want to delete this comment?</h3>
-            <div className="flex justify-center gap-4">
-              <Button color="failure" onClick={()=> handleDelete(commentToDelete)}>Yes, I&apos;m sure</Button>
-              <Button color="gray" onClick={()=> setShowModal(false)}>No, cancel</Button>
-            </div>
           </div>
-        </Modal.Body>
-      </Modal>
+        </CustomModal>
     </div>
   );
 }

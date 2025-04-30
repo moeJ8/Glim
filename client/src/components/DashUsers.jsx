@@ -496,11 +496,10 @@ export default function DashUsers() {
         
         {showMore && (
           <div className="flex justify-center mt-4">
-            <Button 
-              color="purple"
+            <Button
               onClick={handleShowMore}
-              className="bg-purple-600 hover:bg-purple-700"
-              style={{ backgroundColor: "#9333ea", borderColor: "#9333ea" }}
+              color="teal"
+              className="text-sm"
             >
               Show More
             </Button>
@@ -730,14 +729,9 @@ export default function DashUsers() {
             </Table>
             {
               showMore && (
-                <div className="flex justify-center mt-5">
-                  <Button 
-                    color="purple" 
-                    onClick={handleShowMore}
-                  >
-                    Show More
-                  </Button>
-                </div>
+                <button onClick={handleShowMore} className="w-full text-teal-500 self-center text-sm py-7">
+                  Show More
+                </button>
               )
             }
           </div>

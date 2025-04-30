@@ -1,8 +1,9 @@
-import { Table, Modal, Button, Spinner } from "flowbite-react"
+import { Table, Button, Spinner } from "flowbite-react"
 import {HiOutlineExclamationCircle} from "react-icons/hi"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { Link } from "react-router-dom"
+import CustomModal from "./CustomModal"
 
 export default function DashComments() {
   const {currentUser} = useSelector((state) => state.user);
@@ -288,19 +289,36 @@ export default function DashComments() {
         </div>
       )}
       
-      <Modal show={showModal} onClose={()=> setShowModal(false)} popup size="md">
-        <Modal.Header/>
-        <Modal.Body>
-          <div className="text-center">
-            <HiOutlineExclamationCircle className="h-14 w-14 text-red-500 dark:text-red-500 mb-4 mx-auto" />
-            <h3 className="mb-5 text-lg text-gray-500 dark:text-gray-400">Are you sure you want to delete this comment?</h3>
-            <div className="flex justify-center gap-4">
-              <Button color="failure" onClick={()=> handleDeleteComment()}>Yes, I&apos;m sure</Button>
-              <Button color="gray" onClick={()=> setShowModal(false)}>No, cancel</Button>
-            </div>
+      <CustomModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Delete Comment"
+        maxWidth="md"
+        footer={
+          <div className="flex justify-center gap-4 w-full">
+            <Button 
+              color="failure" 
+              onClick={handleDeleteComment}
+              className="bg-gradient-to-r from-red-500 to-pink-500"
+            >
+              Yes, I'm sure
+            </Button>
+            <Button color="gray" onClick={() => setShowModal(false)}>
+              No, cancel
+            </Button>
           </div>
-        </Modal.Body>
-      </Modal>
+        }
+      >
+        <div className="text-center py-4">
+          <HiOutlineExclamationCircle className="h-14 w-14 text-red-500 dark:text-red-400 mb-4 mx-auto" />
+          <h3 className="mb-5 text-lg text-gray-600 dark:text-gray-300">
+            Are you sure you want to delete this comment?
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            This action cannot be undone. The comment will be permanently removed.
+          </p>
+        </div>
+      </CustomModal>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
-import { Button, Alert, Spinner } from "flowbite-react";
+import { useParams, Navigate } from "react-router-dom";
+import { Spinner } from "flowbite-react";
 import UserPosts from "./UserPosts";
 import { useSelector } from "react-redux";
 import UserListModal from "./UserListModal";
@@ -240,29 +240,8 @@ export default function UserProfile() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="max-w-lg mx-auto p-3 w-full">
-        <Alert color="failure" className="my-7">
-          {error}
-        </Alert>
-        <Button as={Link} to="/" className="w-full">
-          Go Home
-        </Button>
-      </div>
-    );
-  }
-  if (!user) {
-    return (
-      <div className="max-w-lg mx-auto p-3 w-full">
-        <Alert color="failure" className="my-7">
-          User not found
-        </Alert>
-        <Button as={Link} to="/" className="w-full">
-          Go Home
-        </Button>
-      </div>
-    );
+  if (error || !user) {
+    return <Navigate to="/not-found" replace />;
   }
 
   return (

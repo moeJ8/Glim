@@ -1,4 +1,4 @@
-import { Alert, Button, Modal, TextInput, Label } from "flowbite-react"
+import { Alert, Button, TextInput, Label } from "flowbite-react"
 import { useSelector } from "react-redux"
 import { useState, useRef, useEffect } from "react"
 import {getStorage, ref, uploadBytesResumable, getDownloadURL} from 'firebase/storage'
@@ -12,6 +12,7 @@ import {FaEye, FaCheckCircle, FaTimesCircle, FaCalendarAlt} from "react-icons/fa
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import UserPosts from "./UserPosts"
 import UserListModal from "./UserListModal"
+import CustomModal from "./CustomModal"
 
 export default function DashProfile() {
     const {currentUser, errormodal, loading} = useSelector(state => state.user)
@@ -491,19 +492,36 @@ export default function DashProfile() {
           {errormodal}
         </Alert>
       )}
-      <Modal show={showModal} onClose={()=> setShowModal(false)} popup size ='md'>
-        <Modal.Header/>
-        <Modal.Body>
-          <div className="text-center">
-            <HiOutlineExclamationCircle className="h-14 w-14 text-red-500 dark:text-red-500 mb-4 mx-auto" />
-            <h3 className="mb-5 text-lg text-gray-500 dark:text-gray-400">Are you sure you want to delete your account?</h3>
-            <div className="flex justify-center gap-4">
-              <Button color="failure" onClick={()=> handleDeleteUser()}>Yes, I&apos;m sure</Button>
-              <Button color="gray" onClick={()=> setShowModal(false)}>No, cancel</Button>
-            </div>
+      <CustomModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Delete Account"
+        maxWidth="md"
+        footer={
+          <div className="flex justify-center gap-4 w-full">
+            <Button 
+              color="failure" 
+              onClick={handleDeleteUser}
+              className="bg-gradient-to-r from-red-500 to-pink-500"
+            >
+              Yes, I&apos;m sure
+            </Button>
+            <Button color="gray" onClick={() => setShowModal(false)}>
+              No, cancel
+            </Button>
           </div>
-        </Modal.Body>
-      </Modal>
+        }
+      >
+        <div className="text-center py-4">
+          <HiOutlineExclamationCircle className="h-14 w-14 text-red-500 dark:text-red-400 mb-4 mx-auto" />
+          <h3 className="mb-5 text-lg text-gray-600 dark:text-gray-300">
+            Are you sure you want to delete your account?
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            This action cannot be undone. All your data will be permanently removed.
+          </p>
+        </div>
+      </CustomModal>
      
       <div className="mt-10">
         {currentUser && <UserPosts userId={currentUser._id} username={currentUser.username} />}

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
 
 import Home from './pages/Home'
 import About from './pages/About'
@@ -40,6 +41,9 @@ import SessionExpiredNotification from './components/SessionExpiredNotification'
 export default function App() {
   return (
     <div>
+      {/* Toast notifications */}
+      <Toaster position="bottom-center" />
+      
       {/* Session Expired Notification */}
       <SessionExpiredNotification />
       

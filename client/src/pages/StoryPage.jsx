@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { Button, Spinner, Alert, Badge } from 'flowbite-react';
+import { Link, useParams, Navigate } from 'react-router-dom';
+import { Button, Spinner, Badge } from 'flowbite-react';
 import { FaCalendarDays } from 'react-icons/fa6';
 import { FaFacebook, FaWhatsapp, FaTelegram, FaDiscord, FaTag, FaMapMarkerAlt } from 'react-icons/fa';
 import { MdEmail } from 'react-icons/md';
@@ -11,6 +11,7 @@ export default function StoryPage() {
   const [story, setStory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notFound, setNotFound] = useState(false);
   const { currentUser } = useSelector((state) => state.user);
   
   useEffect(() => {
@@ -22,6 +23,12 @@ export default function StoryPage() {
         
         if (!res.ok) {
           setError(data.message || 'Failed to fetch story');
+          return;
+        }
+        
+        // Check if the story exists
+        if (!data) {
+          setNotFound(true);
           return;
         }
         
@@ -113,34 +120,12 @@ export default function StoryPage() {
     );
   }
   
-  if (error) {
-    return (
-      <div className="max-w-4xl mx-auto p-4 mt-8">
-        <Alert color="failure">
-          <p>{error}</p>
-          <div className="mt-4">
-            <Link to="/stories">
-              <Button color="purple">Back to Stories</Button>
-            </Link>
-          </div>
-        </Alert>
-      </div>
-    );
+  if (notFound || !story) {
+    return <Navigate to="/not-found" replace />;
   }
   
-  if (!story) {
-    return (
-      <div className="max-w-4xl mx-auto p-4 mt-8">
-        <Alert color="info">
-          <p>Narrative not found</p>
-          <div className="mt-4">
-            <Link to="/stories">
-              <Button color="purple">Back to Narratives</Button>
-            </Link>
-          </div>
-        </Alert>
-      </div>
-    );
+  if (error) {
+    return <Navigate to="/not-found" replace />;
   }
 
   return (

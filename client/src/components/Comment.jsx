@@ -3,12 +3,12 @@ import PropTypes from 'prop-types';
 import moment from 'moment';
 import {FaThumbsUp} from 'react-icons/fa';
 import { useSelector } from "react-redux";
-import { Button, Textarea, Alert, Modal } from "flowbite-react";
+import { Button, Textarea } from "flowbite-react";
 import { Link } from "react-router-dom";
 import { FaReply, FaChevronDown, FaChevronUp, FaFlag } from 'react-icons/fa';
 import ReportModal from './ReportModal';
-import { HiOutlineExclamationCircle } from "react-icons/hi";
 import MentionSuggestions from "./MentionSuggestions";
+import CustomAlert from "./CustomAlert";
 
 export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
     const [isEditing, setIsEditing] = useState(false);
@@ -20,8 +20,6 @@ export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
     const [showReplies, setShowReplies] = useState(false);
     const [showReportModal, setShowReportModal] = useState(false);
     const [currentReportTarget, setCurrentReportTarget] = useState(null);
-    const [showModal, setShowModal] = useState(false);
-    const [commentToDelete, setCommentToDelete] = useState(null);
     
     const editTextareaRef = useRef(null);
     const replyTextareaRef = useRef(null);
@@ -48,6 +46,17 @@ export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
             activeTextareaRef.current = null;
         }
     }, [isEditing, showReplyForm]);
+    
+    // Clear error message after 3 seconds
+    useEffect(() => {
+      if (replyError) {
+        const timer = setTimeout(() => {
+          setReplyError(null);
+        }, 3000);
+        
+        return () => clearTimeout(timer);
+      }
+    }, [replyError]);
 
     const handleEdit = () => {
         setIsEditing(true);
@@ -224,7 +233,7 @@ export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
                                     <button type="button" onClick={handleEdit} className="text-gray-400 hover:text-blue-500">
                                         Edit
                                     </button>
-                                    <button type="button" onClick={() => setShowModal(true)} className="text-gray-400 hover:text-red-500">
+                                    <button type="button" onClick={() => onDelete(comment._id)} className="text-gray-400 hover:text-red-500">
                                         Delete
                                     </button>
                                 </>
@@ -256,9 +265,9 @@ export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
                                 </div>
                                 
                                 {replyError && (
-                                    <Alert color='failure' className="my-2">
-                                        {replyError}
-                                    </Alert>
+                                    <div className="my-2">
+                                        <CustomAlert message={replyError} type="error" size="sm" />
+                                    </div>
                                 )}
                                 
                                 <div className="flex gap-2">
@@ -336,10 +345,7 @@ export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
                                                 <>
                                                     <button 
                                                         type="button" 
-                                                        onClick={() => {
-                                                            setShowModal(true);
-                                                            setCommentToDelete(reply._id);
-                                                        }} 
+                                                        onClick={() => onDelete(reply._id)} 
                                                         className="text-gray-400 hover:text-red-500"
                                                     >
                                                         Delete
@@ -364,30 +370,6 @@ export default function Comment({comment, onLike, onEdit, onDelete, onReply}) {
                     </>
                 )}
             </div>
-            
-            {/* Delete confirmation modal */}
-            <Modal show={showModal} onClose={() => setShowModal(false)} popup size='sm'>
-                <Modal.Header />
-                <Modal.Body>
-                    <div className="text-center">
-                        <HiOutlineExclamationCircle className="h-14 w-14 text-red-500 dark:text-red-500 mb-4 mx-auto" />
-                        <h3 className="mb-5 text-lg text-gray-600 dark:text-gray-400">
-                            Are you sure you want to delete this comment?
-                        </h3>
-                        <div className="flex justify-center gap-4">
-                            <Button color="failure" onClick={() => {
-                                onDelete(commentToDelete || comment._id);
-                                setShowModal(false);
-                            }}>
-                                Yes, delete it
-                            </Button>
-                            <Button color="gray" onClick={() => setShowModal(false)}>
-                                Cancel
-                            </Button>
-                        </div>
-                    </div>
-                </Modal.Body>
-            </Modal>
             
             {/* Report modal */}
             {showReportModal && (
