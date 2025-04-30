@@ -13,8 +13,13 @@ export const isTokenExpired = (token) => {
   try {
     // Get payload from JWT token
     const payload = JSON.parse(atob(token.split('.')[1]));
-    // Check if expiration time is past current time
-    return payload.exp < Math.floor(Date.now() / 1000);
+    const currentTime = Math.floor(Date.now() / 1000);
+    
+    // Check if token is actually expired according to its expiration time
+    const isActuallyExpired = payload.exp < currentTime;
+    
+    // If token is actually expired, return true
+    return isActuallyExpired;
   } catch (error) {
     console.error('Error decoding token:', error);
     return true;
@@ -42,14 +47,20 @@ export const signOutExpired = () => {
  * Sets up periodic token validation
  */
 export const setupTokenValidation = () => {
-  // Check token validity every minute
-  const intervalId = setInterval(() => {
+  // Perform an immediate check
+  const checkTokenValidity = () => {
     const { currentUser } = store.getState().user;
     
     if (currentUser?.token && isTokenExpired(currentUser.token)) {
       signOutExpired();
     }
-  }, 60000); // Check every minute
+  };
+  
+  // Run once on setup
+  checkTokenValidity();
+  
+  // Check token validity every 30 seconds
+  const intervalId = setInterval(checkTokenValidity, 30000);
   
   return () => clearInterval(intervalId);
 }; 

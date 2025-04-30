@@ -3,6 +3,7 @@ import { store } from '../redux/store';
 import { signoutSuccess } from '../redux/user/userSlice';
 
 let socket = null;
+let reconnectAttempts = 0;
 const API_URL = '/'; // Adjust if needed to match server setup
 
 export const initSocket = () => {
@@ -19,20 +20,33 @@ export const initSocket = () => {
         withCredentials: true,
         autoConnect: true,
         reconnection: true,
-        reconnectionAttempts: 5,
+        reconnectionAttempts: 10,     // Increased from 5 to 10
         reconnectionDelay: 1000,
-        transports: ['websocket'],
+        reconnectionDelayMax: 5000,   // Max delay of 5 seconds
+        randomizationFactor: 0.5,     // Add randomization to prevent connection storms
+        timeout: 20000,               // Increased timeout
+        transports: ['websocket', 'polling'], // Allow fallback to polling if websocket fails
     });
 
     socket.on('connect', () => {
-        // Connection success log removed
+        reconnectAttempts = 0; // Reset counter on successful connection
     });
 
     socket.on('connect_error', (err) => {
-        console.error('Socket connection error:', err.message);
+        reconnectAttempts++;
+        console.error(`Socket connection error (attempt ${reconnectAttempts}):`, err.message);
         
-        // Check if error is authentication-related
-        if (err.message && err.message.includes('Authentication error')) {
+        // Only consider authentication errors for sign-out
+        // Be more specific about what constitutes an auth error
+        if (reconnectAttempts >= 5 && ( // Only act after multiple failures
+            err.message && (
+                err.message.includes('Authentication error') || 
+                err.message.includes('Token') || 
+                err.message.includes('auth') ||
+                err.message.includes('unauthorized') ||
+                err.message.includes('Unauthorized')
+            )
+        )) {
             // Set flag in localStorage
             localStorage.setItem('sessionExpired', 'true');
             
@@ -44,6 +58,7 @@ export const initSocket = () => {
     
     socket.on('disconnect', (reason) => {
         if (reason === 'io server disconnect') {
+            // The server has forcefully disconnected the socket
             socket.connect();
         }
     });
@@ -53,10 +68,14 @@ export const initSocket = () => {
         // Set flag in localStorage
         localStorage.setItem('sessionExpired', 'true');
         
+        // Force immediate sign-out
         store.dispatch(signoutSuccess());
         disconnectSocket();
         document.cookie = 'access_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-        window.location.href = '/sign-in';
+        
+        setTimeout(() => {
+            window.location.href = '/sign-in';
+        }, 100);
     });
 
     return socket;

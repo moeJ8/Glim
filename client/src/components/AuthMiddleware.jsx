@@ -16,18 +16,28 @@ export default function AuthMiddleware({ children }) {
 
   // Handle socket connection based on auth state
   useEffect(() => {
+    // Don't do anything if user state hasn't been initialized yet
+    if (!currentUser && !initialized) {
+      return;
+    }
+    
     // Check if current token is valid before initializing socket
     if (currentUser?.token) {
-      if (isTokenExpired(currentUser.token)) {
-        // Token is expired, sign out
-        signOutExpired();
-      } else {
-        // Token is valid, connect socket
-        authenticateSocket(currentUser.token);
-        setInitialized(true);
+      try {
+        if (isTokenExpired(currentUser.token)) {
+          // Token is expired, sign out
+          signOutExpired();
+        } else {
+          // Token is valid, connect socket
+          authenticateSocket(currentUser.token);
+          setInitialized(true);
+        }
+      } catch (error) {
+        console.error('Error validating token in AuthMiddleware:', error);
+
       }
     } else if (initialized) {
-      // User logged out, disconnect socket
+
       disconnectSocket();
     }
   }, [currentUser, initialized]);

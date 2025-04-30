@@ -1,27 +1,41 @@
-import { Label, TextInput, Button, Alert, Spinner } from "flowbite-react";
+import { Label, TextInput, Button, Spinner } from "flowbite-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from 'react';
 import OAuth from "../components/OAuth";
 import FOAuth from "../components/FOAuth";
 import GlimSignInImage from "../assets/GlimSignIn.jpg";
+import CustomAlert from "../components/CustomAlert";
 
 export default function SignUp() {
   const [formData, setFormData] = useState({});
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [dateError, setDateError] = useState(null);
+  const [emailError, setEmailError] = useState(null);
   const navigate = useNavigate();
+  
   const handleChange = (e) => {
-    let value = e.target.value.trim(); // Trims the input
+    const { id, value } = e.target;
+    let trimmedValue = value.trim(); // Trims the input
+    
+    // Custom email validation
+    if (id === 'email') {
+      if (trimmedValue && !trimmedValue.includes('@')) {
+        setEmailError("Please include an '@' in the email address.");
+      } else {
+        setEmailError(null);
+      }
+    }
   
     setFormData((prev) => ({
       ...prev,
-      [e.target.id]: value,
+      [id]: trimmedValue,
     }));
   
     // Optional: Force update input field value in real-time
-    e.target.value = value;
+    e.target.value = trimmedValue;
   };
+  
   const handleDateChange = (e) => {
     const birthDate = new Date(e.target.value);
     const today = new Date();
@@ -40,14 +54,28 @@ export default function SignUp() {
       handleChange(e);
     }
   };
+  
   const handleSubmit = async (e) => {
-    e.preventDefault() // prevent page refresh
+    e.preventDefault(); // prevent page refresh
+    
+    // Custom validation
     if (dateError) {
       return setErrorMessage('You must be at least 13 years old to register');
     }
+    
+    if (emailError) {
+      return setErrorMessage(emailError);
+    }
+    
+    // Validate email format
+    if (formData.email && !validateEmail(formData.email)) {
+      return setErrorMessage('Please enter a valid email address');
+    }
+    
     if(!formData.username || !formData.password || !formData.email || !formData.dateOfBirth){
       return setErrorMessage('Please fill out all fields');
     }
+    
     try {
       setLoading(true);
       setErrorMessage(null);
@@ -71,6 +99,12 @@ export default function SignUp() {
     }
   }
   
+  // Email validation function
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+  
   // Calculate max date (13 years ago from today)
   const calculateMaxDate = () => {
     const today = new Date();
@@ -89,14 +123,22 @@ export default function SignUp() {
             <p className="text-gray-600 dark:text-gray-400">Create your account</p>
           </div>
           
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
             <div>
               <Label value="Your Username" className="block" />
               <TextInput type="text" placeholder="Username" id="username" onChange={handleChange}/>
             </div>
             <div>
               <Label value="Your Email" className="block" />
-              <TextInput type="email" placeholder="name@mail.com" id="email" onChange={handleChange}/>
+              <TextInput 
+                type="text" 
+                placeholder="name@mail.com" 
+                id="email" 
+                onChange={handleChange}
+              />
+              {emailError && (
+                <CustomAlert message={emailError} type="error" size="sm" className="mt-1" />
+              )}
             </div>
             <div>
               <Label value="Your Password" className="block" />
@@ -111,11 +153,11 @@ export default function SignUp() {
                 max={calculateMaxDate()}
               />
               {dateError && (
-                <p className="text-sm text-red-500 mt-1">{dateError}</p>
+                <CustomAlert message={dateError} type="error" size="sm" className="mt-1" />
               )}
               <p className="text-xs text-gray-500 mt-1">You must be at least 13 years old to register</p>
             </div>
-            <Button gradientDuoTone="purpleToPink" type="submit" disabled={loading || dateError}>
+            <Button gradientDuoTone="purpleToPink" type="submit" disabled={loading || dateError || emailError}>
               {
                 loading ? <> <Spinner size="sm"/> <span className="pl-3">Loading...</span></> : 'Sign Up'
               }
@@ -132,11 +174,9 @@ export default function SignUp() {
               Sign In
             </Link>
           </div>
-          {
-          errorMessage && 
-          (<Alert className="mt-2" color="failure">
-            {errorMessage}
-          </Alert>)}
+          {errorMessage && (
+            <CustomAlert message={errorMessage} type="error" className="mt-2" />
+          )}
         </div>
       </div>
 

@@ -58,7 +58,12 @@ io.use((socket, next) => {
             if (err) {
                 if (err.name === 'TokenExpiredError') {
                     console.log('Socket connection rejected: Token expired');
-                    socket.emit('token_expired'); // Emit event before error
+                    
+                    // Emit token_expired event immediately
+                    // This ensures the client gets notified of expiration
+                    socket.emit('token_expired');
+                    
+                    // Also reject the connection with a clear error
                     return next(new Error('Authentication error: Session expired'));
                 }
                 
