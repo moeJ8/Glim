@@ -13,57 +13,122 @@ export default function FOAuth() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     
-    // Chrome detection
-    const isChromeMobile = /Android.*Chrome|Chrome.*Mobile/i.test(navigator.userAgent);
+    // Chrome detection - more specific Chrome mobile detection
+    const isChromeMobile = /Android.*Chrome|Chrome.*Mobile/i.test(navigator.userAgent) &&
+                           !/OPR|Opera|Brave|Edge|Firefox/i.test(navigator.userAgent);
     
-    // Handle redirect result when component mounts
+    // Set up FB SDK
     useEffect(() => {
-      // Set a flag in sessionStorage to track authentication attempts
-      const authInProgress = sessionStorage.getItem('fbAuthInProgress');
-      
-      const checkRedirectResult = async () => {
-        try {
-          // Add an initial delay for Chrome mobile
-          if (isChromeMobile) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-          
-          const result = await getRedirectResult(auth);
-          
-          if (result) {
+      // Only load Facebook SDK if it hasn't been loaded already
+      if (!window.FB) {
+        // Create script element
+        const script = document.createElement('script');
+        script.src = 'https://connect.facebook.net/en_US/sdk.js';
+        script.async = true;
+        script.defer = true;
+        script.crossOrigin = 'anonymous';
+        document.body.appendChild(script);
+        
+        // Initialize FB SDK
+        window.fbAsyncInit = function() {
+          window.FB.init({
+            appId: import.meta.env.VITE_FACEBOOK_APP_ID || '949489573472137', // Use your Facebook App ID
+            cookie: true,
+            xfbml: true,
+            version: 'v18.0'
+          });
+        };
+      }
+    }, []);
+    
+    // Check for pending Facebook auth on component mount
+    useEffect(() => {
+      const checkPendingAuth = async () => {
+        const pendingAuth = localStorage.getItem('fbPendingAuth');
+        
+        if (pendingAuth) {
+          try {
             setLoading(true);
-            await processAuthResult(result);
-            // Clear the auth in progress flag
-            sessionStorage.removeItem('fbAuthInProgress');
-          } else if (authInProgress) {
-            // If we had a redirect but no result, something went wrong
-            console.error("Redirect completed but no result found");
-            sessionStorage.removeItem('fbAuthInProgress');
+            
+            // Parse the stored auth data
+            const authData = JSON.parse(pendingAuth);
+            
+            // Call your backend API with the Facebook data
+            await processStoredAuthData(authData);
+            
+            // Clear the pending auth flag
+            localStorage.removeItem('fbPendingAuth');
+          } catch (error) {
+            console.error("Error processing stored Facebook auth:", error);
+            localStorage.removeItem('fbPendingAuth');
             setLoading(false);
           }
-        } catch (error) {
-          console.error("Redirect result error:", error);
-          sessionStorage.removeItem('fbAuthInProgress');
-          setLoading(false);
         }
       };
       
-      checkRedirectResult();
-      
-      // Cleanup function
-      return () => {
-        if (!loading) {
-          sessionStorage.removeItem('fbAuthInProgress');
-        }
-      };
+      checkPendingAuth();
+    }, []);
+    
+    // Handle redirect result from Firebase for non-Chrome mobile browsers
+    useEffect(() => {
+      if (!isChromeMobile) {
+        const checkRedirectResult = async () => {
+          try {
+            const result = await getRedirectResult(auth);
+            if (result) {
+              setLoading(true);
+              await processAuthResult(result);
+            }
+          } catch (error) {
+            console.error("Redirect result error:", error);
+            setLoading(false);
+          }
+        };
+        
+        checkRedirectResult();
+      }
     }, [auth, isChromeMobile]);
     
+    // Process auth data from Facebook JavaScript SDK
+    const processStoredAuthData = async (authData) => {
+      try {
+        const res = await fetch('/api/auth/facebook', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: authData.name,
+            email: authData.email,
+            facebookPhotoUrl: authData.picture?.data?.url || null,
+          }),
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+          dispatch(signInSuccess(data));
+          
+          setTimeout(() => {
+            if (data.isAdmin) {
+              navigate('/dashboard?tab=dashboard');
+            } else {
+              navigate('/');
+            }
+            setLoading(false);
+          }, 500);
+        } else {
+          console.error("Server response error:", data);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Facebook auth processing error:", error);
+        setLoading(false);
+      }
+    };
+    
+    // Process Firebase auth result (for non-Chrome mobile)
     const processAuthResult = async (resultFromFacebook) => {
       try {
-        // Add a longer delay for Chrome mobile
-        const delayTime = isChromeMobile ? 1500 : 800;
-        await new Promise(resolve => setTimeout(resolve, delayTime));
-        
         const res = await fetch('/api/auth/facebook', {
           method: 'POST',
           headers: {
@@ -80,9 +145,6 @@ export default function FOAuth() {
         if(res.ok){
           dispatch(signInSuccess(data));
           
-          // Add an even longer delay before navigation for Chrome mobile
-          const navigationDelay = isChromeMobile ? 2000 : 800;
-          
           setTimeout(() => {
             if (data.isAdmin) {
               navigate('/dashboard?tab=dashboard');
@@ -90,7 +152,7 @@ export default function FOAuth() {
               navigate('/');
             }
             setLoading(false);
-          }, navigationDelay);
+          }, 800);
         } else {
           console.error("Server response not OK:", data);
           setLoading(false);
@@ -101,8 +163,45 @@ export default function FOAuth() {
       }
     };
 
+    // Handle Facebook login via JavaScript SDK (for Chrome mobile)
+    const handleFacebookJSLogin = () => {
+      if (!window.FB) {
+        console.error("Facebook SDK not loaded");
+        setLoading(false);
+        return;
+      }
+      
+      window.FB.login(function(response) {
+        if (response.authResponse) {
+          // Get user details
+          window.FB.api('/me', {fields: 'name,email,picture'}, function(userInfo) {
+            // Store auth data in localStorage
+            localStorage.setItem('fbPendingAuth', JSON.stringify({
+              name: userInfo.name,
+              email: userInfo.email,
+              picture: userInfo.picture
+            }));
+            
+            // Reload the page to process the stored auth
+            window.location.reload();
+          });
+        } else {
+          console.log('User cancelled login or did not fully authorize.');
+          setLoading(false);
+        }
+      }, {scope: 'email,public_profile'});
+    };
+
     const handleFacebookClick = async() => {
       setLoading(true);
+      
+      // For Chrome mobile, use the Facebook JS SDK approach
+      if (isChromeMobile) {
+        handleFacebookJSLogin();
+        return;
+      }
+      
+      // For all other browsers, use the Firebase approach
       const provider = new FacebookAuthProvider();
       provider.addScope('email');
       provider.addScope('public_profile');
@@ -112,18 +211,6 @@ export default function FOAuth() {
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         
         if (isMobile) {
-          // Set a flag in sessionStorage to track the auth attempt
-          sessionStorage.setItem('fbAuthInProgress', 'true');
-          
-          // For Chrome mobile, add extra parameters
-          if (isChromeMobile) {
-            provider.setCustomParameters({
-              'display': 'popup',
-              'auth_type': 'rerequest',
-              'prompt': 'select_account'
-            });
-          }
-          
           // For mobile, use redirect (this will navigate away and come back)
           await signInWithRedirect(auth, provider);
           // Code after this point won't execute until redirect completes and user returns
@@ -134,7 +221,6 @@ export default function FOAuth() {
         }
       } catch (error) {
         console.error("Facebook login error:", error);
-        sessionStorage.removeItem('fbAuthInProgress');
         setLoading(false);
       }
     };
