@@ -6,6 +6,8 @@ import { BsArrowRightCircle } from 'react-icons/bs';
 import { useSelector } from 'react-redux';
 import { getSocket, authenticateSocket } from '../services/socketService';
 import { HiOutlineExclamationCircle } from 'react-icons/hi';
+import { FaComment, FaReply } from 'react-icons/fa';
+import { MdPublish, MdThumbUp, MdCheck, MdClose } from 'react-icons/md';
 import moment from 'moment';
 
 export default function NotificationIcon() {
@@ -241,6 +243,16 @@ export default function NotificationIcon() {
         return `/`;
       }
     }
+    if (notification.type === 'publisher_request') {
+      if (currentUser?.isAdmin) {
+        return `/dashboard?tab=requests`;
+      } else {
+        return `/`;
+      }
+    }
+    if (notification.type === 'publisher_approved' || notification.type === 'publisher_rejected') {
+      return `/dashboard?tab=profile`;
+    }
     if (!notification.postSlug) {
       return `/`;
     }
@@ -276,7 +288,7 @@ export default function NotificationIcon() {
             return (
                 <div className="flex items-start gap-3">
                     <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
-                        <IoMdNotificationsOutline className="text-blue-600 dark:text-blue-400 w-5 h-5" />
+                        <FaComment className="text-blue-600 dark:text-blue-400 w-5 h-5" />
                     </div>
                     <div className="flex-1">
                         <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
@@ -295,7 +307,7 @@ export default function NotificationIcon() {
             return (
                 <div className="flex items-start gap-3">
                     <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-lg">
-                        <IoMdNotificationsOutline className="text-purple-600 dark:text-purple-400 w-5 h-5" />
+                        <FaReply className="text-purple-600 dark:text-purple-400 w-5 h-5" />
                     </div>
                     <div className="flex-1">
                         <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
@@ -314,7 +326,7 @@ export default function NotificationIcon() {
             return (
                 <div className="flex items-start gap-3">
                     <div className="bg-pink-100 dark:bg-pink-900/30 p-2 rounded-lg">
-                        <IoMdNotificationsOutline className="text-pink-600 dark:text-pink-400 w-5 h-5" />
+                        <MdThumbUp className="text-pink-600 dark:text-pink-400 w-5 h-5" />
                     </div>
                     <div className="flex-1">
                         <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
@@ -410,6 +422,63 @@ export default function NotificationIcon() {
                 <div className="flex items-start gap-3">
                     <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-lg">
                         <HiOutlineExclamationCircle className="text-purple-600 dark:text-purple-400 w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                            {notification.title}
+                        </h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {notification.message}
+                        </p>
+                        <span className="text-xs text-gray-500 dark:text-gray-500 mt-1 block">
+                            {moment(notification.createdAt).fromNow()}
+                        </span>
+                    </div>
+                </div>
+            );
+        case 'publisher_request':
+            return (
+                <div className="flex items-start gap-3">
+                    <div className="bg-amber-100 dark:bg-amber-900/30 p-2 rounded-lg">
+                        <MdPublish className="text-amber-600 dark:text-amber-400 w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                            {notification.title}
+                        </h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {notification.message}
+                        </p>
+                        <span className="text-xs text-gray-500 dark:text-gray-500 mt-1 block">
+                            {moment(notification.createdAt).fromNow()}
+                        </span>
+                    </div>
+                </div>
+            );
+        case 'publisher_approved':
+            return (
+                <div className="flex items-start gap-3">
+                    <div className="bg-emerald-100 dark:bg-emerald-900/30 p-2 rounded-lg">
+                        <MdCheck className="text-emerald-600 dark:text-emerald-400 w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                            {notification.title}
+                        </h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {notification.message}
+                        </p>
+                        <span className="text-xs text-gray-500 dark:text-gray-500 mt-1 block">
+                            {moment(notification.createdAt).fromNow()}
+                        </span>
+                    </div>
+                </div>
+            );
+        case 'publisher_rejected':
+            return (
+                <div className="flex items-start gap-3">
+                    <div className="bg-rose-100 dark:bg-rose-900/30 p-2 rounded-lg">
+                        <MdClose className="text-rose-600 dark:text-rose-400 w-5 h-5" />
                     </div>
                     <div className="flex-1">
                         <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">

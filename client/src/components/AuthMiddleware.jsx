@@ -7,12 +7,34 @@ export default function AuthMiddleware({ children }) {
   const { currentUser } = useSelector(state => state.user);
   const [initialized, setInitialized] = useState(false);
 
-  // Setup token validation and auto sign-out
+  // Perform immediate token validation on component mount or when user returns to the tab
   useEffect(() => {
+    // Immediately validate token on mount
+    if (currentUser?.token && isTokenExpired(currentUser.token)) {
+      signOutExpired();
+      return;
+    }
+
     // Setup periodic token validation
     const cleanup = setupTokenValidation();
-    return cleanup;
-  }, []);
+    
+    // Also check when page becomes visible again (tab switching/browser reopening)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        const { currentUser } = window.store.getState().user;
+        if (currentUser?.token && isTokenExpired(currentUser.token)) {
+          signOutExpired();
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      cleanup();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [currentUser?.token]);
 
   // Handle socket connection based on auth state
   useEffect(() => {
@@ -20,7 +42,6 @@ export default function AuthMiddleware({ children }) {
     if (!currentUser && !initialized) {
       return;
     }
-    
     // Check if current token is valid before initializing socket
     if (currentUser?.token) {
       try {
@@ -34,10 +55,8 @@ export default function AuthMiddleware({ children }) {
         }
       } catch (error) {
         console.error('Error validating token in AuthMiddleware:', error);
-
       }
     } else if (initialized) {
-
       disconnectSocket();
     }
   }, [currentUser, initialized]);

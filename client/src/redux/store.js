@@ -31,3 +31,6 @@ export const store = configureStore({
 
 export const persistor = persistStore(store);
 
+// Expose store for use in non-React contexts (like visibility change handler)
+window.store = store;
+

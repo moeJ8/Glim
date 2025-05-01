@@ -7,6 +7,7 @@ import Token from '../models/token.js';
 import { sendEmail } from '../utils/sendEmail.js';
 import crypto from 'crypto';
 import Notification from '../models/notification.model.js';
+import { createNotification } from './notification.controller.js';
 
 export const test = (req, res) => {
   res.json({ message: "API is working" });
@@ -271,9 +272,37 @@ export const requestPublisher = async (req, res, next) => {
     if (existingRequest) {
       return res.status(400).json({ message: "You already have a pending request." });
     }
+
+    // Get the user who made the request to include their username in notification
+    const requestingUser = await User.findById(userId);
+    if (!requestingUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Create the publisher request
     await PublisherRequest.create({ userId, reason });
+
+    // Find all admin users to notify them
+    const adminUsers = await User.find({ isAdmin: true });
+    
+    // Create notifications for all admins
+    for (const admin of adminUsers) {
+      try {
+        await createNotification(req, {
+          recipient: admin._id,
+          title: 'New Publisher Request',
+          message: `${requestingUser.username} has requested to become a publisher`,
+          type: 'publisher_request',
+          triggeredBy: userId
+        });
+      } catch (error) {
+        console.error('Error creating notification:', error);
+        // Continue with other admins even if one notification fails
+      }
+    }
+
     res.status(200).json({ message: "Request sent successfully." });
-  }catch(err) {
+  } catch(err) {
     next(err);
   }
 }
@@ -323,6 +352,12 @@ export const updatePublisherRequest = async (req, res, next) => {
     const requestUserId = request.userId.toString();
     const adminId = req.user.id;
 
+    // Get admin user info for notification
+    const admin = await User.findById(adminId);
+    if (!admin) {
+      return next(errorHandler(404, "Admin not found"));
+    }
+
     if (status === 'approved') {
       const updatedUser = await User.findByIdAndUpdate(
         request.userId, 
@@ -331,6 +366,20 @@ export const updatePublisherRequest = async (req, res, next) => {
       );
       
       if (updatedUser) {
+        // Create notification for user about approval
+        try {
+          await createNotification(req, {
+            recipient: updatedUser._id,
+            title: 'Publisher Request Approved',
+            message: `Your request to become a publisher has been approved`,
+            type: 'publisher_approved',
+            triggeredBy: adminId
+          });
+        } catch (error) {
+          console.error('Error creating approval notification:', error);
+          // Continue even if notification fails
+        }
+
         const token = jwt.sign(
           {
             id: updatedUser._id,
@@ -347,6 +396,20 @@ export const updatePublisherRequest = async (req, res, next) => {
           res.cookie("access_token", token, { httpOnly: true });
         }
         // Otherwise, don't touch the admin's token
+      }
+    } else if (status === 'rejected') {
+      // Create notification for user about rejection
+      try {
+        await createNotification(req, {
+          recipient: request.userId,
+          title: 'Publisher Request Rejected',
+          message: `Your request to become a publisher has been rejected`,
+          type: 'publisher_rejected',
+          triggeredBy: adminId
+        });
+      } catch (error) {
+        console.error('Error creating rejection notification:', error);
+        // Continue even if notification fails
       }
     }
 

@@ -3,6 +3,10 @@ import { useSelector } from 'react-redux';
 import { Button, Spinner } from 'flowbite-react';
 import { Link } from 'react-router-dom';
 import { getSocket, authenticateSocket } from '../services/socketService';
+import { IoMdNotificationsOutline } from 'react-icons/io';
+import { HiOutlineExclamationCircle } from 'react-icons/hi';
+import { FaComment, FaReply } from 'react-icons/fa';
+import { MdPublish, MdThumbUp, MdCheck, MdClose } from 'react-icons/md';
 
 export default function Notifications() {
   const { currentUser } = useSelector((state) => state.user);
@@ -181,6 +185,12 @@ export default function Notifications() {
         return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300';
       case 'report':
         return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
+      case 'publisher_request':
+        return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300';
+      case 'publisher_approved':
+        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300';
+      case 'publisher_rejected':
+        return 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
     }
@@ -204,8 +214,35 @@ export default function Notifications() {
         return 'New Follower';
       case 'report':
         return 'Report';
+      case 'publisher_request':
+        return 'Publisher Request';
+      case 'publisher_approved':
+        return 'Request Approved';
+      case 'publisher_rejected':
+        return 'Request Rejected';
       default:
         return type;
+    }
+  };
+
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'comment':
+        return <FaComment className="text-blue-600 dark:text-blue-400" />;
+      case 'reply':
+        return <FaReply className="text-purple-600 dark:text-purple-400" />;
+      case 'like_comment':
+        return <MdThumbUp className="text-pink-600 dark:text-pink-400" />;
+      case 'publisher_request':
+        return <MdPublish className="text-amber-600 dark:text-amber-400" />;
+      case 'publisher_approved':
+        return <MdCheck className="text-emerald-600 dark:text-emerald-400" />;
+      case 'publisher_rejected':
+        return <MdClose className="text-rose-600 dark:text-rose-400" />;
+      case 'report':
+        return <HiOutlineExclamationCircle className="text-purple-600 dark:text-purple-400" />;
+      default:
+        return <IoMdNotificationsOutline className="text-gray-600 dark:text-gray-400" />;
     }
   };
 
@@ -227,6 +264,16 @@ export default function Notifications() {
       } else {
         return `/`;
       }
+    }
+    if (notification.type === 'publisher_request') {
+      if (currentUser.isAdmin) {
+        return `/dashboard?tab=requests`;
+      } else {
+        return `/`;
+      }
+    }
+    if (notification.type === 'publisher_approved' || notification.type === 'publisher_rejected') {
+      return `/dashboard?tab=profile`;
     }
     if (!notification.postSlug) {
       return `/`;
@@ -316,6 +363,9 @@ export default function Notifications() {
                     ></div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <span className="mr-1">
+                          {getNotificationIcon(notification.type)}
+                        </span>
                         {notification.title}
                         <span
                           className={`text-xs px-2 py-1 rounded-full ${getNotificationTypeStyle(notification.type)}`}
