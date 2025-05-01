@@ -1,154 +1,54 @@
-import { Button, Spinner } from "flowbite-react";
+import { Button } from "flowbite-react";
 import { AiFillGoogleCircle } from "react-icons/ai";
-import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, getAuth } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup, getAuth } from "firebase/auth";
 import { app } from "../firebase";
 import { useDispatch } from "react-redux";
 import { signInSuccess } from "../redux/user/userSlice";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
 
 export default function OAuth() {
     const auth = getAuth(app);
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
-    
-    // Handle redirect result when component mounts
-    useEffect(() => {
-      const checkRedirectResult = async () => {
-        try {
-          setLoading(true);
-          const result = await getRedirectResult(auth);
-          if (result) {
-            await processAuthResult(result);
-          } else {
-            // Check if we have stored auth data from redirect
-            const storedAuthData = localStorage.getItem('googleAuthData');
-            if (storedAuthData) {
-              try {
-                console.log("Found stored Google auth data");
-                const authData = JSON.parse(storedAuthData);
-                
-                // Add a delay to ensure data is processed
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                dispatch(signInSuccess(authData));
-                
-                // Another short delay before navigation
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                if (authData.isAdmin) {
-                  navigate('/dashboard?tab=dashboard');
-                } else {
-                  navigate('/');
-                }
-                // Clear stored data after successful use
-                localStorage.removeItem('googleAuthData');
-              } catch (parseError) {
-                console.error("Error parsing stored auth data:", parseError);
-                localStorage.removeItem('googleAuthData');
-              }
-            }
-          }
-          setLoading(false);
-        } catch (error) {
-          console.error("Redirect result error:", error);
-          setLoading(false);
-        }
-      };
-      
-      checkRedirectResult();
-    }, [auth, dispatch, navigate]);
-    
-    const processAuthResult = async (resultFromGoogle) => {
-      try {
-        const res = await fetch('/api/auth/google', {
+  const handleGoogleClick = async() => {
+    // TODO: Implement Google OAuth
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+      prompt: "select_account"
+    });
+
+    try {
+      const resultFromGoogle = await signInWithPopup(auth, provider);
+      const res = await fetch('/api/auth/google', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
-          },
+        },
           body: JSON.stringify({
-            name: resultFromGoogle.user.displayName,
-            email: resultFromGoogle.user.email,
-            googlePhotoUrl: resultFromGoogle.user.photoURL,
+              name: resultFromGoogle.user.displayName,
+              email: resultFromGoogle.user.email,
+              googlePhotoUrl: resultFromGoogle.user.photoURL,
           }),
-          credentials: 'include' // Important for cookies
-        });
-        
-        const data = await res.json();
-        if(res.ok){
-          console.log("Google auth successful, storing in localStorage");
-          
-          // Store auth data in localStorage as a fallback for mobile redirects
-          localStorage.setItem('googleAuthData', JSON.stringify(data));
-          
-          // Add a delay to ensure data is properly saved in localStorage
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          dispatch(signInSuccess(data));
-          
-          // Another short delay before navigation
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          if (data.isAdmin) {
-            navigate('/dashboard?tab=dashboard');
-          } else {
-            navigate('/');
-          }
-          setLoading(false);
-        } else {
-          console.error("Server response error:", data);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("Google auth error:", error);
-        setLoading(false);
       }
-    };
-    
-    const handleGoogleClick = async() => {
-      setLoading(true);
-      
-      try {
-        // Create Google provider
-        const provider = new GoogleAuthProvider();
-        provider.addScope('email');
-        provider.addScope('profile');
-        
-        // Detect if on mobile
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        
-        if (isMobile) {
-          console.log("Mobile detected, using redirect auth");
-          // Use redirect for mobile devices
-          await signInWithRedirect(auth, provider);
-          // This will redirect the user away from the app
-          // The useEffect above will handle the redirect result when they return
+      )
+      const data = await res.json();
+      if(res.ok){
+        dispatch(signInSuccess(data))
+        if (data.isAdmin) {
+          navigate('/dashboard?tab=dashboard');
         } else {
-          // Use popup for desktop
-          const resultFromGoogle = await signInWithPopup(auth, provider);
-          await processAuthResult(resultFromGoogle);
+          navigate('/')
         }
-      } catch (error) {
-        console.error("Google login error:", error);
-        setLoading(false);
       }
-    };
-    
+    } catch (error) {
+     console.log(error);
+    }
+  }
   return (
-    <Button type="button" gradientDuoTone="pinkToOrange" outline onClick={handleGoogleClick} disabled={loading}>
+    <Button type="button" gradientDuoTone="pinkToOrange" outline onClick={handleGoogleClick}>
       <div className="flex items-center justify-center">
-        {loading ? (
-          <>
-            <Spinner size="sm" className="mr-2" />
-            <span className="text-xs">Signing in...</span>
-          </>
-        ) : (
-          <>
-            <AiFillGoogleCircle size={20} className="mr-2" />
-            <span className="text-xs">Continue with Google</span>
-          </>
-        )}
+        <AiFillGoogleCircle size={20} className="mr-2" />
+        <span className="text-xs">Continue with Google</span>
       </div>
     </Button>
   )
