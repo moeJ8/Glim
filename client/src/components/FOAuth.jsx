@@ -13,28 +13,56 @@ export default function FOAuth() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     
+    // Chrome detection
+    const isChromeMobile = /Android.*Chrome|Chrome.*Mobile/i.test(navigator.userAgent);
+    
     // Handle redirect result when component mounts
     useEffect(() => {
+      // Set a flag in sessionStorage to track authentication attempts
+      const authInProgress = sessionStorage.getItem('fbAuthInProgress');
+      
       const checkRedirectResult = async () => {
         try {
+          // Add an initial delay for Chrome mobile
+          if (isChromeMobile) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+          
           const result = await getRedirectResult(auth);
+          
           if (result) {
             setLoading(true);
             await processAuthResult(result);
+            // Clear the auth in progress flag
+            sessionStorage.removeItem('fbAuthInProgress');
+          } else if (authInProgress) {
+            // If we had a redirect but no result, something went wrong
+            console.error("Redirect completed but no result found");
+            sessionStorage.removeItem('fbAuthInProgress');
+            setLoading(false);
           }
         } catch (error) {
           console.error("Redirect result error:", error);
+          sessionStorage.removeItem('fbAuthInProgress');
           setLoading(false);
         }
       };
       
       checkRedirectResult();
-    }, [auth]);
+      
+      // Cleanup function
+      return () => {
+        if (!loading) {
+          sessionStorage.removeItem('fbAuthInProgress');
+        }
+      };
+    }, [auth, isChromeMobile]);
     
     const processAuthResult = async (resultFromFacebook) => {
       try {
-        // Add a slight delay to allow UI to catch up
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Add a longer delay for Chrome mobile
+        const delayTime = isChromeMobile ? 1500 : 800;
+        await new Promise(resolve => setTimeout(resolve, delayTime));
         
         const res = await fetch('/api/auth/facebook', {
           method: 'POST',
@@ -51,7 +79,10 @@ export default function FOAuth() {
         const data = await res.json();
         if(res.ok){
           dispatch(signInSuccess(data));
-          // Add a slight delay before navigation
+          
+          // Add an even longer delay before navigation for Chrome mobile
+          const navigationDelay = isChromeMobile ? 2000 : 800;
+          
           setTimeout(() => {
             if (data.isAdmin) {
               navigate('/dashboard?tab=dashboard');
@@ -59,7 +90,10 @@ export default function FOAuth() {
               navigate('/');
             }
             setLoading(false);
-          }, 500);
+          }, navigationDelay);
+        } else {
+          console.error("Server response not OK:", data);
+          setLoading(false);
         }
       } catch (error) {
         console.error("Facebook auth error:", error);
@@ -78,6 +112,18 @@ export default function FOAuth() {
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         
         if (isMobile) {
+          // Set a flag in sessionStorage to track the auth attempt
+          sessionStorage.setItem('fbAuthInProgress', 'true');
+          
+          // For Chrome mobile, add extra parameters
+          if (isChromeMobile) {
+            provider.setCustomParameters({
+              'display': 'popup',
+              'auth_type': 'rerequest',
+              'prompt': 'select_account'
+            });
+          }
+          
           // For mobile, use redirect (this will navigate away and come back)
           await signInWithRedirect(auth, provider);
           // Code after this point won't execute until redirect completes and user returns
@@ -88,6 +134,7 @@ export default function FOAuth() {
         }
       } catch (error) {
         console.error("Facebook login error:", error);
+        sessionStorage.removeItem('fbAuthInProgress');
         setLoading(false);
       }
     };
