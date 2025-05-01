@@ -142,7 +142,12 @@ export const signin = async (req, res, next) => {
         
         // Allow login but include verification message if present
         return res.status(200)
-            .cookie("access_token", token, {httpOnly: true})
+            .cookie("access_token", token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 24 * 60 * 60 * 1000 // 1 day
+            })
             .json({
                 ...rest, 
                 token, 
@@ -170,7 +175,16 @@ export const google = async (req, res, next) => {
                 {expiresIn: "1d"}
             );
             const { password: pass, ...rest} = user._doc;
-            res.status(200).cookie("access_token", token, {httpOnly: true}).json({...rest, token});
+            
+            // Set mobile-friendly cookie
+            res.status(200)
+                .cookie("access_token", token, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: 'lax',
+                    maxAge: 24 * 60 * 60 * 1000 // 1 day
+                })
+                .json({...rest, token});
         } else {
             const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
             const hashedPassword = await bcryptjs.hashSync(generatedPassword, 10);
@@ -198,8 +212,16 @@ export const google = async (req, res, next) => {
                 {expiresIn: "1d"}
             );
             const {password, ...rest} = newUser._doc;
-            res.status(200).cookie("access_token", token, {httpOnly: true}).json({...rest, token});
             
+            // Set mobile-friendly cookie
+            res.status(200)
+                .cookie("access_token", token, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: 'lax',
+                    maxAge: 24 * 60 * 60 * 1000 // 1 day
+                })
+                .json({...rest, token});
         }
     } catch(err) {
         next(err);
@@ -226,10 +248,11 @@ export const facebook = async (req, res, next) => {
             );
             const { password: pass, ...rest} = user._doc;
             
-            // Set cookie with simpler settings for better mobile compatibility
+            // Set mobile-friendly cookie
             return res.status(200)
                 .cookie("access_token", token, {
                     httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
                     sameSite: 'lax',
                     maxAge: 24 * 60 * 60 * 1000 // 1 day
                 })
@@ -264,10 +287,11 @@ export const facebook = async (req, res, next) => {
             
             const {password, ...rest} = newUser._doc;
             
-            // Set cookie with simpler settings for better mobile compatibility
+            // Set mobile-friendly cookie
             return res.status(200)
                 .cookie("access_token", token, {
                     httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
                     sameSite: 'lax',
                     maxAge: 24 * 60 * 60 * 1000 // 1 day
                 })

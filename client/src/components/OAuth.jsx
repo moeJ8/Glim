@@ -17,11 +17,32 @@ export default function OAuth() {
     useEffect(() => {
       const checkRedirectResult = async () => {
         try {
+          setLoading(true);
           const result = await getRedirectResult(auth);
           if (result) {
-            setLoading(true);
             await processAuthResult(result);
+          } else {
+            // Check if we have stored auth data from redirect
+            const storedAuthData = localStorage.getItem('googleAuthData');
+            if (storedAuthData) {
+              try {
+                const authData = JSON.parse(storedAuthData);
+                dispatch(signInSuccess(authData));
+                
+                if (authData.isAdmin) {
+                  navigate('/dashboard?tab=dashboard');
+                } else {
+                  navigate('/');
+                }
+                // Clear stored data after successful use
+                localStorage.removeItem('googleAuthData');
+              } catch (parseError) {
+                console.error("Error parsing stored auth data:", parseError);
+                localStorage.removeItem('googleAuthData');
+              }
+            }
           }
+          setLoading(false);
         } catch (error) {
           console.error("Redirect result error:", error);
           setLoading(false);
@@ -29,7 +50,7 @@ export default function OAuth() {
       };
       
       checkRedirectResult();
-    }, [auth]);
+    }, [auth, dispatch, navigate]);
     
     const processAuthResult = async (resultFromGoogle) => {
       try {
@@ -43,10 +64,14 @@ export default function OAuth() {
             email: resultFromGoogle.user.email,
             googlePhotoUrl: resultFromGoogle.user.photoURL,
           }),
+          credentials: 'include' // Important for cookies
         });
         
         const data = await res.json();
         if(res.ok){
+          // Store auth data in localStorage as a fallback for mobile redirects
+          localStorage.setItem('googleAuthData', JSON.stringify(data));
+          
           dispatch(signInSuccess(data));
           
           if (data.isAdmin) {
