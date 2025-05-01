@@ -5,6 +5,7 @@ import OAuth from "../components/OAuth";
 import FOAuth from "../components/FOAuth";
 import GlimSignInImage from "../assets/GlimSignIn.jpg";
 import CustomAlert from "../components/CustomAlert";
+import PasswordInput from "../components/PasswordInput";
 
 export default function SignUp() {
   const [formData, setFormData] = useState({});
@@ -142,7 +143,7 @@ export default function SignUp() {
             </div>
             <div>
               <Label value="Your Password" className="block" />
-              <TextInput type="password" placeholder="Password" id="password" onChange={handleChange}/>
+              <PasswordInput placeholder="Password" id="password" onChange={handleChange}/>
             </div>
             <div>
               <Label value="Date of Birth" className="block" />
