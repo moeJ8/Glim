@@ -1,55 +1,111 @@
-import { Button } from "flowbite-react"
+import { Button, Spinner } from "flowbite-react"
 import { AiFillFacebook } from "react-icons/ai"
 import { app } from "../firebase";
-import { FacebookAuthProvider, getAuth, signInWithPopup} from "firebase/auth";
+import { FacebookAuthProvider, getAuth, signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { signInSuccess } from "../redux/user/userSlice";
+import { useState, useEffect } from "react";
 
 export default function FOAuth() {
     const auth = getAuth(app);
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const handleFacebookClick = async() => {
-        // TODO: Implement Facebook OAuth
-        const provider = new FacebookAuthProvider();
-        provider.setCustomParameters({
-          prompt: "select_account"
-        });
-
+    const [loading, setLoading] = useState(false);
+    
+    // Handle redirect result when component mounts
+    useEffect(() => {
+      const checkRedirectResult = async () => {
         try {
-            const resultFromFacebook = await signInWithPopup(auth, provider);
-            const res = await fetch('/api/auth/facebook', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-              },
-                body: JSON.stringify({
-                    name: resultFromFacebook.user.displayName,
-                    email: resultFromFacebook.user.email,
-                    facebookPhotoUrl: resultFromFacebook.user.photoURL,
-                }),
-            }
-            )
-            const data = await res.json();
-            if(res.ok){
-              dispatch(signInSuccess(data))
-              if (data.isAdmin) {
-                navigate('/dashboard?tab=dashboard');
-              } else {
-                navigate('/')
-              }
-            }
-          } catch (error) {
-           console.log(error);
+          const result = await getRedirectResult(auth);
+          if (result) {
+            setLoading(true);
+            await processAuthResult(result);
           }
+        } catch (error) {
+          console.error("Redirect result error:", error);
+          setLoading(false);
         }
+      };
+      
+      checkRedirectResult();
+    }, [auth]);
+    
+    const processAuthResult = async (resultFromFacebook) => {
+      try {
+        // Add a slight delay to allow UI to catch up
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const res = await fetch('/api/auth/facebook', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: resultFromFacebook.user.displayName,
+            email: resultFromFacebook.user.email,
+            facebookPhotoUrl: resultFromFacebook.user.photoURL,
+          }),
+        });
+        
+        const data = await res.json();
+        if(res.ok){
+          dispatch(signInSuccess(data));
+          // Add a slight delay before navigation
+          setTimeout(() => {
+            if (data.isAdmin) {
+              navigate('/dashboard?tab=dashboard');
+            } else {
+              navigate('/');
+            }
+            setLoading(false);
+          }, 500);
+        }
+      } catch (error) {
+        console.error("Facebook auth error:", error);
+        setLoading(false);
+      }
+    };
+
+    const handleFacebookClick = async() => {
+      setLoading(true);
+      const provider = new FacebookAuthProvider();
+      provider.addScope('email');
+      provider.addScope('public_profile');
+      
+      try {
+        // Use redirect for mobile devices, popup for desktop
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+          // For mobile, use redirect (this will navigate away and come back)
+          await signInWithRedirect(auth, provider);
+          // Code after this point won't execute until redirect completes and user returns
+        } else {
+          // For desktop, use popup
+          const resultFromFacebook = await signInWithPopup(auth, provider);
+          await processAuthResult(resultFromFacebook);
+        }
+      } catch (error) {
+        console.error("Facebook login error:", error);
+        setLoading(false);
+      }
+    };
 
   return (
-    <Button type="button" className="bg-gradient-to-r from-pink-500 to-blue-500 text-white" outline onClick={handleFacebookClick}>
+    <Button type="button" className="bg-gradient-to-r from-pink-500 to-blue-500 text-white" outline onClick={handleFacebookClick} disabled={loading}>
       <div className="flex items-center justify-center">
-        <AiFillFacebook size={20} className="mr-2 ml-3 sm:ml-0" />
-        <span className="text-xs">Continue with Facebook</span>
+        {loading ? (
+          <>
+            <Spinner size="sm" className="mr-2" />
+            <span className="text-xs">Signing in...</span>
+          </>
+        ) : (
+          <>
+            <AiFillFacebook size={20} className="mr-2 ml-3 sm:ml-0" />
+            <span className="text-xs">Continue with Facebook</span>
+          </>
+        )}
       </div>
     </Button>
   )
