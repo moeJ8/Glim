@@ -26,8 +26,16 @@ export default function FOAuth() {
             const storedAuthData = localStorage.getItem('facebookAuthData');
             if (storedAuthData) {
               try {
+                console.log("Found stored Facebook auth data");
                 const authData = JSON.parse(storedAuthData);
+                
+                // Add a delay to ensure data is processed
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
                 dispatch(signInSuccess(authData));
+                
+                // Another short delay before navigation
+                await new Promise(resolve => setTimeout(resolve, 500));
                 
                 if (authData.isAdmin) {
                   navigate('/dashboard?tab=dashboard');
@@ -69,10 +77,18 @@ export default function FOAuth() {
         
         const data = await res.json();
         if(res.ok){
+          console.log("Facebook auth successful, storing in localStorage");
+          
           // Store auth data in localStorage as a fallback for mobile redirects
           localStorage.setItem('facebookAuthData', JSON.stringify(data));
           
+          // Add a delay to ensure data is properly saved in localStorage
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
           dispatch(signInSuccess(data));
+          
+          // Another short delay before navigation
+          await new Promise(resolve => setTimeout(resolve, 500));
           
           if (data.isAdmin) {
             navigate('/dashboard?tab=dashboard');
@@ -103,6 +119,7 @@ export default function FOAuth() {
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         
         if (isMobile) {
+          console.log("Mobile detected, using redirect auth");
           // Use redirect for mobile devices
           await signInWithRedirect(auth, provider);
           // This will redirect the user away from the app

@@ -14,6 +14,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import path from 'path';
+import cors from 'cors';
 
 dotenv.config();
 
@@ -31,6 +32,12 @@ const __dirname = path.resolve();
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ? [process.env.CLIENT_URL, /\.vercel\.app$/] : 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 const port = 3000;
 
 // Create HTTP server
