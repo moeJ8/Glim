@@ -33,9 +33,6 @@ export default function OAuth() {
     
     const processAuthResult = async (resultFromGoogle) => {
       try {
-        // Add a slight delay to allow UI to catch up
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
         const res = await fetch('/api/auth/google', {
           method: 'POST',
           headers: {
@@ -51,15 +48,16 @@ export default function OAuth() {
         const data = await res.json();
         if(res.ok){
           dispatch(signInSuccess(data));
-          // Add a slight delay before navigation
-          setTimeout(() => {
-            if (data.isAdmin) {
-              navigate('/dashboard?tab=dashboard');
-            } else {
-              navigate('/');
-            }
-            setLoading(false);
-          }, 500);
+          
+          if (data.isAdmin) {
+            navigate('/dashboard?tab=dashboard');
+          } else {
+            navigate('/');
+          }
+          setLoading(false);
+        } else {
+          console.error("Server response error:", data);
+          setLoading(false);
         }
       } catch (error) {
         console.error("Google auth error:", error);
@@ -69,20 +67,23 @@ export default function OAuth() {
     
     const handleGoogleClick = async() => {
       setLoading(true);
-      const provider = new GoogleAuthProvider();
-      provider.addScope('email');
-      provider.addScope('profile');
       
       try {
-        // Use redirect for mobile devices, popup for desktop
+        // Create Google provider
+        const provider = new GoogleAuthProvider();
+        provider.addScope('email');
+        provider.addScope('profile');
+        
+        // Detect if on mobile
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         
         if (isMobile) {
-          // For mobile, use redirect (this will navigate away and come back)
+          // Use redirect for mobile devices
           await signInWithRedirect(auth, provider);
-          // Code after this point won't execute until redirect completes and user returns
+          // This will redirect the user away from the app
+          // The useEffect above will handle the redirect result when they return
         } else {
-          // For desktop, use popup
+          // Use popup for desktop
           const resultFromGoogle = await signInWithPopup(auth, provider);
           await processAuthResult(resultFromGoogle);
         }

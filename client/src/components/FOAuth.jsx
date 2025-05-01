@@ -1,11 +1,11 @@
 import { Button, Spinner } from "flowbite-react"
 import { AiFillFacebook } from "react-icons/ai"
 import { app } from "../firebase";
-import { FacebookAuthProvider, getAuth, signInWithPopup } from "firebase/auth";
+import { FacebookAuthProvider, getAuth, signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { signInSuccess } from "../redux/user/userSlice";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function FOAuth() {
     const auth = getAuth(app);
@@ -13,53 +13,79 @@ export default function FOAuth() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
 
-    const handleFacebookClick = async() => {
-      setLoading(true);
+    // Handle redirect result when component mounts
+    useEffect(() => {
+      const checkRedirectResult = async () => {
+        try {
+          const result = await getRedirectResult(auth);
+          if (result) {
+            setLoading(true);
+            await processAuthResult(result);
+          }
+        } catch (error) {
+          console.error("Redirect result error:", error);
+          setLoading(false);
+        }
+      };
       
+      checkRedirectResult();
+    }, [auth]);
+    
+    const processAuthResult = async (resultFromFacebook) => {
       try {
-        // Create Facebook provider with explicit scopes
-        const provider = new FacebookAuthProvider();
-        provider.addScope('email');
-        provider.addScope('public_profile');
-        
-        // Set consistent parameters for all devices
-        provider.setCustomParameters({
-          // Force authentication prompt
-          auth_type: 'reauthenticate',
-          // Use touch-optimized UI for all devices
-          display: 'popup'
-        });
-        
-        // Use signInWithPopup for all platforms - more reliable than redirect
-        const result = await signInWithPopup(auth, provider);
-        
-        // Process login on backend
         const res = await fetch('/api/auth/facebook', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            name: result.user.displayName,
-            email: result.user.email,
-            facebookPhotoUrl: result.user.photoURL,
+            name: resultFromFacebook.user.displayName,
+            email: resultFromFacebook.user.email,
+            facebookPhotoUrl: resultFromFacebook.user.photoURL,
           }),
         });
         
         const data = await res.json();
-        
-        if(res.ok) {
+        if(res.ok){
           dispatch(signInSuccess(data));
           
-          // Navigate to appropriate page
           if (data.isAdmin) {
             navigate('/dashboard?tab=dashboard');
           } else {
             navigate('/');
           }
+          setLoading(false);
         } else {
           console.error("Server response error:", data);
           setLoading(false);
+        }
+      } catch (error) {
+        console.error("Facebook auth error:", error);
+        setLoading(false);
+      }
+    };
+
+    const handleFacebookClick = async() => {
+      setLoading(true);
+      
+      try {
+        // Create Facebook provider
+        const provider = new FacebookAuthProvider();
+        provider.addScope('email');
+        provider.addScope('public_profile');
+        
+        // Detect if on mobile
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+          // Use redirect for mobile devices
+          await signInWithRedirect(auth, provider);
+          // This will redirect the user away from the app
+          // The useEffect above will handle the redirect result when they return
+        } else {
+          // Use popup for desktop
+          const result = await signInWithPopup(auth, provider);
+          await processAuthResult(result);
         }
       } catch (error) {
         console.error("Facebook login error:", error);
