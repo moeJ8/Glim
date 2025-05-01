@@ -226,12 +226,11 @@ export const facebook = async (req, res, next) => {
             );
             const { password: pass, ...rest} = user._doc;
             
-            // Set cookie with SameSite and Secure options for better mobile compatibility
+            // Set cookie with simpler settings for better mobile compatibility
             return res.status(200)
                 .cookie("access_token", token, {
                     httpOnly: true,
                     sameSite: 'lax',
-                    secure: process.env.NODE_ENV === 'production',
                     maxAge: 24 * 60 * 60 * 1000 // 1 day
                 })
                 .json({...rest, token});
@@ -265,12 +264,11 @@ export const facebook = async (req, res, next) => {
             
             const {password, ...rest} = newUser._doc;
             
-            // Set cookie with SameSite and Secure options for better mobile compatibility
+            // Set cookie with simpler settings for better mobile compatibility
             return res.status(200)
                 .cookie("access_token", token, {
                     httpOnly: true,
                     sameSite: 'lax',
-                    secure: process.env.NODE_ENV === 'production',
                     maxAge: 24 * 60 * 60 * 1000 // 1 day
                 })
                 .json({...rest, token});
