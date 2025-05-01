@@ -158,10 +158,6 @@ export const signin = async (req, res, next) => {
 export const google = async (req, res, next) => {
     const {email, name, googlePhotoUrl} = req.body;
     try{
-        if (!email) {
-            return next(errorHandler(400, "Email is required from Google authentication"));
-        }
-        
         const user = await User.findOne({email});
         if (user) {
             const token = jwt.sign(
@@ -174,16 +170,7 @@ export const google = async (req, res, next) => {
                 {expiresIn: "1d"}
             );
             const { password: pass, ...rest} = user._doc;
-            
-            // Set cookie with SameSite and Secure options for better mobile compatibility
-            return res.status(200)
-                .cookie("access_token", token, {
-                    httpOnly: true,
-                    sameSite: 'lax',
-                    secure: process.env.NODE_ENV === 'production',
-                    maxAge: 24 * 60 * 60 * 1000 // 1 day
-                })
-                .json({...rest, token});
+            res.status(200).cookie("access_token", token, {httpOnly: true}).json({...rest, token});
         } else {
             const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
             const hashedPassword = await bcryptjs.hashSync(generatedPassword, 10);
@@ -201,7 +188,6 @@ export const google = async (req, res, next) => {
                 verified: true,
             });
             await newUser.save();
-            
             const token = jwt.sign(
                 {
                     id: newUser._id, 
@@ -211,18 +197,9 @@ export const google = async (req, res, next) => {
                 process.env.JWT_SECRET, 
                 {expiresIn: "1d"}
             );
-            
             const {password, ...rest} = newUser._doc;
+            res.status(200).cookie("access_token", token, {httpOnly: true}).json({...rest, token});
             
-            // Set cookie with SameSite and Secure options for better mobile compatibility
-            return res.status(200)
-                .cookie("access_token", token, {
-                    httpOnly: true,
-                    sameSite: 'lax',
-                    secure: process.env.NODE_ENV === 'production',
-                    maxAge: 24 * 60 * 60 * 1000 // 1 day
-                })
-                .json({...rest, token});
         }
     } catch(err) {
         next(err);
