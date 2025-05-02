@@ -9,7 +9,7 @@ const firebaseConfig = {
   // Use auth subdomain for authentication
   authDomain: window.location.hostname === "localhost" || window.location.hostname.includes("127.0.0.1")
     ? "mern-blog-d9c14.firebaseapp.com"
-    : "auth.glim.blog",
+    : window.location.hostname === "glim.blog" ? "glim.blog" : "auth.glim.blog",
   projectId: "mern-blog-d9c14",
   storageBucket: "mern-blog-d9c14.firebasestorage.app",
   messagingSenderId: "1075273492029",
