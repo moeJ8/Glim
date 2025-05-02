@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Push notification related files
+vapid-keys.txt
+PUSH_NOTIFICATIONS.md

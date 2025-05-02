@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
+import { useEffect } from 'react'
+import { registerServiceWorker } from './services/pushNotificationService'
 
 import Home from './pages/Home'
 import About from './pages/About'
@@ -39,6 +41,21 @@ import SessionExpiredNotification from './components/SessionExpiredNotification'
 
 
 export default function App() {
+  // Register service worker for push notifications
+  useEffect(() => {
+    const registerSW = async () => {
+      try {
+        if ('serviceWorker' in navigator) {
+          await registerServiceWorker();
+        }
+      } catch (error) {
+        console.error('Failed to register service worker:', error);
+      }
+    };
+
+    registerSW();
+  }, []);
+
   return (
     <div>
       {/* Toast notifications */}

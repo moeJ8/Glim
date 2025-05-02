@@ -13,6 +13,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom"
 import UserPosts from "./UserPosts"
 import UserListModal from "./UserListModal"
 import CustomModal from "./CustomModal"
+import PushNotificationSettings from "./PushNotificationSettings"
 
 export default function DashProfile() {
     const {currentUser, errormodal, loading} = useSelector(state => state.user)
@@ -550,6 +551,11 @@ export default function DashProfile() {
         emptyTitle="Not following anyone yet"
         emptyMessage="When you follow someone, they'll appear here."
       />
+
+      <div className="my-4">
+        <h3 className="text-md font-semibold mb-2 text-gray-700 dark:text-gray-200">Notifications</h3>
+        <PushNotificationSettings />
+      </div>
     </div>
   )
 }

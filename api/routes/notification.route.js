@@ -5,24 +5,24 @@ import {
   markAsRead, 
   markAllAsRead, 
   getUnreadCount,
-  deleteNotification
+  deleteNotification,
+  subscribeToNotifications,
+  updatePushSettings,
+  getVapidKey
 } from '../controllers/notification.controller.js';
 
 const router = express.Router();
 
 // Get all notifications for the current user
 router.get('/', verifyToken, getNotifications);
-
-// Get unread notification count
 router.get('/unread-count', verifyToken, getUnreadCount);
-
-// Mark a notification as read
 router.put('/:notificationId/read', verifyToken, markAsRead);
-
-// Mark all notifications as read
 router.put('/read-all', verifyToken, markAllAsRead);
-
-// Delete a notification
 router.delete('/:notificationId', verifyToken, deleteNotification);
+
+// Push notification endpoints
+router.get('/vapid-public-key', getVapidKey);
+router.post('/subscribe', verifyToken, subscribeToNotifications);
+router.put('/push-settings', verifyToken, updatePushSettings);
 
 export default router; 

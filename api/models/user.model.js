@@ -56,6 +56,15 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
+  // Push notification fields
+  pushSubscription: {
+    type: String,
+    default: null
+  },
+  pushNotificationsEnabled: {
+    type: Boolean,
+    default: false
+  },
     
 }, {timestamps: true}
 );

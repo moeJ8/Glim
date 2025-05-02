@@ -1,5 +1,11 @@
 import Notification from '../models/notification.model.js';
 import { errorHandler } from '../utils/error.js';
+import { 
+  getVapidPublicKey, 
+  savePushSubscription, 
+  updatePushNotificationSettings, 
+  sendPushNotification 
+} from '../utils/pushNotification.js';
 
 // Helper function to get and emit unread count for a user
 const getAndEmitUnreadCount = async (req, userId) => {
@@ -57,8 +63,6 @@ export const createNotification = async (req, notificationData) => {
         read: false 
       });
       
-      console.log(`Emitting new notification to user ${notificationData.recipient} (Socket: ${recipientSocketId}), unread count: ${unreadCount}`);
-      
       // Emit both a specific notification event and a general unread count update
       io.to(recipientSocketId).emit('new-notification', {
         notification: populatedNotification,
@@ -70,7 +74,17 @@ export const createNotification = async (req, notificationData) => {
         unreadCount: unreadCount
       });
     } else {
-      // Log removed as requested
+      // User is offline, send push notification
+      const pushData = {
+        title: notificationData.title,
+        message: notificationData.message,
+        url: getNotificationUrl(notificationData)
+      };
+      
+      await sendPushNotification(
+        notificationData.recipient.toString(),
+        pushData
+      );
     }
     
     return newNotification;
@@ -78,6 +92,27 @@ export const createNotification = async (req, notificationData) => {
     console.error('Error creating notification:', err);
     throw err;
   }
+};
+
+// Helper function to get notification URL
+const getNotificationUrl = (notification) => {
+  let url = '/notifications';
+  
+  if (notification.type === 'comment' && notification.postSlug) {
+    url = `/post/${notification.postSlug}?highlight=${notification.commentId}`;
+  } else if (notification.type === 'reply' && notification.postSlug) {
+    url = `/post/${notification.postSlug}?highlight=${notification.commentId}`;
+  } else if (['new_post', 'like_comment'].includes(notification.type) && notification.postSlug) {
+    url = `/post/${notification.postSlug}`;
+  } else if (['follow', 'mention'].includes(notification.type) && notification.triggeredBy) {
+    url = `/user/${notification.triggeredBy}`;
+  } else if (['new_donation', 'donation_received'].includes(notification.type) && notification.donationId) {
+    url = `/donation/${notification.donationId}`;
+  } else if (['publisher_request', 'publisher_approved', 'publisher_rejected'].includes(notification.type)) {
+    url = '/dashboard/profile';
+  }
+  
+  return url;
 };
 
 export const getNotifications = async (req, res, next) => {
@@ -301,6 +336,67 @@ export const deleteNotification = async (req, res, next) => {
     });
   } catch (err) {
     console.error('Error deleting notification:', err);
+    next(err);
+  }
+};
+
+// ====== Push Notification Endpoints ======
+
+export const getVapidKey = (req, res) => {
+  const publicKey = getVapidPublicKey();
+  if (!publicKey) {
+    return res.status(500).json({
+      success: false,
+      message: 'Push notifications are not configured'
+    });
+  }
+  
+  res.status(200).json({
+    success: true,
+    publicKey
+  });
+};
+
+export const subscribeToNotifications = async (req, res, next) => {
+  if (!req.user.id) {
+    return next(errorHandler(401, 'Unauthorized'));
+  }
+  
+  try {
+    const subscription = req.body.subscription;
+    if (!subscription) {
+      return next(errorHandler(400, 'Subscription object is required'));
+    }
+    
+    await savePushSubscription(req.user.id, subscription);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Successfully subscribed to push notifications'
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updatePushSettings = async (req, res, next) => {
+  if (!req.user.id) {
+    return next(errorHandler(401, 'Unauthorized'));
+  }
+  
+  try {
+    const { enabled } = req.body;
+    if (typeof enabled !== 'boolean') {
+      return next(errorHandler(400, 'Enabled setting must be a boolean'));
+    }
+    
+    await updatePushNotificationSettings(req.user.id, enabled);
+    
+    res.status(200).json({
+      success: true,
+      message: `Push notifications ${enabled ? 'enabled' : 'disabled'}`
+    });
+  } catch (err) {
     next(err);
   }
 }; 
