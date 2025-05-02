@@ -6,7 +6,10 @@ import { initializeApp } from "firebase/app";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY, // ✅ Use import.meta.env
-  authDomain: "mern-blog-d9c14.firebaseapp.com",
+  // Use Firebase domain for localhost, custom domain for production
+  authDomain: window.location.hostname === "localhost" || window.location.hostname.includes("127.0.0.1")
+    ? "mern-blog-d9c14.firebaseapp.com"
+    : "glim.blog",
   projectId: "mern-blog-d9c14",
   storageBucket: "mern-blog-d9c14.firebasestorage.app",
   messagingSenderId: "1075273492029",
