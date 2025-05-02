@@ -36,18 +36,14 @@ export const initSocket = () => {
         reconnectAttempts++;
         console.error(`Socket connection error (attempt ${reconnectAttempts}):`, err.message);
         
-        // Only consider authentication errors for sign-out
-        // Be more specific about what constitutes an auth error
-        if (reconnectAttempts >= 5 && ( // Only act after multiple failures
+        // Only consider authentication errors for sign-out after multiple attempts
+        if (reconnectAttempts >= 8 && ( // Increased from 5 to 8 attempts
             err.message && (
-                err.message.includes('Authentication error') || 
-                err.message.includes('Token') || 
-                err.message.includes('auth') ||
-                err.message.includes('unauthorized') ||
-                err.message.includes('Unauthorized')
+                err.message.includes('Authentication error: Session expired') || 
+                err.message.includes('TokenExpiredError')
             )
         )) {
-            // Set flag in localStorage
+            // Only sign out for clear token expiration errors
             localStorage.setItem('sessionExpired', 'true');
             
             store.dispatch(signoutSuccess());

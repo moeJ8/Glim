@@ -15,9 +15,8 @@ export const isTokenExpired = (token) => {
     const payload = JSON.parse(atob(token.split('.')[1]));
     const currentTime = Math.floor(Date.now() / 1000);
     
-    // Check if token is actually expired according to its expiration time
-    // Add a small buffer (10 seconds) to prevent edge cases
-    const isActuallyExpired = payload.exp <= currentTime + 10;
+    // Check if token is actually expired according to its expiration time - no buffer
+    const isActuallyExpired = payload.exp <= currentTime;
     
     return isActuallyExpired;
   } catch (error) {
@@ -65,9 +64,8 @@ export const setupTokenValidation = () => {
   // Run once on setup
   checkTokenValidity();
   
-  // Check token validity every 5 minutes (decreased from 30 seconds for better performance)
-  // The visibilitychange event will handle most real-world cases
-  const intervalId = setInterval(checkTokenValidity, 300000);
+  // Check token validity less frequently (15 minutes)
+  const intervalId = setInterval(checkTokenValidity, 900000);
   
   return () => clearInterval(intervalId);
 }; 
