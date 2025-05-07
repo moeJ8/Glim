@@ -11,7 +11,7 @@ export default function FrequentlyAskedQuestions() {
   const faqItems = [
     {
       question: "What is this platform about?",
-      answer: "Our platform is a community space for knowledge sharing, storytelling, and connecting people. Users can interact with posts by commenting, sharing ideas, and engaging with content. The platform also features help request stories where community members can offer support to those in need across various areas such as medical, education, housing, food security, and emergency situations."
+      answer: "Our platform is a community space for knowledge sharing, storytelling, and connecting people. Users can interact with posts by commenting, sharing ideas, and engaging with content. The platform also features help request narratives where community members can offer support to those in need across various areas such as medical, education, housing, food security, and emergency situations."
     },
     {
       question: "How can I participate in the community?",
@@ -19,7 +19,7 @@ export default function FrequentlyAskedQuestions() {
     },
     {
       question: "What's the difference between regular users and publishers?",
-      answer: "Regular users can comment on posts, interact with content, and request help through stories (which publishers will help publish). Publishers have additional capabilities to create blog posts. Publishers help maintain content quality and assist regular users in sharing their stories with the community."
+      answer: "Regular users can comment on posts, interact with content, and request help through narratives (which publishers will help publish). Publishers have additional capabilities to create blog posts. Publishers help maintain content quality and assist regular users in sharing their narratives with the community."
     },
     {
       question: "I'm not a publisher. How can I share my narrative?",
@@ -27,11 +27,11 @@ export default function FrequentlyAskedQuestions() {
     },
     {
       question: "How can I become a publisher?",
-      answer: "To become a publisher, simply click on the 'Become a Publisher' button in the call-to-action section of the website. Our admin team will review your request based on your contribution history, understanding of community guidelines, and commitment to quality content. Publishers play an important role in helping maintain content standards and assisting regular users in sharing their stories."
+      answer: "To become a publisher, simply click on the 'Become a Publisher' button in the call-to-action section of the website. Our admin team will review your request based on your contribution history, understanding of community guidelines, and commitment to quality content. Publishers play an important role in helping maintain content standards and assisting regular users in sharing their narratives."
     },
     {
-      question: "How do I interact with stories and posts?",
-      answer: "You can interact with content by leaving comments, sharing your thoughts and experiences, and offering help on assistance requests. When someone has posted a help request story, you can contact them directly through the contact information provided if you wish to offer support or assistance."
+      question: "How do I interact with narratives and posts?",
+      answer: "You can interact with content by leaving comments, sharing your thoughts and experiences, and offering help on assistance requests. When someone has posted a help request narrative, you can contact them directly through the contact information provided if you wish to offer support or assistance."
     },
     {
       question: "Is there a fee to use this platform?",
