@@ -1,6 +1,6 @@
 import { Button, Spinner } from "flowbite-react";
 import { useEffect, useState } from "react"
-import { Link, useParams, Navigate } from "react-router-dom"
+import { Link, useParams, Navigate, useNavigate } from "react-router-dom"
 import CallToAction from "../components/CallToAction";
 import CommentSection from "../components/CommentSection";
 import PostCard from "../components/PostCard";
@@ -8,6 +8,8 @@ import { useSelector } from "react-redux";
 import { HiPlus, HiMinus } from "react-icons/hi";
 import { FaFlag } from "react-icons/fa";
 import ReportModal from "../components/ReportModal";
+import PostOptionsMenu from "../components/PostOptionsMenu";
+import toast from "react-hot-toast";
 
 export default function PostPage() {
     const {postSlug} = useParams()
@@ -20,6 +22,7 @@ export default function PostPage() {
     const [followLoading, setFollowLoading] = useState(false);
     const [showReportModal, setShowReportModal] = useState(false);
     const [notFound, setNotFound] = useState(false);
+    const navigate = useNavigate();
     
 
     useEffect(() => {
@@ -187,6 +190,44 @@ export default function PostPage() {
         }
     };
 
+    const handleDeletePost = async (postId) => {
+        try {
+            const res = await fetch(`/api/post/deletepost/${postId}/${currentUser._id}`, {
+                method: "DELETE",
+            });
+            const data = await res.json();
+            
+            if (!res.ok) {
+                toast.error(data.message || 'Failed to delete post', {
+                    duration: 4000,
+                    style: {
+                        background: '#991b1b',
+                        color: '#fff',
+                    },
+                });
+                return;
+            }
+            
+            toast.success('Post deleted successfully', {
+                duration: 4000,
+                style: {
+                    background: '#15803d',
+                    color: '#fff',
+                },
+            });
+            navigate('/');
+        } catch (err) {
+            console.error('Error deleting post:', err);
+            toast.error('Something went wrong', {
+                duration: 4000,
+                style: {
+                    background: '#991b1b',
+                    color: '#fff',
+                },
+            });
+        }
+    };
+
     if(loading){
         return (
             <div className="flex justify-center items-center min-h-screen">
@@ -202,6 +243,11 @@ export default function PostPage() {
     if (error) {
         return <Navigate to="/not-found" replace />;
     }
+
+    // Check if current user is post owner or admin
+    const isPostOwner = currentUser && post?.userId && currentUser._id === post.userId._id;
+    const isAdmin = currentUser && currentUser.isAdmin;
+
   return <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen"><h1 className="text-3xl mt-10 p-3 text-center font-serif max-w-2xl mx-auto lg:text-4xl">{post && post.title}</h1>
   <Link to={`/search?category=${post && post.category}`} className="self-center mt-5">
     <Button color="gray" pill size="xs">
@@ -254,13 +300,54 @@ export default function PostPage() {
     )}
   </div>
 
-  <img src={post && post.image} alt={post && post.title} className="mt-2 p-3 max-h-[600px] w-full object-cover"/>
+  {/* Post options menu - visible to everyone but with different options */}
+  {currentUser && post && (
+    <div className="flex justify-end mb-2 px-3">
+      <PostOptionsMenu 
+        postId={post._id} 
+        onDelete={handleDeletePost}
+        onReport={() => setShowReportModal(true)}
+        isOwner={isPostOwner || isAdmin}
+        isAdmin={isAdmin}
+        isActualOwner={isPostOwner}
+      />
+    </div>
+  )}
+
+  {/* Post image container */}
+  <div className="mt-2 p-3">
+    <img src={post && post.image} alt={post && post.title} className="max-h-[600px] w-full object-cover"/>
+  </div>
+
   <div className="flex justify-between p-3 border-b border-slate-500 mx-auto w-full max-w-2xl text-xs">
     <span>{post && new Date(post.createdAt).toLocaleDateString()}</span>
     <span className="italic">{post && (post.content.length /1000).toFixed(0)} mins read</span>
   </div>
   <div className="p-3 max-w-2xl mx-auto w-full post-content" dangerouslySetInnerHTML={{__html: post && post.content}}>
   </div>
+  
+  {/* Author info footer - moved from bottom */}
+  <div className="flex justify-between items-center gap-2 p-2 text-xs max-w-2xl mx-auto w-full">
+    <Link to={`/profile/${post && post.userId && post.userId.username}`} className="flex gap-1 items-center">
+        <img src={post && post.userId && post.userId.profilePicture} className="h-5 w-5 rounded-full object-cover" alt={post && post.userId && post.userId.username} />
+        <span>{post && post.userId && post.userId.username}</span>
+    </Link>
+    <span className="italic">{post && new Date(post.createdAt).toLocaleDateString()}</span>
+    
+    {/* Make the report button more visible */}
+    {currentUser && post && post.userId && currentUser._id !== post.userId._id && !currentUser.isAdmin && (
+        <button 
+            onClick={() => setShowReportModal(true)}
+            className="bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-500 flex items-center gap-1 px-2 py-1 rounded"
+        >
+            <FaFlag className="text-xs" />
+            <span>Report</span>
+        </button>
+    )}
+  </div>
+  
+  {/* Border line under author info */}
+  <div className="w-full max-w-2xl mx-auto border-b dark:border-slate-500 my-3"></div>
   
   {/* Report button placed under post content */}
   {currentUser && post && post.userId && currentUser._id !== post.userId._id && !currentUser.isAdmin && (
@@ -295,24 +382,6 @@ export default function PostPage() {
              ))
         }
     </div>
-  </div>
-  <div className="flex justify-between items-center gap-2 p-2 text-xs border-b border-slate-500 max-w-2xl mx-auto w-full">
-    <Link to={`/profile/${post && post.userId && post.userId.username}`} className="flex gap-1 items-center">
-        <img src={post && post.userId && post.userId.profilePicture} className="h-5 w-5 rounded-full object-cover" alt={post && post.userId && post.userId.username} />
-        <span>{post && post.userId && post.userId.username}</span>
-    </Link>
-    <span className="italic">{post && new Date(post.createdAt).toLocaleDateString()}</span>
-    
-    {/* Make the report button more visible */}
-    {currentUser && post && post.userId && currentUser._id !== post.userId._id && !currentUser.isAdmin && (
-        <button 
-            onClick={() => setShowReportModal(true)}
-            className="bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-500 flex items-center gap-1 px-2 py-1 rounded"
-        >
-            <FaFlag className="text-xs" />
-            <span>Report</span>
-        </button>
-    )}
   </div>
   {showReportModal && post && (
     <ReportModal

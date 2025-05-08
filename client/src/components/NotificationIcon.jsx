@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Badge, Button, Spinner } from 'flowbite-react';
+import { Button, Spinner } from 'flowbite-react';
 import { Link } from 'react-router-dom';
 import { IoMdNotificationsOutline } from 'react-icons/io';
 import { BsArrowRightCircle } from 'react-icons/bs';
@@ -281,6 +281,22 @@ export default function NotificationIcon() {
     }
   };
   
+  const markAllAsRead = async () => {
+    try {
+      // Optimistic UI update - mark all as read immediately
+      setRecentNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setUnreadCount(0);
+      
+      // Then make API request
+      await fetch('/api/notification/read-all', {
+        method: 'PUT',
+      });
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+      fetchUnreadCount();
+    }
+  };
+  
   const renderNotification = (notification) => {
     const { type } = notification;
     switch (type) {
@@ -528,9 +544,11 @@ export default function NotificationIcon() {
         <div className="flex items-center justify-center w-full h-full">
           <IoMdNotificationsOutline className="text-xl" />
           {unreadCount > 0 && (
-            <Badge color="failure" className="absolute -top-1 -right-1 px-1.5 py-0.5">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </Badge>
+            <div className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 flex items-center justify-center rounded-full text-xs font-bold border border-white dark:border-gray-800 bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm">
+              <span className="px-1.5 py-0.5">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            </div>
           )}
         </div>
       </Button>
@@ -540,11 +558,24 @@ export default function NotificationIcon() {
           <div className="p-3 border-b border-gray-200 dark:border-gray-700 font-medium flex justify-between items-center">
             <span>Recent Notifications</span>
             {unreadCount > 0 && (
-              <Badge color="failure" className="px-2.5 py-1">
+              <div className="px-2.5 py-1 rounded-full font-semibold text-xs shadow-sm bg-gradient-to-r from-purple-500 to-pink-500 text-white">
                 {unreadCount} unread
-              </Badge>
+              </div>
             )}
           </div>
+          
+          {unreadCount > 0 && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                markAllAsRead();
+              }}
+              className="w-full py-2 px-3 text-center bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/30 border-b border-gray-200 dark:border-gray-700 font-medium"
+            >
+              Mark All as Read
+            </button>
+          )}
           
           <div className="max-h-[calc(100vh-12rem)] md:max-h-96 overflow-y-auto">
             {loading ? (
@@ -570,7 +601,7 @@ export default function NotificationIcon() {
                       setTimeout(() => setShowDropdown(false), 50);
                     }}
                     className={`block p-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
-                      !notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                      !notification.read ? 'bg-purple-50 dark:bg-purple-900/20' : ''
                     }`}
                   >
                     {renderNotification(notification)}
@@ -582,7 +613,7 @@ export default function NotificationIcon() {
           
           <Link 
             to="/notifications" 
-            className="block p-3 text-center text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 font-medium"
+            className="block p-3 text-center text-purple-600 dark:text-purple-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 font-medium"
             onClick={() => setShowDropdown(false)}
           >
             <div className="flex items-center justify-center gap-2">
