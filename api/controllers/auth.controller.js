@@ -37,7 +37,6 @@ export const signup = async (req, res, next) => {
 
         try {
             const savedUser = await newUser.save();
-            
             // Create verification token
             const token = await new Token({
                 userId: savedUser._id,
@@ -68,7 +67,6 @@ export const signin = async (req, res, next) => {
         next(errorHandler(400, "All fields are required"))
     }
     try {
-        // Try to find user by email or username
         const validUser = await User.findOne({
             $or: [
                 { email: email },
@@ -140,13 +138,12 @@ export const signin = async (req, res, next) => {
             verificationMessage = "Your email is not verified. A verification link has been sent to your email.";
         }
         
-        // Allow login but include verification message if present
         return res.status(200)
             .cookie("access_token", token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax',
-                maxAge: 24 * 60 * 60 * 1000 // 1 day in milliseconds
+                maxAge: 24 * 60 * 60 * 1000 
             })
             .json({
                 ...rest, 

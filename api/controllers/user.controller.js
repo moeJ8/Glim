@@ -737,3 +737,45 @@ export const unbanUser = async (req, res, next) => {
     next(err);
   }
 };
+
+export const refreshUserData = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    
+    // Get the latest user data from database to ensure roles are up-to-date
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return next(errorHandler(404, "User not found"));
+    }
+    
+    // Generate a new token with current permissions from database
+    const token = jwt.sign(
+      {
+        id: user._id,
+        isAdmin: user.isAdmin,
+        isPublisher: user.isPublisher
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+    
+    // Set the token in cookies
+    res.cookie("access_token", token, { 
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000 // 1 day
+    });
+    
+    // Return user data without password
+    const { password, ...userData } = user._doc;
+    
+    res.status(200).json({
+      ...userData,
+      token
+    });
+  } catch (err) {
+    next(err);
+  }
+};

@@ -1,6 +1,6 @@
 import express from 'express';
 import { verifyToken } from '../utils/verifyUser.js';
-import { deleteUser, signout, updateUser, test, getUsers, getUser, getUserByUsername, updateUserRole, requestPublisher, getPublisherRequests, updatePublisherRequest, searchUsers, resendVerificationLink, followUser, unfollowUser, getUserFollowers, getUserFollowing, banUser, unbanUser } from '../controllers/user.controller.js';
+import { deleteUser, signout, updateUser, test, getUsers, getUser, getUserByUsername, updateUserRole, requestPublisher, getPublisherRequests, updatePublisherRequest, searchUsers, resendVerificationLink, followUser, unfollowUser, getUserFollowers, getUserFollowing, banUser, unbanUser, refreshUserData } from '../controllers/user.controller.js';
 
 const router = express.Router();
 
@@ -23,5 +23,11 @@ router.get('/:id/followers', getUserFollowers);
 router.get('/:id/following', getUserFollowing);
 router.post('/ban', verifyToken, banUser);
 router.post('/unban/:userId', verifyToken, unbanUser);
+router.get('/refresh-token/data', verifyToken, refreshUserData);
+
+// token validation
+router.head('/validate-token', verifyToken, (req, res) => {
+  res.status(200).end();
+});
 
 export default router;

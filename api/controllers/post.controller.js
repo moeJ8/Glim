@@ -164,3 +164,21 @@ export const getMostReadPosts = async (req, res, next) => {
         next(err);
     }
 };
+
+export const checkPermission = async (req, res, next) => {
+  try {
+    // Check if user has publisher or admin permissions
+    if (!req.user.isAdmin && !req.user.isPublisher) {
+      return res.status(403).json({ message: "Access denied." });
+    }
+    
+    // Return success with user permissions
+    res.status(200).json({ 
+      success: true,
+      isAdmin: req.user.isAdmin,
+      isPublisher: req.user.isPublisher
+    });
+  } catch (err) {
+    next(err);
+  }
+};

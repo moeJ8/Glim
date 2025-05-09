@@ -8,6 +8,8 @@ import { PersistGate } from 'redux-persist/integration/react'
 import ThemeProvider from './components/ThemeProvider.jsx'
 import AuthMiddleware from './components/AuthMiddleware.jsx'
 import { isTokenExpired, signOutExpired } from './services/tokenService'
+// Import the token checker validation function
+import { setupVisibilityTracking } from './services/tokenChecker'
 
 // Add debugging helper for token expiration
 const debugTokenExpiration = () => {
@@ -41,7 +43,11 @@ const validateTokenOnLoad = () => {
   }
 };
 
+// Regular token validation when the app loads
 validateTokenOnLoad();
+
+// Set up the visibility tracking for when user returns to the app after leaving
+setupVisibilityTracking();
 
 createRoot(document.getElementById('root')).render(
   <PersistGate persistor={persistor}>

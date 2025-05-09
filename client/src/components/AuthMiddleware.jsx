@@ -1,10 +1,35 @@
 import { useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { authenticateSocket, disconnectSocket } from '../services/socketService';
 import { isTokenExpired, setupTokenValidation, signOutExpired } from '../services/tokenService';
+import { updateSuccess } from '../redux/user/userSlice';
 
 export default function AuthMiddleware({ children }) {
   const { currentUser } = useSelector(state => state.user);
+  const dispatch = useDispatch();
+
+  // Auto refresh user data and token on page load if the user is logged in
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    const refreshUserData = async () => {
+      try {
+        const res = await fetch('/api/user/refresh-token/data', {
+          credentials: 'include'
+        });
+        
+        if (res.ok) {
+          const userData = await res.json();
+          // Update Redux store with fresh data including the new token
+          dispatch(updateSuccess(userData));
+          console.log('User data and token refreshed on page load');
+        }
+      } catch (error) {
+        console.error('Error refreshing user data:', error);
+      }
+    };
+    refreshUserData();
+  }, [dispatch]); 
 
   // Single useEffect for all token validation scenarios
   useEffect(() => {
