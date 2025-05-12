@@ -220,8 +220,10 @@ export default function DashComments() {
                     <Table.Cell>
                       {new Date(comment.updatedAt).toLocaleDateString()}
                     </Table.Cell>
-                    <Table.Cell>
-                      {comment.content}
+                    <Table.Cell className="max-w-xs">
+                      <div className="whitespace-normal break-words">
+                        {comment.content}
+                      </div>
                     </Table.Cell>
                     <Table.Cell>
                       {comment.numberOfLikes}
