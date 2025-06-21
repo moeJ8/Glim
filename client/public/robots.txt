@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /posts
+Allow: /stories
+Allow: /donate
+Allow: /about
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api
+
+Sitemap: https://glim.blog/sitemap.xml

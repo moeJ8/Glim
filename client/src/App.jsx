@@ -57,7 +57,7 @@ export default function App() {
   }, []);
 
   return (
-    <div>
+    <div className="overflow-x-hidden">
       {/* Toast notifications */}
       <Toaster position="bottom-center" />
       
