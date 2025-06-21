@@ -74,6 +74,8 @@ export default function MostReadPosts() {
                 src={post.image}
                 alt={post.title}
                 className="h-full w-full object-cover brightness-75"
+                width="800"
+                height="500"
               />
               <div className="absolute inset-0 flex flex-col justify-end p-6 pl-12 bg-gradient-to-t from-black/80 via-black/50 to-transparent">
                 <div className="flex gap-6 text-gray-200 text-sm mb-3">

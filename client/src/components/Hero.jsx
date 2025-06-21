@@ -200,6 +200,8 @@ export default function Hero() {
               src="https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?q=80&w=2080&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
               alt="Modern creative workspace"
               className="w-full h-[500px] object-cover rounded-lg shadow-lg mx-auto transition-transform duration-300 brightness-[0.95] contrast-[1.05]"
+              width="600"
+              height="500"
             />
           </div>
         </div>
