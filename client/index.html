@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Critical CSS Inline (add this if needed) -->
+    <style>
+      body { min-height: 100vh; overflow-x: hidden; }
+      .loading-skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; }
+      @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    </style>
     <!-- SEO Meta Tags -->
     <title>Glim</title>
     <meta name="description" content="Glim is a platform for sharing engaging informative posts, creating meaningful content, and supporting important causes through our donation and narratives system.">
@@ -31,6 +38,7 @@
     <!-- Performance Optimization -->
     <link rel="preconnect" href="https://images.unsplash.com">
     <link rel="dns-prefetch" href="https://images.unsplash.com">
+    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?q=80&w=2080&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D">
 
   </head>
   <body>

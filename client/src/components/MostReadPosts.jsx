@@ -42,18 +42,26 @@ export default function MostReadPosts() {
   };
 
   if (loading) return (
-    <div className="flex justify-center items-center py-8">
+    <div className="w-full h-[400px] md:h-[450px] xl:h-[500px] flex justify-center items-center rounded-lg bg-gray-100 dark:bg-gray-800 loading-skeleton">
       <Spinner size="lg" />
     </div>
   );
 
-  if (error) return null;
+  if (error) return (
+    <div className="w-full h-[400px] md:h-[450px] xl:h-[500px] flex justify-center items-center rounded-lg bg-gray-100 dark:bg-gray-800">
+      <p className="text-gray-500">Unable to load posts</p>
+    </div>
+  );
 
-  if (posts.length === 0) return null;
+  if (posts.length === 0) return (
+    <div className="w-full h-[400px] md:h-[450px] xl:h-[500px] flex justify-center items-center rounded-lg bg-gray-100 dark:bg-gray-800">
+      <p className="text-gray-500">No posts available</p>
+    </div>
+  );
 
   return (
     <div className="w-full">
-      <div className="h-[400px] md:h-[450px] xl:h-[500px] rounded-lg overflow-hidden">
+      <div className="h-[400px] md:h-[450px] xl:h-[500px] rounded-lg overflow-hidden" style={{minHeight: '400px'}}>
         <Carousel
           leftControl={
             <span className="bg-gray-100/30 dark:bg-gray-800/30 p-2 rounded-full">
