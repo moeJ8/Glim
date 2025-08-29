@@ -6,7 +6,7 @@ const router = express.Router();
 router.post('/signup', signup);
 router.post('/signin', signin);
 router.post('/google', google);
-router.post('/facebook', facebook);
+// router.post('/facebook', facebook); // Temporarily disabled due to Facebook account issues
 router.get('/:userId/verify/:token', verifyEmail);
 router.post('/request-password-reset', requestPasswordReset);
 router.post('/reset-password/:userId/:token', resetPassword);

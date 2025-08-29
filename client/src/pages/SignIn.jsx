@@ -135,9 +135,9 @@ export default function SignIn() {
                 loading ? <> <Spinner size="sm"/> <span className="pl-3">Loading...</span></> : 'Sign In'
               }
             </Button>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2">
               <OAuth />
-              <FOAuth />
+              {/* <FOAuth /> */}
             </div>
           </form>
 
